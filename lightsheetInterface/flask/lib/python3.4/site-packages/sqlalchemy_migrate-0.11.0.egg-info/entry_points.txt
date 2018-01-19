@@ -1,0 +1,4 @@
+[console_scripts]
+migrate-repository = migrate.versioning.migrate_repository:main
+migrate = migrate.versioning.shell:main
+

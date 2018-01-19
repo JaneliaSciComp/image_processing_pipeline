@@ -1,0 +1,9 @@
+{% block content %}
+    {% for pipelineStep in pipelineSteps %}
+    <input type="checkbox" name="step" value="processTimePoint">{{ pipelineStep.stepName }}
+    <textarea rows="20" cols="50" disabled>{{ pipelineStep.inputJson }}</textarea><br>
+    {% endfor %}
+    <form action="" method="post">
+      <p><input type="submit" name="testPost" value="TestPost" /></p>
+    </form>
+{% endblock %}
