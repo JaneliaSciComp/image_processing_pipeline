@@ -3,22 +3,55 @@ from flask import render_template, request
 from app import app #, mongo
 from pymongo import MongoClient
 from time import gmtime, strftime
+from collections import OrderedDict
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
+@app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 #@app.route('/index', methods=['GET','POST'])
-def index():
-    pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']
+def index(jacsServiceIndex):
+
+    connection = MongoClient()
+    db = connection.jacs
+    #get all that have name lightsheetProcessing (so it is the parent job), dont show the id, show creationDate and args
+    serviceHistory = list(list(db.jacsServiceHistory.find({"name": "lightsheetProcessing"},{"_id":0,"creationDate":1,"args":1}))) 
     
+    count = 0
+    for dictionary in serviceHistory: #convert date to nicer string
+        dictionary.update((k,str(v)) for k, v in dictionary.items() if k=="creationDate")
+        dictionary["selected"]=''
+        dictionary["index"] = str(count)
+        count=count+1
+
+    if jacsServiceIndex is not None:
+        serviceHistory[int(jacsServiceIndex)]["selected"] = 'selected'
+
+    pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']    
     pipelineSteps = []
+    defaultFilePrefix = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'
+    currentStepIndex = 0;
+
     for currentStep in pipelineOrder:
-        fileName = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'+ currentStep +'.json';
+        #Check if currentStep was used in previous service
+        if (jacsServiceIndex is not None) and (currentStep in serviceHistory[int(jacsServiceIndex)]["args"][3]):
+            fileName = serviceHistory[int(jacsServiceIndex)]["args"][1] + str(currentStepIndex) + '_' + currentStep + '.json'
+            currentStepIndex = currentStepIndex+1
+            editState = 'enabled'
+            checkboxState = 'checked'
+        else:
+            fileName = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'+ currentStep +'.json'
+            editState = 'disabled'
+            checkboxState = ''
         json_data = json.load(open(fileName))
         pipelineSteps.append({
-           'stepName': currentStep,
-           'inputJson': json.dumps(json_data, indent=4, separators=(',', ': '))
+            'stepName': currentStep,
+            'inputJson': json.dumps(json_data, indent=4, separators=(',', ': ')),
+            'state': editState,
+            'checkboxState': checkboxState
         })
     
     headers = {'content-type': 'application/json', 'USERNAME': 'lightsheet'}
+    
+
     if request.method == 'POST':
         datetime_and_randint = strftime("%Y%m%d_%H%M%S_", gmtime())+str(random.randint(1,100)).zfill(3)
         output_directory = "/groups/lightsheet/lightsheet/home/ackermand/interface_output/"+datetime_and_randint+"/"
@@ -36,7 +69,7 @@ def index():
                 fh = open(output_directory + fileName,"w")
                 fh.write(text)
                 fh.close()
-                jsonifiedText = json.loads(text)
+                jsonifiedText = json.loads(text, object_pairs_hook=OrderedDict)
                 numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
                 allSelectedStepNames = allSelectedStepNames+currentStep+", "
                 allSelectedTimePoints = allSelectedTimePoints+str(numTimePoints)+", "
@@ -46,7 +79,7 @@ def index():
         
         davidTest_json_data["args"].extend(("-allSelectedStepNames",allSelectedStepNames[0:-2]))
         davidTest_json_data["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints[0:-2]))
-        print(json.dumps(davidTest_json_data))
+ #       print(json.dumps(davidTest_json_data))
         r = requests.post('http://10.36.13.18:9000/api/rest-v2/async-services/lightsheetProcessing',
                           headers=headers,
                           data=json.dumps(davidTest_json_data))
@@ -56,7 +89,8 @@ def index():
     
     return render_template('index.html',
                            title='Home',
-                           pipelineSteps=pipelineSteps)
+                           pipelineSteps=pipelineSteps,
+                           serviceHistory=serviceHistory)
 
 @app.route('/db_test')
 def db_test_page():
@@ -66,8 +100,6 @@ def db_test_page():
     #online_users = list(mongo.db.collection_names())
     for dictionary in serviceHistory: #convert date to nicer string
         dictionary.update((k,str(v)) for k, v in dictionary.items() if k=="creationDate")
-
-    print(serviceHistory)
     return render_template('db_test_page.html', 
                             serviceHistory=serviceHistory)
 
