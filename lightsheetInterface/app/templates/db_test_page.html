@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<form action="" method="post">
+  {% for serviceHistory in serviceHistory %}
+  {{ serviceHistory }}<br>
+  {% endfor %}
+</form>
+{% endblock %}

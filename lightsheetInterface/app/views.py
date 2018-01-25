@@ -1,6 +1,7 @@
-import requests, json, random, os, math
+import requests, json, random, os, math, datetime
 from flask import render_template, request
-from app import app
+from app import app #, mongo
+from pymongo import MongoClient
 from time import gmtime, strftime
 
 @app.route('/', methods=['GET','POST'])
@@ -51,10 +52,25 @@ def index():
                           data=json.dumps(davidTest_json_data))
                 
        # print(json.dumps(json_data, indent=4, separators=(',',': ')))
-        
+       
+    
     return render_template('index.html',
                            title='Home',
                            pipelineSteps=pipelineSteps)
+
+@app.route('/db_test')
+def db_test_page():
+    connection = MongoClient()
+    db = connection.jacs
+    serviceHistory = list(list(db.jacsServiceHistory.find({"name": "lightsheetProcessing"},{"_id":0,"creationDate":1,"args":1}))) #get all that have name lightsheetProcessing (so it is the parent job), dont show the id, show creationDate and args
+    #online_users = list(mongo.db.collection_names())
+    for dictionary in serviceHistory: #convert date to nicer string
+        dictionary.update((k,str(v)) for k, v in dictionary.items() if k=="creationDate")
+
+    print(serviceHistory)
+    return render_template('db_test_page.html', 
+                            serviceHistory=serviceHistory)
+
         
         
 
