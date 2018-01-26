@@ -4,26 +4,16 @@ from app import app #, mongo
 from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
+import bson
 
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 #@app.route('/index', methods=['GET','POST'])
 def index(jacsServiceIndex):
-
+    #get all that have name lightsheetProcessing (so it is the parent job), dont show the id, show creationDate and args
     connection = MongoClient()
     db = connection.jacs
-    #get all that have name lightsheetProcessing (so it is the parent job), dont show the id, show creationDate and args
-    serviceHistory = list(list(db.jacsServiceHistory.find({"name": "lightsheetProcessing"},{"_id":0,"creationDate":1,"args":1}))) 
-    
-    count = 0
-    for dictionary in serviceHistory: #convert date to nicer string
-        dictionary.update((k,str(v)) for k, v in dictionary.items() if k=="creationDate")
-        dictionary["selected"]=''
-        dictionary["index"] = str(count)
-        count=count+1
-
-    if jacsServiceIndex is not None:
-        serviceHistory[int(jacsServiceIndex)]["selected"] = 'selected'
+    serviceHistory = getServiceHistory(db, jacsServiceIndex)
 
     pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']    
     pipelineSteps = []
@@ -79,12 +69,9 @@ def index(jacsServiceIndex):
         
         davidTest_json_data["args"].extend(("-allSelectedStepNames",allSelectedStepNames[0:-2]))
         davidTest_json_data["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints[0:-2]))
- #       print(json.dumps(davidTest_json_data))
         r = requests.post('http://10.36.13.18:9000/api/rest-v2/async-services/lightsheetProcessing',
                           headers=headers,
                           data=json.dumps(davidTest_json_data))
-                
-       # print(json.dumps(json_data, indent=4, separators=(',',': ')))
        
     
     return render_template('index.html',
@@ -92,17 +79,38 @@ def index(jacsServiceIndex):
                            pipelineSteps=pipelineSteps,
                            serviceHistory=serviceHistory)
 
-@app.route('/db_test')
-def db_test_page():
+@app.route('/job_status', defaults={'jacsServiceIndex': None}, methods=['GET'])
+@app.route('/job_status/<jacsServiceIndex>', methods=['GET'])
+def job_status(jacsServiceIndex):
     connection = MongoClient()
     db = connection.jacs
-    serviceHistory = list(list(db.jacsServiceHistory.find({"name": "lightsheetProcessing"},{"_id":0,"creationDate":1,"args":1}))) #get all that have name lightsheetProcessing (so it is the parent job), dont show the id, show creationDate and args
-    #online_users = list(mongo.db.collection_names())
+    serviceHistory = getServiceHistory(db, jacsServiceIndex)
+    statuses=[]
+    if jacsServiceIndex is not None:
+        childJobStatuses = list(db.jacsServiceHistory.find({"parentServiceId":bson.Int64(serviceHistory[int(jacsServiceIndex)]["serviceId"])},{"_id":0, "args":1, "state":1, "events":1}))
+        steps = serviceHistory[int(jacsServiceIndex)]["args"][3].split(", ")
+        #print(serviceHistory[int(jacsServiceIndex)]["serviceId"])
+        print(steps)
+        print(childJobStatuses)
+        
+        for i in range(0,len(steps)):
+            if i<=len(childJobStatuses)-1:
+                statuses.append(steps[i] + " status: " + childJobStatuses[i]["state"])
+            else:
+                statuses.append(steps[i] + " status: NOT YET QUEUED")
+       # print(statusString)
+    return render_template('job_status.html', 
+                           serviceHistory=serviceHistory,
+                           statuses=statuses)
+
+def getServiceHistory(db,jacsServiceIndex):
+    count = 0
+    serviceHistory = list(db.jacsServiceHistory.find({"name": "lightsheetProcessing"},{"_id":0,"creationDate":1,"args":1,"serviceId":1})) #get all that have name lightsheetProcessing (so it is the parent job), dont show the id, show creationDate and args
     for dictionary in serviceHistory: #convert date to nicer string
         dictionary.update((k,str(v)) for k, v in dictionary.items() if k=="creationDate")
-    return render_template('db_test_page.html', 
-                            serviceHistory=serviceHistory)
-
-        
-        
-
+        dictionary["selected"]=''
+        dictionary["index"] = str(count)
+        count=count+1
+    if jacsServiceIndex is not None:
+        serviceHistory[int(jacsServiceIndex)]["selected"] = 'selected'
+    return serviceHistory
