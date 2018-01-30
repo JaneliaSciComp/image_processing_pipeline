@@ -1,16 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
-<form action="" method="post">
-  <select onchange="location = this.options[this.selectedIndex].value;">
-    <option value="http://10.36.13.18:5000/job_status" selected>---Select Previous Run---</option>
-    {% for service in serviceHistory %}
-    <option value={{"http://10.36.13.18:5000/job_status/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
-    {% endfor %}
-    </select>
+<style>
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+</style>
+
+<META HTTP-EQUIV="refresh" CONTENT="30">
+<select onchange="location = this.options[this.selectedIndex].value;">
+  <option value="http://10.36.13.18:5000/job_status" selected>---Select Previous Run---</option>
+  {% for service in parentServiceData %}
+  {% if service.state == "ERROR" %}
+  <option style="background-color: rgba(255,0,0,0.3)" value={{"http://10.36.13.18:5000/job_status/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
+  {% endif %}
+  {% if service.state == "SUCCESSFUL" %}
+  <option style="background-color: rgba(0,255,0,0.3)" value={{"http://10.36.13.18:5000/job_status/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
+  {% endif %}
+  {% if service.state == "RUNNING" %}
+  <option style="background-color: rgba(0,0,255,0.3)" value={{"http://10.36.13.18:5000/job_status/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
+  {% endif %}
+  {% endfor %}
+</select>
+<table>
+  <tr>
+    <th>Step</th>
+    <th>Status</th>
+    <th>Start Time</th>
+    <th>End Time</th>
+    <th>Elapsed Time</th>
+  </tr>
   </br>
   {% for status in statuses %}
-   {{ status }} </br>
+  <tr>
+    <td>{{ status.step }}</td>
+    <td>{{ status.status }}</td>
+    <td>{{ status.startTime }}</td>
+    <td>{{ status.endTime }}</td>
+    <td>{{ status.elapsedTime }}</td>
+  </tr>
   {% endfor %}
-
-</form>
+</table>
+<a href="http://10.36.13.18:5000/"> Go To Job Submission </a>
 {% endblock %}
