@@ -39,11 +39,18 @@ def index(jacsServiceIndex):
         json_string = re.sub(r'\[.*?\]', lambda m: m.group().replace(" ", ""), json_string, flags=re.DOTALL)
         pipelineSteps.append({
             'stepName': currentStep,
+            'stepDescription':"",
             'inputJson': json_string,
             'state': editState,
             'checkboxState': checkboxState
         })
-    
+    pipelineSteps[0]["stepDescription"] = "Image Correction and Compression"
+    pipelineSteps[1]["stepDescription"] = "Multiview Image Fusion (MF)"
+    pipelineSteps[2]["stepDescription"] = "Preprocessing MF for Temporal Smoothing"
+    pipelineSteps[3]["stepDescription"] = "Temporal Smoothing of MF"
+    pipelineSteps[4]["stepDescription"] = "Preprocessing for 3D Drift Correction and Intensity Normalization"
+    pipelineSteps[5]["stepDescription"] = "Drift and Intensity Correction"
+    pipelineSteps[6]["stepDescription"] = "Filter Image Stacks and/or Max. Intensity Projections of Filtered Stacks"
     headers = {'content-type': 'application/json', 'USERNAME': 'lightsheet'}
     if request.method == 'POST':
         datetime_and_randint = strftime("%Y%m%d_%H%M%S_", gmtime())+str(random.randint(1,100)).zfill(3)
