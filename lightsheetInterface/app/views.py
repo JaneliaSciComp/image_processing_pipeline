@@ -1,12 +1,11 @@
 import requests, json, random, os, math, datetime, bson, re
 from flask import render_template, request
-from app import app #, mongo
+from app import app
 from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
 
-outputDictionary = {"_id":0,"creationDate":1,"args":1,"serviceId":1, "state":1,"modificationDate":1}
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 #@app.route('/index', methods=['GET','POST'])
@@ -15,16 +14,16 @@ def index(jacsServiceIndex):
     connection = MongoClient()
     db = connection.jacs
     findDictionary = {"name": "lightsheetProcessing"}
-    parentServiceData = getParentServiceData(db, findDictionary, outputDictionary, jacsServiceIndex)
+    parentServiceData = getParentServiceData(db, findDictionary, jacsServiceIndex)
 
     pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']    
     pipelineSteps = []
     defaultFilePrefix = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'
     currentStepIndex = 0;
-
+ 
     for currentStep in pipelineOrder:
         #Check if currentStep was used in previous service
-        if (jacsServiceIndex is not None) and (currentStep in parentServiceData[int(jacsServiceIndex)]["args"][3]):
+        if (jacsServiceIndex is not None) and (jacsServiceIndex!="favicon.ico") and (currentStep in parentServiceData[int(float(jacsServiceIndex))]["args"][3]):
             fileName = parentServiceData[int(jacsServiceIndex)]["args"][1] + str(currentStepIndex) + '_' + currentStep + '.json'
             currentStepIndex = currentStepIndex+1
             editState = 'enabled'
@@ -44,6 +43,7 @@ def index(jacsServiceIndex):
             'state': editState,
             'checkboxState': checkboxState
         })
+
     pipelineSteps[0]["stepDescription"] = "Image Correction and Compression"
     pipelineSteps[1]["stepDescription"] = "Multiview Image Fusion (MF)"
     pipelineSteps[2]["stepDescription"] = "Preprocessing MF for Temporal Smoothing"
@@ -52,6 +52,7 @@ def index(jacsServiceIndex):
     pipelineSteps[5]["stepDescription"] = "Drift and Intensity Correction"
     pipelineSteps[6]["stepDescription"] = "Filter Image Stacks and/or Max. Intensity Projections of Filtered Stacks"
     headers = {'content-type': 'application/json', 'USERNAME': 'lightsheet'}
+
     if request.method == 'POST':
         datetime_and_randint = strftime("%Y%m%d_%H%M%S_", gmtime())+str(random.randint(1,100)).zfill(3)
         output_directory = "/groups/lightsheet/lightsheet/home/ackermand/interface_output/"+datetime_and_randint+"/"
@@ -81,7 +82,7 @@ def index(jacsServiceIndex):
             r = requests.post('http://10.36.13.18:9000/api/rest-v2/async-services/lightsheetProcessing',
                               headers=headers,
                               data=json.dumps(davidTest_json_data))
-       
+            print(r.json())
     
     return render_template('index.html',
                            title='Home',
@@ -94,11 +95,11 @@ def job_status(jacsServiceIndex):
     connection = MongoClient()
     db = connection.jacs
     findDictionary = {"name": "lightsheetProcessing"}
-    parentServiceData = getParentServiceData(db, findDictionary, outputDictionary, jacsServiceIndex)
+    parentServiceData = getParentServiceData(db, findDictionary,  jacsServiceIndex)
     statuses=[]
     if jacsServiceIndex is not None:
         findDictionary = {"parentServiceId":bson.Int64(parentServiceData[int(jacsServiceIndex)]["serviceId"])}
-        childJobStatuses = getServiceData(db, findDictionary, outputDictionary)
+        childJobStatuses = getServiceData(db, findDictionary)
         steps = parentServiceData[int(float(jacsServiceIndex))]["args"][3].split(", ")
        
         for i in range(0,len(steps)):
@@ -108,24 +109,25 @@ def job_status(jacsServiceIndex):
                     statuses[i]["elapsedTime"] = str(datetime.utcnow()-childJobStatuses[i]["creationDate"])
             else:
                 statuses.append({"step": steps[i], "status": "NOT YET QUEUED", "startTime": "N/A", "endTime":"N/A", "elapsedTime": "N/A"})
-        #print(statuses)
+ 
     return render_template('job_status.html', 
                            parentServiceData=parentServiceData,
                            statuses=statuses)
 
-def getParentServiceData(db, findDictionary, outputDictionary, jacsServiceIndex=None):
-    serviceData = getServiceData(db, findDictionary, outputDictionary)
+def getParentServiceData(db, findDictionary, jacsServiceIndex=None):
+    serviceData = getServiceData(db, findDictionary)
     count = 0
     for dictionary in serviceData: #convert date to nicer string
         dictionary.update((k,str(v)) for k, v in dictionary.items() if k=="creationDate")
         dictionary["selected"]=''
         dictionary["index"] = str(count)
         count=count+1
-    if jacsServiceIndex is not None:
-        serviceData[int(jacsServiceIndex)]["selected"] = 'selected'
+    if jacsServiceIndex is not None and (jacsServiceIndex!="favicon.ico"):
+        serviceData[int(float(jacsServiceIndex))]["selected"] = 'selected'
     return serviceData
 
-def getServiceData(db, findDictionary, outputDictionary):
+def getServiceData(db, findDictionary):
+    outputDictionary = {"_id":0,"creationDate":1,"args":1,"serviceId":1, "state":1,"modificationDate":1}
     serviceData = list(db.jacsServiceHistory.find(findDictionary, outputDictionary))
     serviceData = serviceData + list(db.jacsService.find(findDictionary, outputDictionary))
     serviceData = sorted(serviceData, key=lambda k: k['creationDate'])

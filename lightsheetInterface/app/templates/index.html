@@ -1,20 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<a href="http://10.36.13.18:5000/job_status"> Check Job Status </a>
-<form>
-  <div>
-    <p> Select default or advanced options: </p>
-    <input type="radio" id="default"
-	   name="defaultOrAdvanced" value="default">
-    <label for="default">Default</label>
-    
-    <input type="radio" id="advanced"
-	   name="defaultOrAdvanced" value="advanced">
-    <label for="advanced">Options</label>
-  </div>
-</form>
+<style>
+  fieldset {
+  border: none;
+  }   		 
+</style>
+<a href="http://10.36.13.18:5000/job_status"> Check Job Status </a
 <p></p>
 <p></p>
+
 <select onchange="location = this.options[this.selectedIndex].value;">
   <option value="http://10.36.13.18:5000/" selected>---Select Previous Run---</option>
   {% for service in parentServiceData %}
@@ -26,7 +20,7 @@
 <form action="" method="post">
   {% for pipelineStep in pipelineSteps %}
   <fieldset>
-  <legend><input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick={{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}> {{ pipelineStep.stepDescription }} </legend>
+  <legend class="hide"><input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}> {{ pipelineStep.stepDescription }} </legend>
   <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>{{ pipelineStep.inputJson }}</textarea><br>
   </fieldset>
   <br>
@@ -34,3 +28,4 @@
   <p><input type="submit" name="testPost" value="Submit Job" /></p>
 </form>
 {% endblock %}
+
