@@ -5,15 +5,18 @@ from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
+from settings import Settings
+
+settings = Settings()
 
 #Note: The endpoint to access JACS job information is currently being created, so in the meantime and FOR NONPRODUCTION work we are accessing a local mongo server directly
 
 #Prefix for all default pipeline step json file names
-defaultFileBase = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'
+defaultFileBase = settings.defaultFileBase
 #Location to store json files
-outputDirectoryBase = "/groups/lightsheet/lightsheet/home/ackermand/interface_output/" 
+outputDirectoryBase = settings.outputDirectoryBase
 #Header for post request
-headers = {'content-type': 'application/json', 'USERNAME': 'lightsheet'}
+headers = {'content-type': 'application/json', 'USERNAME': settings.username}
 
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
@@ -69,7 +72,7 @@ def index(jacsServiceIndex):
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
-        client = MongoClient('mongodb://10.40.3.155:27017/')
+        client = MongoClient(settings.lightsheetDB)
         lightsheetDB = client.lightsheet
         numSteps = 0
         allSelectedStepNames=""
@@ -104,7 +107,7 @@ def index(jacsServiceIndex):
             postBody["args"].extend(("-allSelectedStepNames",allSelectedStepNames[0:-2]))
             postBody["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints[0:-2]))
             #Post to JACS
-            requestOutput = requests.post('http://10.36.13.18:9000/api/rest-v2/async-services/lightsheetProcessing',
+            requestOutput = requests.post(settings.lightsheetProcessing,
                                            headers=headers,
                                            data=json.dumps(postBody))
             requestOutputJsonified = requestOutput.json()
