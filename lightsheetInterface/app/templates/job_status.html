@@ -18,6 +18,7 @@ tr:nth-child(even) {
 }
 </style>
 
+<!-- Drop down menu to look up status of previous jobs, colorcoded by status of job -->
 <META HTTP-EQUIV="refresh" CONTENT="30">
 <select onchange="location = this.options[this.selectedIndex].value;">
   <option value="http://10.36.13.18:5000/job_status" selected>---Select Previous Run---</option>
@@ -42,7 +43,8 @@ tr:nth-child(even) {
     <th>Elapsed Time</th>
   </tr>
   </br>
-  {% for status in statuses %}
+  <!-- Status of child processes-->
+  {% for status in childSummarizedStatuses %}
   <tr>
     <td>{{ status.step }}</td>
     <td>{{ status.status }}</td>
