@@ -6,6 +6,7 @@ from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
 from settings import Settings
+from pprint import pprint
 
 settings = Settings()
 
@@ -18,16 +19,29 @@ outputDirectoryBase = settings.outputDirectoryBase
 #Header for post request
 headers = {'content-type': 'application/json', 'USERNAME': settings.username}
 
+@app.route('/test')
+def test():
+    client = MongoClient('localhost', 27017)
+    db = client.lightsheet
+    status = db.command('serverStatus')
+    print(status)
+    return 'works'
+
+@app.route('/login')
+def login():
+    return render_template('login.html', logged_in=False)
+
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 def index(jacsServiceIndex):
     #index is the function to execute when url '/' or '/<jacsServiceIndex>' is reached and takes in the currently selected job index, if any
 
     #Access jacs database to get parent job service information
-    client = MongoClient()
-    jacsDB = client.jacs
+    # jacsClient = MongoClient()
+    # jacsDB = jacsClient.jacs
     findDictionary = {"name": "lightsheetProcessing"}
-    parentServiceData = getParentServiceData(jacsDB, findDictionary, jacsServiceIndex)
+    # parentServiceData = getParentServiceData(jacsDB, findDictionary, jacsServiceIndex)
+    parentServiceData = None;
 
     #Order of pipeline steps
     pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']
@@ -72,8 +86,8 @@ def index(jacsServiceIndex):
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
-        client = MongoClient(settings.lightsheetDB)
-        lightsheetDB = client.lightsheet
+        # lightClient = MongoClient()
+        # lightsheetDB = lightClient.lightsheet
         numSteps = 0
         allSelectedStepNames=""
         allSelectedTimePoints=""
@@ -83,7 +97,7 @@ def index(jacsServiceIndex):
             if text is not None:
                 if numSteps==0:
                     #Create new document in jobs collection in lightsheet database and create json output directory
-                    newId = lightsheetDB.jobs.insert_one({"steps":{}}).inserted_id
+                    # newId = lightsheetDB.jobs.insert_one({"steps":{}}).inserted_id
                     outputDirectory = outputDirectoryBase + str(newId) + "/"
                     postBody = { "processingLocation": "LSF_JAVA", 
                                  "args": ["-jsonDirectory",outputDirectory],
@@ -118,7 +132,8 @@ def index(jacsServiceIndex):
     return render_template('index.html',
                            title='Home',
                            pipelineSteps=pipelineSteps,
-                           parentServiceData=parentServiceData)
+                           parentServiceData=None,
+                           logged_in=True)
 
 @app.route('/job_status', defaults={'jacsServiceIndex': None}, methods=['GET'])
 @app.route('/job_status/<jacsServiceIndex>', methods=['GET'])
@@ -127,27 +142,28 @@ def job_status(jacsServiceIndex):
 
     #For now, get information from jacs database directly to monitor parent and child job statuses
     connection = MongoClient()
-    jacsDB = connection.jacs
+    # jacsDB = connection.jacs
     findDictionary = {"name": "lightsheetProcessing"}
-    parentServiceData = getParentServiceData(jacsDB, findDictionary,  jacsServiceIndex)
-    childSummarizedStatuses=[]
-    if jacsServiceIndex is not None:
-        #If a specific parent job is selected, find all the child job status information and store the step name, status, start time, endtime and elapsedTime
-        findDictionary = {"parentServiceId":bson.Int64(parentServiceData[int(jacsServiceIndex)]["serviceId"])}
-        childJobStatuses = getServiceData(jacsDB, findDictionary)
-        steps = parentServiceData[int(float(jacsServiceIndex))]["args"][3].split(", ")
-        for i in range(0,len(steps)):
-            if i<=len(childJobStatuses)-1:
-                childSummarizedStatuses.append({"step": steps[i], "status": childJobStatuses[i]["state"], "startTime": str(childJobStatuses[i]["creationDate"]), "endTime":str(childJobStatuses[i]["modificationDate"]), "elapsedTime":str(childJobStatuses[i]["modificationDate"]-childJobStatuses[i]["creationDate"])})
-                if childJobStatuses[i]["state"]=="RUNNING":
-                    childSummarizedStatuses[i]["elapsedTime"] = str(datetime.utcnow()-childJobStatuses[i]["creationDate"])
-            else:
-                childSummarizedStatuses.append({"step": steps[i], "status": "NOT YET QUEUED", "startTime": "N/A", "endTime":"N/A", "elapsedTime": "N/A"})
+    # parentServiceData = getParentServiceData(jacsDB, findDictionary,  jacsServiceIndex)
+    # childSummarizedStatuses=[]
+    # if jacsServiceIndex is not None:
+    #     #If a specific parent job is selected, find all the child job status information and store the step name, status, start time, endtime and elapsedTime
+    #     findDictionary = {"parentServiceId":bson.Int64(parentServiceData[int(jacsServiceIndex)]["serviceId"])}
+    #     childJobStatuses = getServiceData(jacsDB, findDictionary)
+    #     steps = parentServiceData[int(float(jacsServiceIndex))]["args"][3].split(", ")
+    #     for i in range(0,len(steps)):
+    #         if i<=len(childJobStatuses)-1:
+    #             childSummarizedStatuses.append({"step": steps[i], "status": childJobStatuses[i]["state"], "startTime": str(childJobStatuses[i]["creationDate"]), "endTime":str(childJobStatuses[i]["modificationDate"]), "elapsedTime":str(childJobStatuses[i]["modificationDate"]-childJobStatuses[i]["creationDate"])})
+    #             if childJobStatuses[i]["state"]=="RUNNING":
+    #                 childSummarizedStatuses[i]["elapsedTime"] = str(datetime.utcnow()-childJobStatuses[i]["creationDate"])
+    #         else:
+    #             childSummarizedStatuses.append({"step": steps[i], "status": "NOT YET QUEUED", "startTime": "N/A", "endTime":"N/A", "elapsedTime": "N/A"})
 
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
-                           parentServiceData=parentServiceData,
-                           childSummarizedStatuses=childSummarizedStatuses)
+                           parentServiceData=None,
+                           childSummarizedStatuses=None,
+                           logged_in=True)
 
 def getParentServiceData(db, findDictionary, jacsServiceIndex=None):
     #Function to get information about parent jobs from JACS database and marks currently selected job
