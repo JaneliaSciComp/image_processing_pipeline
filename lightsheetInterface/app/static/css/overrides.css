@@ -9,3 +9,7 @@ fieldset {
 .select-job {
   width: 50%;
 }
+
+.right-align {
+  text-align: right;
+}

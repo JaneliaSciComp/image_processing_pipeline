@@ -4,6 +4,7 @@
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/dist/css/bootstrap.min.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/overrides.css') }}">
     <title>Lightsheet Pipeline</title>
+    
   </head>
   <body>
     <div class="container">
@@ -11,5 +12,8 @@
      {% block navbar %}{% endblock %}
      {% block content %}{% endblock %}
     </div>
+    <script src="{{url_for('static', filename='components/jquery/dist/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='components/bootstrap/dist/js/bootstrap.min.js')}}"></script>
+    <script src="{{url_for('static', filename='components/bootstrap/dist/js/bootstrap-select.js')}}"></script>
   </body>
 </html>

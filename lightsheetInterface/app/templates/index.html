@@ -1,5 +1,15 @@
 {% extends "branding.html" %}
 {% block content %}
+  <div class="row">
+    Pipeline steps
+    <label for="basic-url">Your vanity URL</label>
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon3">https://example.com/users/</span>
+      </div>
+      <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+    </div>
+  </div>
   <!-- Drop down menu to select a previously submitted job -->
   <div class="row">
     <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
@@ -23,7 +33,7 @@
       </fieldset>
       <br>
       {% endfor %}
-      <p><input type="submit" name="postJob" value="Submit Job" /></p>
+      <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job" /></p>
     </form>
   </div>
 {% endblock %}
