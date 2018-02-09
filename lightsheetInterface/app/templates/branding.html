@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block branding %}
+  <h1>LightSheet Pipeline</h1>
+{% endblock %}
+{% block navbar %}
+  {% if logged_in %}
+    <div class="row navbar">
+      <div class="col-sm-9 col-md-9 col-lg-9">
+        <a href="http://10.36.13.18:5000/job_status"> Check Job Status </a>
+      </div>
+      <div class="col-sm-3 col-md-3 col-lg-3">
+        <a href="{{ url_for('login') }}"> Logout </a>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

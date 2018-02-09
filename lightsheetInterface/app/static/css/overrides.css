@@ -1,0 +1,11 @@
+fieldset {
+  border: none;
+}
+
+.navbar {
+  margin-top: 1.5em;
+}
+
+.select-job {
+  width: 50%;
+}
