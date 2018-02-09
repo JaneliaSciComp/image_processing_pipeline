@@ -1,8 +1,15 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>Lightsheet Pipepline</title>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/dist/css/bootstrap.min.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/overrides.css') }}">
+    <title>Lightsheet Pipeline</title>
   </head>
   <body>
+    <div class="container">
+     {% block branding %}{% endblock %}
+     {% block navbar %}{% endblock %}
      {% block content %}{% endblock %}
+    </div>
   </body>
 </html>
