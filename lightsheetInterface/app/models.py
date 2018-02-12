@@ -1,13 +1,19 @@
 from flask_mongoengine.wtf import model_form
+from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
+                         connect, DecimalField, StringField, IntField, ListField, Document)
+
 from flask_admin.contrib.mongoengine import ModelView
 from app import db, admin
 
-class Config(db.EmbeddedDocument):
-    name = db.StringField()
-    param2 = db.StringField(max_length=3)
+class Config(Document):
+    name = StringField()
+    number1 = IntField()
+    number2 = IntField()
+    def __repr__(self):
+      return self.name
+    def get_queryset(self):
+      notifications = Config.objects.all()
 
-
-#ConfigForm = model_form(Config)
 
 # Customized admin views
 class ConfigView(ModelView):

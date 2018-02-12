@@ -37,3 +37,7 @@ fieldset {
 .empty-label {
   margin-top: 1.8em;
 }
+
+.navbar-brand {
+  padding-left: 3em;
+}

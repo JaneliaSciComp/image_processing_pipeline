@@ -6,13 +6,13 @@
 {% endblock %}
 {% block navbar %}
   {% if logged_in %}
-    <nav class="navbar navbar-light bg-light justify-content-between">
-      <a class="navbar-brand" href="http://10.36.13.18:5000/job_status"> Check Job Status </a>
+    <nav class="navbar navbar-light bg-light justify-content-end">
+      <a class="navbar-brand navbar-brand-left" href="http://10.36.13.18:5000/job_status"> Check Job Status </a>
       <form class="form-inline">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
       </form>
-      <div class="nav-item dropdown">
+        <div class="nav-item dropdown">
         <a class="navbar-brand nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           Advanced Search
         </a>
@@ -23,6 +23,7 @@
           <a class="dropdown-item" href="#">Something else here</a>
         </div>
       </div>
+      <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
       <a class="navbar-brand" href="{{ url_for('login') }}"> Logout </a>
     </nav>
   {% endif %}
