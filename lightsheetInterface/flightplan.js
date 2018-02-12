@@ -70,8 +70,23 @@ plan.remote('deploy',function (remote) {
 });
 
 plan.remote('deploy', function(remote) {
+  remote.log('Create virtualenv');
+  remote.exec('cd ' + config.projectDir + '/current' + '; virtualenv env --no-site-packages');
+});
+
+plan.remote('deploy', function(remote) {
+  remote.log('Activate virtualenv');
+  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -r requirements.txt');
+});
+
+plan.remote('deploy', function(remote) {
   remote.log('Restart services...');
 });
+
+// plan.remote('deploy', function(remote) {
+//   remote.log('Start application');
+//   remote.exec('cd ' + config.projectDir + '/current' + '; python run.py');
+// });
 
 plan.remote('rollback', function(remote) {
   remote.log('Rolling back release');
