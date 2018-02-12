@@ -10,6 +10,8 @@ from pprint import pprint
 
 settings = Settings()
 
+from models import Config
+
 #Note: The endpoint to access JACS job information is currently being created, so in the meantime and FOR NONPRODUCTION work we are accessing a local mongo server directly
 
 #Prefix for all default pipeline step json file names
@@ -120,12 +122,14 @@ def index(jacsServiceIndex):
             #Store information about the job in the lightsheet database
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jsonDirectory":outputDirectory, "steps": stepParameters}})
     
+    config = Config.objects.all()
     #Return index.html with pipelineSteps and parentServiceData
     return render_template('index.html',
                            title='Home',
                            pipelineSteps=pipelineSteps,
                            parentServiceData=None,
-                           logged_in=True)
+                           logged_in=True,
+                           config = config)
 
 @app.route('/job_status', defaults={'jacsServiceIndex': None}, methods=['GET'])
 @app.route('/job_status/<jacsServiceIndex>', methods=['GET'])
