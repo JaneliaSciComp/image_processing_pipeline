@@ -3,3 +3,5 @@ lightsheetInterface/app/views.pyc
 lightsheetInterface/app/__init__.pyc
 lightsheetInterface/app/models.pyc
 lightsheetInterface/app/settings.pyc
+lightsheetInterface/node_modules
+lightsheetInterface/package-lock.json
