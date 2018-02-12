@@ -19,14 +19,6 @@ outputDirectoryBase = settings.outputDirectoryBase
 #Header for post request
 headers = {'content-type': 'application/json', 'USERNAME': settings.username}
 
-@app.route('/test')
-def test():
-    client = MongoClient('localhost', 27017)
-    db = client.lightsheet
-    status = db.command('serverStatus')
-    print(status)
-    return 'works'
-
 @app.route('/login')
 def login():
     return render_template('login.html', logged_in=False)
