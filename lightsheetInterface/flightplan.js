@@ -83,10 +83,10 @@ plan.remote('deploy', function(remote) {
   remote.log('Restart services...');
 });
 
-// plan.remote('deploy', function(remote) {
-//   remote.log('Start application');
-//   remote.exec('cd ' + config.projectDir + '/current' + '; python run.py');
-// });
+plan.remote('deploy', function(remote) {
+  remote.log('Start application');
+  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; python run.py');
+});
 
 plan.remote('rollback', function(remote) {
   remote.log('Rolling back release');
