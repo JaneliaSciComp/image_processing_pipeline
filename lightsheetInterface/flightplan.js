@@ -85,7 +85,7 @@ plan.remote('deploy', function(remote) {
 
 plan.remote('deploy', function(remote) {
   remote.log('Start application');
-  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; python run.py');
+  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; python deploy.py');
 });
 
 plan.remote('rollback', function(remote) {
