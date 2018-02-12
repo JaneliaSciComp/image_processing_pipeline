@@ -1,13 +1,108 @@
 {% extends "branding.html" %}
 {% block content %}
-  <div class="row">
-    Pipeline steps
-    <label for="basic-url">Your vanity URL</label>
-    <div class="input-group mb-3">
-      <div class="input-group-prepend">
-        <span class="input-group-text" id="basic-addon3">https://example.com/users/</span>
+  <div class="row pipeline-config">
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <label></label>
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Specimen</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
-      <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Timepoints</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+    </div>
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Cameras</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Channels</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+    </div>
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">StartsLeft</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">StartsTop</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+    </div>
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Width</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Height</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+    </div>
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Dimensions</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Channels</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <label>Camera X</label>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Startsfront</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Depths</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+    </div>
+    <div class="col-sm-2 col-md-2 col-lg-2">
+      <label>Camera X</label>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Startsfront</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group-prepend">
+          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Depths</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
     </div>
   </div>
   <!-- Drop down menu to select a previously submitted job -->

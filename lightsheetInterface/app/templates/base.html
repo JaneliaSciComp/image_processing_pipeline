@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/dist/css/bootstrap.min.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/css/bootstrap.min.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/overrides.css') }}">
     <title>Lightsheet Pipeline</title>
     
   </head>
   <body>
-    <div class="container">
+    <div class="lightsheet-container container-fluid">
      {% block branding %}{% endblock %}
      {% block navbar %}{% endblock %}
      {% block content %}{% endblock %}
     </div>
     <script src="{{url_for('static', filename='components/jquery/dist/jquery.min.js')}}"></script>
-    <script src="{{url_for('static', filename='components/bootstrap/dist/js/bootstrap.min.js')}}"></script>
-    <script src="{{url_for('static', filename='components/bootstrap/dist/js/bootstrap-select.js')}}"></script>
+    <script src="{{url_for('static', filename='components/bootstrap/js/bootstrap.min.js')}}"></script>
   </body>
 </html>

@@ -13,3 +13,23 @@ fieldset {
 .right-align {
   text-align: right;
 }
+
+.pipeline-config {
+  margin-top: 2em;
+}
+
+.lightsheet-container {
+  width: 75%;
+}
+
+.lightsheet-row {
+  margin-top: 2em;
+}
+
+.lightsheet-input {
+  max-width: 20em;
+}
+
+.lightsheet-heading {
+  margin-top: 2em;
+}
