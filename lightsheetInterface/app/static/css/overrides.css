@@ -7,7 +7,8 @@ fieldset {
 }
 
 .select-job {
-  width: 50%;
+  width: 60%;
+  margin-left: 0.88em;
 }
 
 .right-align {
@@ -31,6 +32,10 @@ fieldset {
   min-width: 7em;
 }
 
+.lightsheet-number {
+  max-width: 6em;
+}
+
 .lightsheet-heading {
   margin-top: 2em;
 }
@@ -43,8 +48,8 @@ fieldset {
   padding-left: 3em;
 }
 
-.button-right {
-  margin-right: 2em;
+.field-left {
+  margin-left: 2em;
 }
 
 .last-camera-parameter {

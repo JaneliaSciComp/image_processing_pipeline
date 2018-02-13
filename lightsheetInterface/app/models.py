@@ -9,6 +9,7 @@ class Config(Document):
     name = StringField()
     number1 = IntField()
     number2 = IntField()
+    number3 = IntField()
     def __repr__(self):
       return self.name
     def get_queryset(self):

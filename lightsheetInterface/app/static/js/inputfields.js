@@ -2,16 +2,13 @@ var config = config || {};
 
 config.addCamParameter = function(text, doc, last) {
     const group = doc.createElement('div');
-    group.classList.add('lightsheet-input');
-    group.classList.add('input-group');
-    group.classList.add('input-group-sm');
+    group.classList.add('lightsheet-input', 'input-group-sm', 'input-group');
 
     const subgroup = doc.createElement('div');
     subgroup.classList.add('input-group-prepend');
 
     const span = doc.createElement('span');
-    span.classList.add('lightsheet-input');
-    span.classList.add('input-group-text');
+    span.classList.add('lightsheet-input', 'input-group-text');
 
     var text = doc.createTextNode(text);
     span.appendChild(text);
@@ -34,11 +31,13 @@ config.addCamParameter = function(text, doc, last) {
     return group;
 }
 
+config.nrCameraField = 'nr-cameras';
+
 config.addCameraFields = function(){
   const doc = window.document;
   const camFields = doc.getElementById("camera-fields");
   camFields.innerHTML = '';
-  const nrCameras = doc.getElementById('nr-cameras').value;
+  const nrCameras = doc.getElementById(config.nrCameraField).value;
   if (!nrCameras || nrCameras == '') {
     alert('Please enter the number of cameras.');
     return;
@@ -59,3 +58,19 @@ config.addCameraFields = function(){
   }
   camFields.appendChild(allParams);
 }
+
+config.addCamParameterButton = function(){
+  doc = window.document;
+  const cam = doc.getElementById('Cameras');
+  if (cam) {
+    const input = doc.createElement('input');
+    input.classList.add('btn', 'btn-info', 'field-left');
+    input.setAttribute('value','Configure');
+    input.setAttribute('type','reset');
+    input.onclick = config.addCameraFields;
+    cam.appendChild(input);
+    const nrCamsField = cam.getElementsByTagName('input')[0];
+    nrCamsField.setAttribute('id',config.nrCameraField);
+    // <input class="btn btn-info" type="reset" onclick="config.addCameraFields()" value="Configure">
+  }
+}();

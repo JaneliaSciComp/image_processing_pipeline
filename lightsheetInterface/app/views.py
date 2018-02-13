@@ -7,6 +7,7 @@ from collections import OrderedDict
 from datetime import datetime
 from settings import Settings
 from pprint import pprint
+from mongoengine.queryset.visitor import Q
 
 settings = Settings()
 
@@ -122,7 +123,7 @@ def index(jacsServiceIndex):
             #Store information about the job in the lightsheet database
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jsonDirectory":outputDirectory, "steps": stepParameters}})
     
-    config = Config.objects.all()
+    config = buildConfigObject();
     #Return index.html with pipelineSteps and parentServiceData
     return render_template('index.html',
                            title='Home',
@@ -160,6 +161,13 @@ def job_status(jacsServiceIndex):
                            parentServiceData=None,
                            childSummarizedStatuses=None,
                            logged_in=True)
+
+def buildConfigObject():
+    oneParam = Config.objects(Q(number2=None) & Q(number3=None))
+    twoParam = Config.objects(Q(number2__ne=None) & Q(number3=None))
+    threeParam = Config.objects( Q(number1__ne=None) & Q(number2__ne=None) & Q(number3__ne=None))
+    config = {'onenum': oneParam, 'twonum': twoParam, 'threenum': threeParam}
+    return config
 
 def getParentServiceData(db, findDictionary, jacsServiceIndex=None):
     #Function to get information about parent jobs from JACS database and marks currently selected job
