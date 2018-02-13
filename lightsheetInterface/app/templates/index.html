@@ -12,28 +12,29 @@
   </div>
   <div class="row pipeline-config">
     <div class="col-sm-2 col-md-2 col-lg-2">
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <label></label>
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Specimen</span>
+          <span class="input-group-text lightsheet-input">Specimen</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Timepoints</span>
+          <span class="input-group-text lightsheet-input">Timepoints</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Cameras</span>
+          <span class="input-group-text lightsheet-input">Cameras</span>
         </div>
-        <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+        <input id='nr-cameras' type="number" class="form-control button-right" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+        <input class="btn btn-info" type="reset" onclick="config.addCameraFields()" value="Configure">
       </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Channels</span>
+          <span class="input-group-text lightsheet-input">Channels</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
@@ -41,85 +42,46 @@
     <div class="col-sm-2 col-md-2 col-lg-2">
       {% if config is not none %}
         {% for item in config %} 
-        <div class="input-group input-group-sm mb-3 lightsheet-input">
+        <div class="input-group input-group-sm mb-3">
           <div class="input-group-prepend">
-            <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">{{ item.name }}</span>
+            <span class="input-group-text lightsheet-input">{{ item.name }}</span>
           </div>
-          <input type="text" class="form-control" value="{{ item.number1 }}">
-          <input type="text" class="form-control" value="{{ item.number2 }}">
+          <input type="number" class="form-control" value="{{ item.number1 }}">
+          <input type="number" class="form-control" value="{{ item.number2 }}">
         </div>
         {% endfor %}
       {% endif %}
     </div>
     <div class="col-sm-2 col-md-2 col-lg-2">
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">SegmentFlag</span>
+          <span class="input-group-text lightsheet-input">SegmentFlag</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">References</span>
+          <span class="input-group-text lightsheet-input">References</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Dependents</span>
+          <span class="input-group-text lightsheet-input">Dependents</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
+      <div class="input-group input-group-sm mb-3">
         <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Thresholds</span>
+          <span class="input-group-text lightsheet-input">Thresholds</span>
         </div>
         <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
       </div>
     </div>
     <div class="col-sm-2 col-md-2 col-lg-2">
-      <label>Camera X</label>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Startsfront</span>
-        </div>
-        <input type="text" class="form-control">
-        <input type="text" class="form-control">
-      </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Depths</span>
-        </div>
-        <input type="text" class="form-control">
-        <input type="text" class="form-control">
-      </div>
-      <label>Camera Y</label>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Startsfront</span>
-        </div>
-        <input type="text" class="form-control">
-        <input type="text" class="form-control">
-      </div>
-      <div class="input-group input-group-sm mb-3 lightsheet-input">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input" id="inputGroup-sizing-sm">Depths</span>
-        </div>
-        <input type="text" class="form-control">
-        <input type="text" class="form-control">
+      <div id="camera-fields">
       </div>
     </div>
-  </div>
-  <!-- Drop down menu to select a previously submitted job -->
-  <div class="row">
-    <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
-      <option value="http://10.36.13.18:5000/" selected>---Select Previous Run---</option>
-      {% if parentServiceData is not none %}
-        {% for service in parentServiceData %}
-          <option value={{"http://10.36.13.18:5000/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
-        {% endfor %}
-      {% endif %}
-    </select>
   </div>
   <br>
   <br>

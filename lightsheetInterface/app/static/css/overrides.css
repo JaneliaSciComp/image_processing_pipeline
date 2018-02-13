@@ -42,3 +42,15 @@ fieldset {
 .navbar-brand {
   padding-left: 3em;
 }
+
+.button-right {
+  margin-right: 2em;
+}
+
+.last-camera-parameter {
+  margin-bottom: 1.2em;
+}
+
+.middle-camera-parameter {
+  margin-bottom: 0.4em;
+}
