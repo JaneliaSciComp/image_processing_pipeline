@@ -163,9 +163,9 @@ def job_status(jacsServiceIndex):
                            logged_in=True)
 
 def buildConfigObject():
-    oneParam = Config.objects(Q(number2=None) & Q(number3=None))
-    twoParam = Config.objects(Q(number2__ne=None) & Q(number3=None))
-    threeParam = Config.objects( Q(number1__ne=None) & Q(number2__ne=None) & Q(number3__ne=None))
+    oneParam = Config.objects(Q(number2=None) & Q(number3=None) & Q(type=None))
+    twoParam = Config.objects(Q(number2__ne=None) & Q(number3=None) & Q(type=None))
+    threeParam = Config.objects( Q(number1__ne=None) & Q(number2__ne=None) & Q(number3__ne=None) & Q(type=None))
     config = {'onenum': oneParam, 'twonum': twoParam, 'threenum': threeParam}
     return config
 

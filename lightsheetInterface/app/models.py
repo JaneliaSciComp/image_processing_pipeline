@@ -5,11 +5,15 @@ from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
 from flask_admin.contrib.mongoengine import ModelView
 from app import db, admin
 
+types = (('', None), ('S','Step'), ('D','Directory'))
+
 class Config(Document):
-    name = StringField()
+    name = StringField(max_length=100)
     number1 = IntField()
     number2 = IntField()
     number3 = IntField()
+    type = StringField(max_length=20, choices=types)
+
     def __repr__(self):
       return self.name
     def get_queryset(self):
