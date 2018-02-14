@@ -1,6 +1,9 @@
 {% extends "branding.html" %}
 {% block content %}
   <div class="row lightsheet-row">
+    <h3>Configure Job</h3>
+  </div>
+  <div class="row lightsheet-row">
     <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
       <option value="http://10.36.13.18:5000/" selected>---Select Previous Run---</option>
       {% if parentServiceData is not none %}

@@ -162,6 +162,11 @@ def job_status(jacsServiceIndex):
                            childSummarizedStatuses=childSummarizedStatuses,
                            logged_in=True)
 
+@app.route('/search')
+def search():
+    return render_template('search.html',
+                           logged_in=True)
+
 def buildConfigObject():
     oneParam = Config.objects(Q(number2=None) & Q(number3=None) & Q(type=None))
     twoParam = Config.objects(Q(number2__ne=None) & Q(number3=None) & Q(type=None))
