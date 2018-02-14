@@ -44,6 +44,10 @@ fieldset {
   max-width: 50%;
 }
 
+.lightsheet-tab {
+  margin-top: 1em;
+}
+
 .empty-label {
   margin-top: 1.8em;
 }

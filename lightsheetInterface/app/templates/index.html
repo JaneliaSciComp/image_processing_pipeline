@@ -17,12 +17,13 @@
           <div class="card">
             <div class="card-header" id="headingOne">
               <h5 class="mb-0">
-                <button class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="true" aria-controls="collapse{{loop.index }}">
+                <button class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{loop.index }}">
+                  <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" {{ pipelineStep.checkboxState }}>
                   {{ pipelineStep.stepDescription }}
                 </button>
               </h5>
             </div>
-            <div id="collapse{{ loop.index }}" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+            <div id="collapse{{ loop.index }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
               <div class="card-body">
                 <ul class="nav nav-tabs" role="tablist">
                   <li class="nav-item tab-frequent">
@@ -37,7 +38,7 @@
                 </ul>
                 <!-- Tab panes -->
                 <div class="tab-content">
-                  <div role="tabpanel" class="tab-pane active" id="frequent{{ loop.index }}">
+                  <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent{{ loop.index }}">
                     {% if loop.first %}
                         {% if config.onenum is not none %}
                           {% for item in config.onenum %}
@@ -98,20 +99,25 @@
                         </div>
                         <div id="camera-fields">
                         </div>
+                    {% else %}
+                      <p>
+                        Pellentesque in ipsum id orci porta dapibus. Donec sollicitudin molestie malesuada. Praesent sapien massa, convallis a pellentesque nec, egestas non nisi. Nulla porttitor accumsan tincidunt. Nulla porttitor accumsan tincidunt. Donec rutrum congue leo eget malesuada. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus. Vestibulum ac diam sit amet quam vehicula elementum sed sit amet dui. Curabitur arcu
+                      </p>
                     {% endif %}
                   </div>
-                  <div role="tabpanel" class="tab-pane" id="sometimes{{ loop.index }}">
+                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes{{ loop.index }}">
+                    <!-- For now, show json in sometimes panel -->
                     <fieldset>
-                      <legend>
-                        <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}> {{ pipelineStep.stepDescription }}
-                      </legend>
                       <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>
                         {{ pipelineStep.inputJson }}
                       </textarea>
                       <br>
                     </fieldset>
                   </div>
-                  <div role="tabpanel" class="tab-pane" id="rare{{ loop.index }}">rare params</div>
+                  <!-- rare panel -->
+                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare{{ loop.index }}">
+
+                  </div>
                 </div>
               </div>
             </div>
