@@ -26,6 +26,11 @@ headers = {'content-type': 'application/json', 'USERNAME': settings.username}
 def login():
     return render_template('login.html', logged_in=False)
 
+@app.route('/test')
+def test():
+    config = buildConfigObject();
+    return render_template('test.html', logged_in=True, config=config)
+
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 def index(jacsServiceIndex):
@@ -166,7 +171,8 @@ def buildConfigObject():
     oneParam = Config.objects(Q(number2=None) & Q(number3=None) & Q(type=None))
     twoParam = Config.objects(Q(number2__ne=None) & Q(number3=None) & Q(type=None))
     threeParam = Config.objects( Q(number1__ne=None) & Q(number2__ne=None) & Q(number3__ne=None) & Q(type=None))
-    config = {'onenum': oneParam, 'twonum': twoParam, 'threenum': threeParam}
+    steps = Config.objects(type='S')
+    config = {'onenum': oneParam, 'twonum': twoParam, 'threenum': threeParam, 'steps': steps}
     return config
 
 def getParentServiceData(db, findDictionary, jacsServiceIndex=None):

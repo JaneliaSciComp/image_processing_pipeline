@@ -8,7 +8,6 @@ fieldset {
 
 .select-job {
   width: 60%;
-  margin-left: 0.88em;
 }
 
 .right-align {
@@ -25,6 +24,7 @@ fieldset {
 
 .lightsheet-row {
   margin-top: 2em;
+  margin-left: 0.2em;
 }
 
 .lightsheet-input {
@@ -58,4 +58,8 @@ fieldset {
 
 .middle-camera-parameter {
   margin-bottom: 0.4em;
+}
+
+.step-name {
+  color: black;
 }

@@ -10,90 +10,117 @@
       {% endif %}
     </select>
   </div>
-  <div class="row pipeline-config">
-    <div class="col-sm-2 col-md-2 col-lg-2">
-      {% if config.onenum is not none %}
-        {% for item in config.onenum %}
-        <div class="input-group input-group-sm mb-3" id="{{ item.name }}">
-          <div class="input-group-prepend">
-            <span class="input-group-text lightsheet-input">{{ item.name }}</span>
-          </div>
-          <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
-        </div>
-        {% endfor %}
-      {% endif %}
-    </div>
-    <div class="col-sm-2 col-md-2 col-lg-2">
-      {% if config.twonum is not none %}
-        {% for item in config.twonum %}
-        <div class="input-group input-group-sm mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text lightsheet-input">{{ item.name }}</span>
-          </div>
-          <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
-          <input type="number" class="form-control lightsheet-number" value="{{ item.number2 }}">
-        </div>
-        {% endfor %}
-      {% endif %}
-    </div>
-    <div class="col-sm-2 col-md-2 col-lg-2">
-      {% if config.threenum is not none %}
-        {% for item in config.threenum %}
-        <div class="input-group input-group-sm mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text lightsheet-input">{{ item.name }}</span>
-          </div>
-          <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
-          <input type="number" class="form-control lightsheet-number" value="{{ item.number2 }}">
-          <input type="number" class="form-control lightsheet-number" value="{{ item.number3 }}">
-        </div>
-        {% endfor %}
-      {% endif %}
-      <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input">SegmentFlag</span>
-        </div>
-        <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-      </div>
-      <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input">References</span>
-        </div>
-        <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-      </div>
-      <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input">Dependents</span>
-        </div>
-        <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-      </div>
-      <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text lightsheet-input">Thresholds</span>
-        </div>
-        <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-      </div>
-    </div>
-    <div class="col-sm-2 col-md-2 col-lg-2">
-      <div id="camera-fields">
-      </div>
-    </div>
-  </div>
-  <br>
-  <br>
-  <div class="row">
-    <!-- Display step names and parameterization, with checked state determining if the text box is editable -->
-    <form action="" method="post">
+  <div class="row lightsheet-row">
+    <div id="steps">
       {% if pipelineSteps is not none %}
         {% for pipelineStep in pipelineSteps %}
-        <fieldset>
-        <legend><input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}> {{ pipelineStep.stepDescription }} </legend>
-        <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>{{ pipelineStep.inputJson }}</textarea><br>
-        </fieldset>
-        <br>
+          <div class="card">
+            <div class="card-header" id="headingOne">
+              <h5 class="mb-0">
+                <button class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="true" aria-controls="collapse{{loop.index }}">
+                  {{ pipelineStep.stepDescription }}
+                </button>
+              </h5>
+            </div>
+            <div id="collapse{{ loop.index }}" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+              <div class="card-body">
+                <ul class="nav nav-tabs" role="tablist">
+                  <li class="nav-item tab-frequent">
+                    <a class="nav-link active" href="#frequent{{ loop.index }}" role="tab" data-toggle="tab">Frequent</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#sometimes{{ loop.index }}" role="tab" data-toggle="tab">Sometimes</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#rare{{ loop.index }}" role="tab" data-toggle="tab">Rare</a>
+                  </li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                  <div role="tabpanel" class="tab-pane active" id="frequent{{ loop.index }}">
+                    {% if loop.first %}
+                        {% if config.onenum is not none %}
+                          {% for item in config.onenum %}
+                            <div class="input-group input-group-sm mb-3" id="{{ item.name }}">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text lightsheet-input">{{ item.name }}</span>
+                              </div>
+                              <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
+                            </div>
+                          {% endfor %}
+                        {% endif %}
+                        {% if config.twonum is not none %}
+                          {% for item in config.twonum %}
+                            <div class="input-group input-group-sm mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text lightsheet-input">{{ item.name }}</span>
+                              </div>
+                              <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
+                              <input type="number" class="form-control lightsheet-number" value="{{ item.number2 }}">
+                            </div>
+                          {% endfor %}
+                        {% endif %}
+                        {% if config.threenum is not none %}
+                          {% for item in config.threenum %}
+                            <div class="input-group input-group-sm mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text lightsheet-input">{{ item.name }}</span>
+                              </div>
+                              <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
+                              <input type="number" class="form-control lightsheet-number" value="{{ item.number2 }}">
+                              <input type="number" class="form-control lightsheet-number" value="{{ item.number3 }}">
+                            </div>
+                          {% endfor %}
+                        {% endif %}
+                        <div class="input-group input-group-sm mb-3">
+                          <div class="input-group-prepend">
+                            <span class="input-group-text lightsheet-input">SegmentFlag</span>
+                          </div>
+                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                          <div class="input-group-prepend">
+                            <span class="input-group-text lightsheet-input">References</span>
+                          </div>
+                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                          <div class="input-group-prepend">
+                            <span class="input-group-text lightsheet-input">Dependents</span>
+                          </div>
+                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                          <div class="input-group-prepend">
+                            <span class="input-group-text lightsheet-input">Thresholds</span>
+                          </div>
+                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+                        </div>
+                        <div id="camera-fields">
+                        </div>
+                    {% endif %}
+                  </div>
+                  <div role="tabpanel" class="tab-pane" id="sometimes{{ loop.index }}">
+                    <fieldset>
+                      <legend>
+                        <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}> {{ pipelineStep.stepDescription }}
+                      </legend>
+                      <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>
+                        {{ pipelineStep.inputJson }}
+                      </textarea>
+                      <br>
+                    </fieldset>
+                  </div>
+                  <div role="tabpanel" class="tab-pane" id="rare{{ loop.index }}">rare params</div>
+                </div>
+              </div>
+            </div>
+          </div>
         {% endfor %}
       {% endif %}
-      <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job" /></p>
-    </form>
+    </div>
+  </div>
+  <div class="row lightsheet-row">
+     <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job" /></p>
   </div>
 {% endblock %}
