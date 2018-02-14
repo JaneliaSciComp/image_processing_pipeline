@@ -40,6 +40,10 @@ fieldset {
   margin-top: 2em;
 }
 
+.lightsheet-dropdown {
+  max-width: 50%;
+}
+
 .empty-label {
   margin-top: 1.8em;
 }
