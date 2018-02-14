@@ -3,5 +3,6 @@ lightsheetInterface/app/views.pyc
 lightsheetInterface/app/__init__.pyc
 lightsheetInterface/app/models.pyc
 lightsheetInterface/app/settings.pyc
+lightsheetInterface/app/settings.py
 lightsheetInterface/node_modules
 lightsheetInterface/package-lock.json
