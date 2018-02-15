@@ -34,29 +34,36 @@ config.addCamParameter = function(text, doc, last) {
 config.nrCameraField = 'nr-cameras';
 
 config.addCameraFields = function(){
-  const doc = window.document;
-  const camFields = doc.getElementById("camera-fields");
-  camFields.innerHTML = '';
+  const maxCameras = 4
   const nrCameras = doc.getElementById(config.nrCameraField).value;
-  if (!nrCameras || nrCameras == '') {
-    alert('Please enter the number of cameras.');
-    return;
+  if (nrCameras > maxCameras) {
+    alert(`At most ${maxCameras} cameras are supported.`);
   }
-  const allParams = doc.createElement('div');
-  for (let i = 0; i < nrCameras; i += 1) {
-    const container = doc.createElement('div');
-    const label = doc.createElement('label');
-    var text = doc.createTextNode(`Camera ${i}`);
-    label.appendChild(text);
-    params1 = config.addCamParameter('Startsfront', doc, false);
-    params2 = config.addCamParameter('Depth', doc, true);
+  else {
+    const doc = window.document;
+    const camFields = doc.getElementById("camera-fields");
+    camFields.innerHTML = '';
 
-    container.appendChild(label);
-    container.appendChild(params1);
-    container.appendChild(params2);
-    allParams.appendChild(container);
+    if (!nrCameras || nrCameras == '') {
+      alert('Please enter the number of cameras.');
+      return;
+    }
+    const allParams = doc.createElement('div');
+    for (let i = 0; i < nrCameras; i += 1) {
+      const container = doc.createElement('div');
+      const label = doc.createElement('label');
+      var text = doc.createTextNode(`Camera ${i}`);
+      label.appendChild(text);
+      params1 = config.addCamParameter('Startsfront', doc, false);
+      params2 = config.addCamParameter('Depth', doc, true);
+
+      container.appendChild(label);
+      container.appendChild(params1);
+      container.appendChild(params2);
+      allParams.appendChild(container);
+    }
+    camFields.appendChild(allParams);
   }
-  camFields.appendChild(allParams);
 }
 
 config.addCamParameterButton = function(){
@@ -64,13 +71,12 @@ config.addCamParameterButton = function(){
   const cam = doc.getElementById('Cameras');
   if (cam) {
     const input = doc.createElement('input');
-    input.classList.add('btn', 'btn-info', 'field-left');
+    input.classList.add('btn', 'btn-outline-info', 'field-left');
     input.setAttribute('value','Configure');
     input.setAttribute('type','reset');
     input.onclick = config.addCameraFields;
     cam.appendChild(input);
     const nrCamsField = cam.getElementsByTagName('input')[0];
     nrCamsField.setAttribute('id',config.nrCameraField);
-    // <input class="btn btn-info" type="reset" onclick="config.addCameraFields()" value="Configure">
   }
 }();

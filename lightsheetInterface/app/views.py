@@ -7,11 +7,10 @@ from collections import OrderedDict
 from datetime import datetime
 from settings import Settings
 from pprint import pprint
-from mongoengine.queryset.visitor import Q
+from models import Config
+from app.utils import buildConfigObject
 
 settings = Settings()
-
-from models import Config
 
 #Note: The endpoint to access JACS job information is currently being created, so in the meantime and FOR NONPRODUCTION work we are accessing a local mongo server directly
 
@@ -30,6 +29,8 @@ def login():
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 def index(jacsServiceIndex):
+
+    config = buildConfigObject()
     #index is the function to execute when url '/' or '/<jacsServiceIndex>' is reached and takes in the currently selected job index, if any
 
     #Access jacs database to get parent job service information
@@ -44,7 +45,9 @@ def index(jacsServiceIndex):
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []
     currentStepIndex = 0;
-    for currentStep in pipelineOrder:
+
+    for index, step in enumerate(config['steps']): # TODO make sure steps are ordered based on ordering
+        currentStep = step.name
         #Check if currentStep was used in previous service
         if (jacsServiceIndex is not None) and (jacsServiceIndex!="favicon.ico") and (currentStep in parentServiceData[int(float(jacsServiceIndex))]["args"][3]):
             fileName = parentServiceData[int(jacsServiceIndex)]["args"][1] + str(currentStepIndex) + '_' + currentStep + '.json'
@@ -61,22 +64,15 @@ def index(jacsServiceIndex):
         jsonString = json.dumps(jsonData, indent=4, separators=(',', ': '))
         jsonString = re.sub(r'\[.*?\]', lambda m: m.group().replace("\n", ""), jsonString, flags=re.DOTALL)
         jsonString = re.sub(r'\[.*?\]', lambda m: m.group().replace(" ", ""), jsonString, flags=re.DOTALL)
+
         #Pipeline steps is passed to index.html for formatting the html based
         pipelineSteps.append({
             'stepName': currentStep,
-            'stepDescription':"",
+            'stepDescription':step.description,
             'inputJson': jsonString,
             'state': editState,
             'checkboxState': checkboxState
         })
-
-    pipelineSteps[0]["stepDescription"] = "Image Correction and Compression"
-    pipelineSteps[1]["stepDescription"] = "Multiview Image Fusion (MF)"
-    pipelineSteps[2]["stepDescription"] = "Preprocessing MF for Temporal Smoothing"
-    pipelineSteps[3]["stepDescription"] = "Temporal Smoothing of MF"
-    pipelineSteps[4]["stepDescription"] = "Preprocessing for 3D Drift Correction and Intensity Normalization"
-    pipelineSteps[5]["stepDescription"] = "Drift and Intensity Correction"
-    pipelineSteps[6]["stepDescription"] = "Filter Image Stacks and/or Max. Intensity Projections of Filtered Stacks"
 
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
@@ -123,7 +119,6 @@ def index(jacsServiceIndex):
             #Store information about the job in the lightsheet database
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jsonDirectory":outputDirectory, "steps": stepParameters}})
     
-    config = buildConfigObject();
     #Return index.html with pipelineSteps and parentServiceData
     return render_template('index.html',
                            title='Home',
@@ -138,7 +133,7 @@ def job_status(jacsServiceIndex):
     #job_status is the function to execute when url '/job_status' or '/job_status/<jacsServiceIndex>' is reached and takes in the currently selected job index, if any
 
     #For now, get information from jacs database directly to monitor parent and child job statuses
-    connection = MongoClient()
+    connection = MongoClient(settings.mongo)
     jacsDB = connection.jacs
     findDictionary = {"name": "lightsheetProcessing"}
     parentServiceData = getParentServiceData(jacsDB, findDictionary,  jacsServiceIndex)
@@ -161,19 +156,10 @@ def job_status(jacsServiceIndex):
                            parentServiceData=parentServiceData,
                            childSummarizedStatuses=childSummarizedStatuses,
                            logged_in=True)
-
 @app.route('/search')
 def search():
     return render_template('search.html',
                            logged_in=True)
-
-def buildConfigObject():
-    oneParam = Config.objects(Q(number2=None) & Q(number3=None) & Q(type=None))
-    twoParam = Config.objects(Q(number2__ne=None) & Q(number3=None) & Q(type=None))
-    threeParam = Config.objects( Q(number1__ne=None) & Q(number2__ne=None) & Q(number3__ne=None) & Q(type=None))
-    steps = Config.objects(type='S')
-    config = {'onenum': oneParam, 'twonum': twoParam, 'threenum': threeParam, 'steps': steps}
-    return config
 
 def getParentServiceData(db, findDictionary, jacsServiceIndex=None):
     #Function to get information about parent jobs from JACS database and marks currently selected job

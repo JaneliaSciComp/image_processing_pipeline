@@ -42,71 +42,37 @@
                 <!-- Tab panes -->
                 <div class="tab-content">
                   <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent{{ loop.index }}">
-                    {% if loop.first %}
-                        {% if config.onenum is not none %}
-                          {% for item in config.onenum %}
-                            <div class="input-group input-group-sm mb-3" id="{{ item.name }}">
-                              <div class="input-group-prepend">
-                                <span class="input-group-text lightsheet-input">{{ item.name }}</span>
-                              </div>
-                              <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
-                            </div>
+                    {% for step in config.steps %}
+                      {% if step.name == pipelineStep.stepName %}
+                          {% for param in step.parameter %}
+                            {% for p in config.parameter %}
+                              {% if param.name == p.name %}
+                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                  <div class="input-group-prepend">
+                                  <span class="input-group-text lightsheet-input">
+                                    {{ param.name | capitalize }}
+                                  </span>
+                                  {% if p.type == 'Text' %}
+                                    <input type="text" class="form-control lightsheet-number" value="{{ param.text1 }}">
+                                  {% elif p.type == 'Number' %}
+                                    {% if p.count == '1' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                    {% elif p.count == '2' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                    {% elif p.count == '3' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
+                                    {% endif %}
+                                  {% endif %}
+                                  </div>
+                                </div>
+                              {% endif %}
+                            {% endfor %}
                           {% endfor %}
-                        {% endif %}
-                        {% if config.twonum is not none %}
-                          {% for item in config.twonum %}
-                            <div class="input-group input-group-sm mb-3">
-                              <div class="input-group-prepend">
-                                <span class="input-group-text lightsheet-input">{{ item.name }}</span>
-                              </div>
-                              <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
-                              <input type="number" class="form-control lightsheet-number" value="{{ item.number2 }}">
-                            </div>
-                          {% endfor %}
-                        {% endif %}
-                        {% if config.threenum is not none %}
-                          {% for item in config.threenum %}
-                            <div class="input-group input-group-sm mb-3">
-                              <div class="input-group-prepend">
-                                <span class="input-group-text lightsheet-input">{{ item.name }}</span>
-                              </div>
-                              <input type="number" class="form-control lightsheet-number" value="{{ item.number1 }}">
-                              <input type="number" class="form-control lightsheet-number" value="{{ item.number2 }}">
-                              <input type="number" class="form-control lightsheet-number" value="{{ item.number3 }}">
-                            </div>
-                          {% endfor %}
-                        {% endif %}
-                        <div class="input-group input-group-sm mb-3">
-                          <div class="input-group-prepend">
-                            <span class="input-group-text lightsheet-input">SegmentFlag</span>
-                          </div>
-                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-                        </div>
-                        <div class="input-group input-group-sm mb-3">
-                          <div class="input-group-prepend">
-                            <span class="input-group-text lightsheet-input">References</span>
-                          </div>
-                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-                        </div>
-                        <div class="input-group input-group-sm mb-3">
-                          <div class="input-group-prepend">
-                            <span class="input-group-text lightsheet-input">Dependents</span>
-                          </div>
-                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-                        </div>
-                        <div class="input-group input-group-sm mb-3">
-                          <div class="input-group-prepend">
-                            <span class="input-group-text lightsheet-input">Thresholds</span>
-                          </div>
-                          <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-                        </div>
-                        <div id="camera-fields">
-                        </div>
-                    {% else %}
-                      <p>
-                        Pellentesque in ipsum id orci porta dapibus. Donec sollicitudin molestie malesuada. Praesent sapien massa, convallis a pellentesque nec, egestas non nisi. Nulla porttitor accumsan tincidunt. Nulla porttitor accumsan tincidunt. Donec rutrum congue leo eget malesuada. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus. Vestibulum ac diam sit amet quam vehicula elementum sed sit amet dui. Curabitur arcu
-                      </p>
-                    {% endif %}
+                      {% endif %}
+                    {% endfor %}
                   </div>
                   <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes{{ loop.index }}">
                     <!-- For now, show json in sometimes panel -->

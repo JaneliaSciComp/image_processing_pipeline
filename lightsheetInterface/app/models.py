@@ -18,15 +18,33 @@ class Config(Document):
     def __repr__(self):
       return self.name
 
+class Parameter(Document):
+    name = StringField(max_length=100)
+    number1 = IntField()
+    number2 = IntField()
+    number3 = IntField()
+    text1 = StringField(max_length=100)
+    def __unicode__(self):
+      return self.name
+
+class Step(Document):
+    name = StringField(max_length=50)
+    description = StringField(max_length=200)
+    order = IntField()
+    parameter = ListField(ReferenceField(Parameter))
+    def __unicode__(self):
+      return self.name
+
 # Customized admin views
 class ConfigView(ModelView):
     column_filters = ['name']
 
-    # form_ajax_refs = {
-    #     'tags': {
-    #         'fields': ('name',)
-    #     }
-    # }
+class StepView(ModelView):
+    column_filters = ['name']
 
+class ParameterView(ModelView):
+    column_filters = ['name']
 
 admin.add_view(ConfigView(Config))
+admin.add_view(StepView(Step))
+admin.add_view(ParameterView(Parameter))
