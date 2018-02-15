@@ -48,7 +48,7 @@
                     {% for step in config.steps %}
                       {% if step.name == pipelineStep.stepName %}
                           {% for param in step.parameter %}
-                            {% for p in config.parameter %}
+                            {% for p in config.parameter.frequent %}
                               {% if param.name == p.name %}
                                 <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
                                   <div class="input-group-prepend">
@@ -79,9 +79,71 @@
                   </div>
                   <!-- sometimes panel -->
                   <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes{{ loop.index }}">
+                    {% for step in config.steps %}
+                      {% if step.name == pipelineStep.stepName %}
+                          {% for param in step.parameter %}
+                            {% for p in config.parameter.sometimes %}
+                              {% if param.name == p.name %}
+                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                  <div class="input-group-prepend">
+                                  <span class="input-group-text lightsheet-input">
+                                    {{ param.name | capitalize }}
+                                  </span>
+                                  {% if p.type == 'Text' %}
+                                    <input type="text" class="form-control lightsheet-number" value="{{ param.text1 }}">
+                                  {% elif p.type == 'Number' %}
+                                    {% if p.count == '1' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                    {% elif p.count == '2' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                    {% elif p.count == '3' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
+                                    {% endif %}
+                                  {% endif %}
+                                  </div>
+                                </div>
+                              {% endif %}
+                            {% endfor %}
+                          {% endfor %}
+                      {% endif %}
+                    {% endfor %}
                   </div>
                   <!-- rare panel -->
                   <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare{{ loop.index }}">
+                    {% for step in config.steps %}
+                      {% if step.name == pipelineStep.stepName %}
+                          {% for param in step.parameter %}
+                            {% for p in config.parameter.rare %}
+                              {% if param.name == p.name %}
+                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                  <div class="input-group-prepend">
+                                  <span class="input-group-text lightsheet-input">
+                                    {{ param.name | capitalize }}
+                                  </span>
+                                  {% if p.type == 'Text' %}
+                                    <input type="text" class="form-control lightsheet-number" value="{{ param.text1 }}">
+                                  {% elif p.type == 'Number' %}
+                                    {% if p.count == '1' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                    {% elif p.count == '2' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                    {% elif p.count == '3' %}
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
+                                    {% endif %}
+                                  {% endif %}
+                                  </div>
+                                </div>
+                              {% endif %}
+                            {% endfor %}
+                          {% endfor %}
+                      {% endif %}
+                    {% endfor %}
                   </div>
                   <!-- json panel -->
                   <div role="tabpanel" class="tab-pane lightsheet-tab" id="json{{ loop.index }}">
