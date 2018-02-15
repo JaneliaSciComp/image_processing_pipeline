@@ -38,6 +38,9 @@
                   <li class="nav-item">
                     <a class="nav-link" href="#rare{{ loop.index }}" role="tab" data-toggle="tab">Rare</a>
                   </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#json{{ loop.index }}" role="tab" data-toggle="tab">JSON</a>
+                  </li>
                 </ul>
                 <!-- Tab panes -->
                 <div class="tab-content">
@@ -74,7 +77,14 @@
                       {% endif %}
                     {% endfor %}
                   </div>
+                  <!-- sometimes panel -->
                   <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes{{ loop.index }}">
+                  </div>
+                  <!-- rare panel -->
+                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare{{ loop.index }}">
+                  </div>
+                  <!-- json panel -->
+                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="json{{ loop.index }}">
                     <!-- For now, show json in sometimes panel -->
                     <fieldset>
                       <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>
@@ -82,10 +92,6 @@
                       </textarea>
                       <br>
                     </fieldset>
-                  </div>
-                  <!-- rare panel -->
-                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare{{ loop.index }}">
-
                   </div>
                 </div>
               </div>

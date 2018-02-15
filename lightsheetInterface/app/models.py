@@ -6,6 +6,7 @@ from flask_admin.contrib.mongoengine import ModelView
 from app import db, admin
 
 types = (('', None), ('S','Step'), ('D','Directory'))
+frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
 
 class Config(Document):
     name = StringField(max_length=100)
@@ -24,6 +25,7 @@ class Parameter(Document):
     number2 = IntField()
     number3 = IntField()
     text1 = StringField(max_length=100)
+    frequency = StringField(max_length=20, choices=frequency)
     def __unicode__(self):
       return self.name
 
