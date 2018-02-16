@@ -1,6 +1,6 @@
 from flask_mongoengine.wtf import model_form
 from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
-                         connect, DecimalField, StringField, IntField, ListField, Document, ReferenceField, NULLIFY)
+                         connect, DecimalField, StringField, IntField, FloatField, ListField, Document, ReferenceField, NULLIFY)
 
 from flask_admin.contrib.mongoengine import ModelView
 from app import db, admin
@@ -21,9 +21,9 @@ class Config(Document):
 
 class Parameter(Document):
     name = StringField(max_length=100)
-    number1 = IntField()
-    number2 = IntField()
-    number3 = IntField()
+    number1 = FloatField()
+    number2 = FloatField()
+    number3 = FloatField()
     text1 = StringField(max_length=100)
     frequency = StringField(max_length=20, choices=frequency)
     def __unicode__(self):
