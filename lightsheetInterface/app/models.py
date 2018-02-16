@@ -7,15 +7,10 @@ from app import db, admin
 
 types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
+formats = (('', None), ('R', 'Range'))
 
 class Config(Document):
     name = StringField(max_length=100)
-    number1 = IntField()
-    number2 = IntField()
-    number3 = IntField()
-    text1 = StringField(max_length=100)
-    parent = ReferenceField("self", reverse_delete_rule = NULLIFY)
-    type = StringField(max_length=20, choices=types)
     def __repr__(self):
       return self.name
 
@@ -27,6 +22,7 @@ class Parameter(Document):
     text1 = StringField(max_length=100)
     description = StringField(max_length=200)
     frequency = StringField(max_length=20, choices=frequency)
+    formatting = StringField(max_length=20, choices=formats)
     def __unicode__(self):
       return self.name
 
