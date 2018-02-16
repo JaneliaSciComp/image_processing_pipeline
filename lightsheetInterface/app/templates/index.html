@@ -50,13 +50,13 @@
                           {% for param in step.parameter %}
                             {% for p in config.parameter.frequent %}
                               {% if param.name == p.name %}
-                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
                                   <div class="input-group-prepend">
                                   <span class="input-group-text lightsheet-input">
                                     {{ param.name | capitalize }}
                                   </span>
                                   {% if p.type == 'Text' %}
-                                    <input type="text" class="form-control lightsheet-number" value="{{ param.text1 }}">
+                                    <input type="text" class="form-control" value="{{ param.text1 }}">
                                   {% elif p.type == 'Number' %}
                                     {% if p.count == '1' %}
                                       <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
@@ -84,23 +84,27 @@
                           {% for param in step.parameter %}
                             {% for p in config.parameter.sometimes %}
                               {% if param.name == p.name %}
-                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
-                                  <div class="input-group-prepend">
-                                  <span class="input-group-text lightsheet-input">
-                                    {{ param.name | capitalize }}
-                                  </span>
-                                  {% if p.type == 'Text' %}
-                                    <input type="text" class="form-control lightsheet-number" value="{{ param.text1 }}">
-                                  {% elif p.type == 'Number' %}
-                                    {% if p.count == '1' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                    {% elif p.count == '2' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                    {% elif p.count == '3' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
+                                {% if p.description is not none %}
+                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
+                                {% else %}
+                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                {% endif %}
+                                    <div class="input-group-prepend">
+                                    <span class="input-group-text lightsheet-input">
+                                      {{ param.name | capitalize }}
+                                    </span>
+                                    {% if p.type == 'Text' %}
+                                      <input type="text" class="form-control" value="{{ param.text1 }}">
+                                    {% elif p.type == 'Number' %}
+                                      {% if p.count == '1' %}
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      {% elif p.count == '2' %}
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                      {% elif p.count == '3' %}
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
                                     {% endif %}
                                   {% endif %}
                                   </div>
@@ -118,26 +122,30 @@
                           {% for param in step.parameter %}
                             {% for p in config.parameter.rare %}
                               {% if param.name == p.name %}
-                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
-                                  <div class="input-group-prepend">
-                                  <span class="input-group-text lightsheet-input">
-                                    {{ param.name | capitalize }}
-                                  </span>
-                                  {% if p.type == 'Text' %}
-                                    <input type="text" class="form-control lightsheet-number" value="{{ param.text1 }}">
-                                  {% elif p.type == 'Number' %}
-                                    {% if p.count == '1' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                    {% elif p.count == '2' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                    {% elif p.count == '3' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
+                                {% if p.description is not none %}
+                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
+                                {% else %}
+                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                {% endif %}
+                                    <div class="input-group-prepend">
+                                    <span class="input-group-text lightsheet-input">
+                                      {{ param.name | capitalize }}
+                                    </span>
+                                    {% if p.type == 'Text' %}
+                                      <input type="text" class="form-control" value="{{ param.text1 }}">
+                                    {% elif p.type == 'Number' %}
+                                      {% if p.count == '1' %}
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                      {% elif p.count == '2' %}
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                      {% elif p.count == '3' %}
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
+                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
+                                      {% endif %}
                                     {% endif %}
-                                  {% endif %}
-                                  </div>
+                                    </div>
                                 </div>
                               {% endif %}
                             {% endfor %}
