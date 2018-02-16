@@ -33,7 +33,12 @@ fieldset {
 }
 
 .lightsheet-number {
+  margin-left: 1em;
   max-width: 6em;
+}
+
+.lightsheet-text {
+  margin-left: 1em;
 }
 
 .lightsheet-heading {
@@ -46,6 +51,11 @@ fieldset {
 
 .lightsheet-tab {
   margin-top: 1em;
+}
+
+.lightsheet-label {
+  font-size: 0.9em;
+  min-width: 4em;
 }
 
 .empty-label {

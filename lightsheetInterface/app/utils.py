@@ -6,6 +6,7 @@ def testDatabaseStatus(db):
   serverStatusResult=db.command("serverStatus")
   pprint(serverStatusResult)
 
+# Calculate properties of parameter based on its values (e.g. if number or text field has been filled in or which frequency / which range is selected)
 def getType(parameter):
   frequent = []
   sometimes = []
