@@ -25,6 +25,7 @@ class Parameter(Document):
     number2 = FloatField()
     number3 = FloatField()
     text1 = StringField(max_length=100)
+    description = StringField(max_length=200)
     frequency = StringField(max_length=20, choices=frequency)
     def __unicode__(self):
       return self.name
@@ -42,10 +43,10 @@ class ConfigView(ModelView):
     column_filters = ['name']
 
 class StepView(ModelView):
-    column_filters = ['name']
+    column_filters = ['name', 'description']
 
 class ParameterView(ModelView):
-    column_filters = ['name']
+    column_filters = ['name', 'description', 'frequency']
 
 admin.add_view(ConfigView(Config))
 admin.add_view(StepView(Step))
