@@ -1,6 +1,7 @@
 var plan = require('flightplan');
 
 var config = {
+  srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the remote server
   projectDir: '/opt/deploy/lightsheet',  // location on the remote server
   keepReleases: 3
 };
@@ -77,6 +78,11 @@ plan.remote('deploy', function(remote) {
 plan.remote('deploy', function(remote) {
   remote.log('Activate virtualenv');
   remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -r requirements.txt');
+});
+
+plan.remote('deploy', function(remote) {
+  remote.log('Copy over settings.py');
+  remote.exec('cp ' + config.srcDir + '/app/settings.py ' + config.projectDir + '/current/app/');
 });
 
 plan.remote('deploy', function(remote) {
