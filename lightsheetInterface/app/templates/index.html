@@ -50,7 +50,11 @@
                           {% for param in step.parameter %}
                             {% for p in config.parameter.frequent %}
                               {% if param.name == p.name %}
-                                <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
+                                {% if p.description is not none %}
+                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
+                                {% else %}
+                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+                                {% endif %}
                                   <div class="input-group-prepend">
                                   <span class="input-group-text lightsheet-input">
                                     {{ param.name | capitalize }}
