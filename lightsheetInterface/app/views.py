@@ -8,7 +8,7 @@ from datetime import datetime
 from settings import Settings
 from pprint import pprint
 from models import Config
-from app.utils import buildConfigObject
+from app.utils import buildConfigObject, writeToJSON
 
 settings = Settings()
 
@@ -25,6 +25,13 @@ headers = {'content-type': 'application/json', 'USERNAME': settings.username}
 def login():
     return render_template('login.html', logged_in=False)
 
+@app.route('/submit', methods=['GET','POST'])
+def submit():
+    if request.method == 'POST':
+        test = 'test'
+        print(test)
+        writeToJSON(test,test)
+    return render_template('index.html', logged_in=True)
 
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])

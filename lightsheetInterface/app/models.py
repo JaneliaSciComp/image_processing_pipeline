@@ -1,4 +1,5 @@
 from flask_mongoengine.wtf import model_form
+from wtforms.widgets import TextArea
 from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
                          connect, DecimalField, StringField, IntField, FloatField, ListField, Document, ReferenceField, NULLIFY)
 
@@ -11,6 +12,7 @@ formats = (('', None), ('R', 'Range'))
 
 class Config(Document):
     name = StringField(max_length=100)
+    value = StringField(max_length=200)
     def __repr__(self):
       return self.name
 

@@ -68,7 +68,6 @@
                                       <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
                                       <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
                                     {% elif p.count == '3' %}
-                                      <form>
                                       {% if p.formatting == 'R' %}
                                         <div class="form-group form-inline">
                                           <label class="lightsheet-label" for="{{ param.name }}-number1">From: </label>
@@ -87,7 +86,6 @@
                                         <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
                                         <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
                                       {% endif %}
-                                      </form>
                                     {% endif %}
                                   {% endif %}
                                   </div>
@@ -225,6 +223,12 @@
     </div>
   </div>
   <div class="row lightsheet-row">
-     <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job" /></p>
+      <form action="" method="post">
+        <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job"/></p>
+      </form>
   </div>
+  <script>
+    var ls = ls || {};
+    jcc.myRoot = "{{ url_for('index')}}";
+  </script>
 {% endblock %}

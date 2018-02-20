@@ -46,3 +46,18 @@ def buildConfigObject():
   # steps = Config.objects(type='S')
   # config = {'onenum': oneParam, 'twonum': twoParam, 'threenum': threeParam, 'steps': steps}
   return config
+
+def writeToJSON(name, value):
+  result = None;
+  if value == None:
+    result = "\"_ArrayType_\":\"double\",\"_ArraySize_\":[0,0],\"_ArrayData_\":null"
+  elif isinstance(value, list):
+    print(result)
+  elif isinstance(value, (int, long, float, complex)):
+    result = "\"" + name + "\":" + value,
+  elif value in 'xyz':
+    print(result)
+  else:
+    print(result)
+
+  return result
