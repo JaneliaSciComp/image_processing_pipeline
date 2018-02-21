@@ -1,4 +1,4 @@
-import requests, json, random, os, math, datetime, bson, re
+import requests, json, random, os, math, datetime, bson, re, subprocess
 from flask import render_template, request
 from app import app
 from pymongo import MongoClient
@@ -13,7 +13,7 @@ defaultFileBase = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Proce
 #Location to store json files
 outputDirectoryBase = "/groups/lightsheet/lightsheet/home/ackermand/interface_output/" 
 #Header for post request
-headers = {'content-type': 'application/json', 'USERNAME': 'lightsheet'}
+headers = {'content-type': 'application/json', 'USERNAME': 'ackermand', 'RUNASUSER': 'lightsheet'}
 
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
@@ -69,7 +69,7 @@ def index(jacsServiceIndex):
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
-        client = MongoClient('mongodb://10.40.3.155:27017/')
+        client = MongoClient()#'mongodb://10.40.3.155:27017/')
         lightsheetDB = client.lightsheet
         numSteps = 0
         allSelectedStepNames=""
@@ -103,13 +103,17 @@ def index(jacsServiceIndex):
             #Finish preparing the post body
             postBody["args"].extend(("-allSelectedStepNames",allSelectedStepNames[0:-2]))
             postBody["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints[0:-2]))
+            #postBody["errorPath"] = outputDirectory
+            #postBody["outputPath"] = outputDirectory
             #Post to JACS
-            requestOutput = requests.post('http://10.36.13.18:9000/api/rest-v2/async-services/lightsheetProcessing',
+            requestOutput = requests.post('http://jacs-dev.int.janelia.org:9000/api/rest-v2/async-services/lightsheetProcessing',
                                            headers=headers,
                                            data=json.dumps(postBody))
             requestOutputJsonified = requestOutput.json()
+            print(requestOutputJsonified)
             #Store information about the job in the lightsheet database
-            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jsonDirectory":outputDirectory, "steps": stepParameters}})
+            currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/.git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
+            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, "steps": stepParameters}})
     
     #Return index.html with pipelineSteps and parentServiceData
     return render_template('index.html',
