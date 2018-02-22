@@ -1,4 +1,4 @@
-from models import Config, Step, Parameter
+from app.models import AppConfig, Step, Parameter
 from mongoengine.queryset.visitor import Q
 
 def testDatabaseStatus(db):

@@ -5,9 +5,9 @@ from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
-from settings import Settings
+from app.settings import Settings
 from pprint import pprint
-from models import Config
+from app.models import AppConfig
 from app.utils import buildConfigObject, writeToJSON
 
 settings = Settings()
