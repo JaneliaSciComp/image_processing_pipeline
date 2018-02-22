@@ -10,7 +10,7 @@ types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
 formats = (('', None), ('R', 'Range'))
 
-class Config(Document):
+class AppConfig(Document):
     name = StringField(max_length=100)
     value = StringField(max_length=200)
     def __repr__(self):
@@ -46,6 +46,6 @@ class StepView(ModelView):
 class ParameterView(ModelView):
     column_filters = ['name', 'description', 'frequency']
 
-admin.add_view(ConfigView(Config))
+admin.add_view(ConfigView(AppConfig))
 admin.add_view(StepView(Step))
 admin.add_view(ParameterView(Parameter))
