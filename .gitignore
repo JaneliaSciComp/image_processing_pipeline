@@ -1,4 +1,5 @@
 lightsheetInterface/env
+app/__pycache__/
 lightsheetInterface/app/views.pyc
 lightsheetInterface/app/__init__.pyc
 lightsheetInterface/app/models.pyc
