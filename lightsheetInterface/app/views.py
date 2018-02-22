@@ -136,7 +136,7 @@ def index(jacsServiceIndex):
     return render_template('index.html',
                            title='Home',
                            pipelineSteps=pipelineSteps,
-                           parentServiceData=None,
+                           parentServiceData=parentServiceData,
                            logged_in=True,
                            config = config)
 
