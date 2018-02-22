@@ -20,7 +20,7 @@ defaultFileBase = settings.defaultFileBase
 #Location to store json files
 outputDirectoryBase = settings.outputDirectoryBase
 #Header for post request
-headers = {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'lightsheet'}
+headers = {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'ackermand'}
 
 @app.route('/login')
 def login():
@@ -85,7 +85,7 @@ def index(jacsServiceIndex):
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
-        client = MongoClient(settings.mongo)
+        client = MongoClient('mongodb://10.40.3.155:27017/')
         lightsheetDB = client.lightsheet
         numSteps = 0
         allSelectedStepNames=""
