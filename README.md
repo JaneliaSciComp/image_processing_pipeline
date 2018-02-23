@@ -12,6 +12,10 @@ Create a virtualenv environment, here the environment is called 'env':
 
 `$ virtualenv env --no-site-packages`
 
+or better
+
+`$ virtualenv --no-site-packages -p [path to your python] env`
+
 Activate the environment:
 
 `$ source env/bin/activate`
