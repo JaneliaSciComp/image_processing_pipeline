@@ -1,0 +1,18 @@
+import matplotlib.pyplot as plt
+import sys
+from scipy import ndimage, misc
+from joblib import Parallel, delayed
+
+#Script takes in a timepoint, speciment, cameras list (ie. 0,1 or 0 or 1) and channel list 
+
+# path = sys.argv[1]
+# timepoint = sys.argv[2]
+#specimen = sys.argv[3]
+#cameras = sys.argv[4].split(',')
+#channels = sys.argv[5].split(',')
+
+temp = numpy.zeros((2048,2048,258))
+for i in range(0, 257):
+    temp[:,:,i+1] = misc.imread('/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039/SPM00/TM00000/ANG000/SPC00_TM00000_ANG000_CM0_CHN01_PH0_PLN' + str(i).zfill(4) + '.tif')
+xy = numpy.amax(temp,axis=2)
+xz = numpy.amax(temp,axis=1);

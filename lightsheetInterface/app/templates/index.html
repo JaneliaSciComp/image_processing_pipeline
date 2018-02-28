@@ -227,8 +227,31 @@
         <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job"/></p>
       </form>
   </div>
+   <img src="//:0" id="myImage" runat="server">
+  <button onclick="myFunction()">Preview Images</button>
+  <style>
+ <!-- img{
+    width:100%;
+    max-width:600px;
+  }-->
+  </style>
   <script>
     var ls = ls || {};
     jcc.myRoot = "{{ url_for('index')}}";
+    function myFunction(){
+    if (!fileExists("http://localhost/static/test.jpg")){
+    setInterval(function() {
+    var num = Math.floor(Math.random() * 10 + 1);
+    var myImageElement = document.getElementById("myImage");
+    myImageElement.src = "http://localhost/static/test.jpg?time=" + new Date().getTime()
+    }, 3000);
+    }
+    }
+    function fileExists(file_url){
+    var http = new XMLHttpRequest();
+    http.open('HEAD', file_url, false);
+    http.send();
+    return http.status != 404;
+    }
   </script>
 {% endblock %}
