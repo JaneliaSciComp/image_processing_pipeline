@@ -2,12 +2,12 @@ var plan = require('flightplan');
 
 var config = {
   srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the remote server
-  projectDir: '/opt/deploy/lightsheet',  // location on the remote server
+  projectDir: '/opt/projects/lightsheet',  // location on the remote server
   keepReleases: 3
 };
 
 plan.target('production', {
-  host: 'kazimiersa-ws1',
+  host: 'lightsheet',
   username: 'kazimiersa',
   agent: process.env.SSH_AUTH_SOCK
 },
