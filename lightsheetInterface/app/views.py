@@ -29,10 +29,10 @@ def login():
 @app.route('/submit', methods=['GET','POST'])
 def submit():
     if request.method == 'POST':
-        test = 'test'
-        print(test)
-        writeToJSON(test,test)
-    return render_template('index.html', logged_in=True)
+        keys = request.form.keys()
+        for k in iter(keys):
+            print(k)
+    return 'form submitted'
 
 #Timezone for timings
 eastern = timezone('US/Eastern')
