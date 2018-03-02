@@ -9,7 +9,7 @@
       <option value="http://10.36.13.18:5000/" selected>---Select Previous Run---</option>
       {% if parentServiceData is not none %}
         {% for service in parentServiceData %}
-          <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option>
+          <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}} </option>
         {% endfor %}
       {% endif %}
     </select>
