@@ -1,14 +1,15 @@
 {% extends "branding.html" %}
 {% block content %}
+<form action="" method="post">
   <div class="row lightsheet-row">
     <h3>Configure Job</h3>
   </div>
   <div class="row lightsheet-row">
     <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
-      <option value="http://10.36.13.18:5000/" selected>---Select Previous Run---</option>
-      {% if parentServiceData is not none %}
-        {% for service in parentServiceData %}
-          <option value={{"http://10.36.13.18:5000/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
+      <option value={{serverInfoFullAddress}} selected>---Select Previous Run---</option>
+      {% if serviceData is not none %}
+        {% for service in serviceData %}
+          <option value={{serverInfoFullAddress + service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.selectedStepNames + ")"}} </option> 
         {% endfor %}
       {% endif %}
     </select>
@@ -20,8 +21,8 @@
           <div class="card">
             <div class="card-header" id="headingOne">
               <h5 class="mb-0">
-                <button class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{loop.index }}">
-                  <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" {{ pipelineStep.checkboxState }}>
+                <button type="button"  class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{loop.index }}">
+                  <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}>
                   {{ pipelineStep.stepDescription }}
                 </button>
               </h5>
@@ -223,12 +224,103 @@
     </div>
   </div>
   <div class="row lightsheet-row">
-      <form action="" method="post">
         <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job"/></p>
-      </form>
   </div>
+</form>
+  <style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+  </style>
+
+  <div class="row lightsheet-row">
+    <table id="jobTable">
+      <tr>
+        <th onclick="sortTable(0)">Job</th>
+	<th onclick="sortTable(1)">Status</th>
+      </tr>
+      </br>
+      <!-- Status of child processes-->
+      {% if parentServiceData is not none %}
+        {% for service in parentServiceData %}
+          <tr>
+            <td>{{ service.creationDate+ "" + "(" + service.args[3] +")" }}</td>
+	    <td>{{ service.state }}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
+
   <script>
     var ls = ls || {};
     jcc.myRoot = "{{ url_for('index')}}";
+    function sortTable(n) {
+     var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById("jobTable");
+  switching = true;
+  //Set the sorting direction to ascending:
+  dir = "asc"; 
+  /*Make a loop that will continue until
+  no switching has been done:*/
+  while (switching) {
+    //start by saying: no switching is done:
+    switching = false;
+    rows = table.getElementsByTagName("TR");
+    /*Loop through all table rows (except the
+    first, which contains table headers):*/
+    for (i = 1; i < (rows.length - 1); i++) {
+      //start by saying there should be no switching:
+      shouldSwitch = false;
+      /*Get the two elements you want to compare,
+      one from current row and one from the next:*/
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      /*check if the two rows should switch place,
+      based on the direction, asc or desc:*/
+      if (dir == "asc") {
+        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+          //if so, mark as a switch and break the loop:
+          shouldSwitch= true;
+          break;
+        }
+      } else if (dir == "desc") {
+        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+          //if so, mark as a switch and break the loop:
+          shouldSwitch= true;
+          break;
+        }
+      }
+    }
+    if (shouldSwitch) {
+      /*If a switch has been marked, make the switch
+      and mark that a switch has been done:*/
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      //Each time a switch is done, increase this count by 1:
+      switchcount ++;      
+    } else {
+      /*If no switching has been done AND the direction is "asc",
+      set the direction to "desc" and run the while loop again.*/
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
+}
+
   </script>
 {% endblock %}

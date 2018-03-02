@@ -1,3 +1,4 @@
 from app import app
+from app.settings import Settings
 
-app.run(debug=True, host='127.0.0.1', port=8089)
+app.run(debug=True, host=Settings.serverInfo["IP"], port=Settings.serverInfo["port"])
