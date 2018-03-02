@@ -81,3 +81,15 @@ fieldset {
 .step-name {
   color: black;
 }
+
+.status-error {
+  background-color: rgba(255,0,0,0.3)
+}
+
+.status-successful {
+  background-color: rgba(0,255,0,0.3)
+}
+
+.status-running {
+  background-color: rgba(0,0,255,0.3)
+}
