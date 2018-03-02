@@ -1,3 +1,4 @@
+import requests
 from app.models import AppConfig, Step, Parameter
 from mongoengine.queryset.visitor import Q
 import sys, numpy, datetime, glob, scipy
@@ -6,6 +7,11 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from multiprocessing import Pool
 from pylab import figure, axes, pie, title, show
+from datetime import datetime
+from pytz import timezone
+from app.settings import Settings
+
+settings = Settings()
 
 def testDatabaseStatus(db):
   # Issue the serverStatus command and print the results
@@ -68,6 +74,46 @@ def writeToJSON(name, value):
 
   return result
 
+#Header for post request
+def getHeaders():
+  return {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'ackermand'}
+
+#Timezone for timings
+eastern = timezone('US/Eastern')
+
+def getParentServiceData(jacsServiceIndex=None):
+  #Function to get information about parent jobs from JACS database marks currently selected job
+  requestOutput = requests.get(settings.lightsheetApi,
+                               params={'service-name':'lightsheetProcessing'},
+                               headers=getHeaders())
+  requestOutputJsonified = requestOutput.json()
+  serviceData = requestOutputJsonified['resultList']
+  count = 0
+  for dictionary in serviceData: #convert date to nicer string
+      dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
+      dictionary["selected"]=''
+      dictionary["index"] = str(count)
+      count=count+1
+  if jacsServiceIndex is not None and (jacsServiceIndex!="favicon.ico"):
+      serviceData[int(float(jacsServiceIndex))]["selected"] = 'selected'
+  return serviceData
+
+def getChildServiceData(parentId):
+  #Function to get information from JACS service databases
+  #Gets information about currently running and already completed jobs
+  requestOutput = requests.get(settings.lightsheetApi,
+                               params={'parent-id': str(parentId)},
+                               headers=getHeaders())
+  requestOutputJsonified = requestOutput.json()
+  serviceData=requestOutputJsonified['resultList']
+  for dictionary in serviceData: #convert date to nicer string
+       dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
+  serviceData = requestOutputJsonified['resultList']
+  serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
+  return serviceData
+
+def convertEpochTime(v):
+  return datetime.fromtimestamp(int(v)/1000, eastern)
 
 def generateThumbnailImages():
   path = sys.argv[1]
@@ -83,41 +129,40 @@ def generateThumbnailImages():
       imagePath = path + 'SPC' + specimenString + '_TM' + timepointString + '_ANG000_CM' + camera + '_CHN' + channel.zfill(2) + '_PH0_PLN' + str(plane).zfill(4) + '.tif'
       return misc.imread(imagePath)
 
-
   if __name__ == '__main__':
-      pool = Pool(processes=32)
-      numberOfChannels = len(channels)
-      numberOfCameras = len(cameras)
-      #fig, ax = plt.subplots(nrows = numberOfChannels, ncols = 2*numberOfCameras)#, figsize=(16,8))
-      fig = plt.figure();
-      fig.set_size_inches(16,8)
-      outer = gridspec.GridSpec(numberOfChannels, numberOfCameras, wspace = 0.3, hspace = 0.3)
+    pool = Pool(processes=32)
+    numberOfChannels = len(channels)
+    numberOfCameras = len(cameras)
+    #fig, ax = plt.subplots(nrows = numberOfChannels, ncols = 2*numberOfCameras)#, figsize=(16,8))
+    fig = plt.figure();
+    fig.set_size_inches(16,8)
+    outer = gridspec.GridSpec(numberOfChannels, numberOfCameras, wspace = 0.3, hspace = 0.3)
 
-      for channelCounter, channel in enumerate(channels):
-          for cameraCounter, camera in enumerate(cameras):
-              inner = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec = outer[cameraCounter, channelCounter], wspace=0.1, hspace=0.1)
-              newList = [(camera, channel, 0)]
-              numberOfPlanes = len(glob.glob1(path, '*CM'+camera+'_CHN'+channel.zfill(2)+'*'))
-              for plane in range(1,numberOfPlanes):
-                  newList.append((camera, channel, plane))
+    for channelCounter, channel in enumerate(channels):
+        for cameraCounter, camera in enumerate(cameras):
+            inner = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec = outer[cameraCounter, channelCounter], wspace=0.1, hspace=0.1)
+            newList = [(camera, channel, 0)]
+            numberOfPlanes = len(glob.glob1(path, '*CM'+camera+'_CHN'+channel.zfill(2)+'*'))
+            for plane in range(1,numberOfPlanes):
+                newList.append((camera, channel, plane))
 
-              images = pool.starmap(insertImage,newList)
-              images = numpy.asarray(images).transpose(1,2,0)
-              xy = numpy.amax(images,axis=2)
-              xz = numpy.amax(images,axis=1)
-              ax1 = plt.Subplot(fig, inner[0])
-              ax1.imshow(xy, cmap='gray')
-              fig.add_subplot(ax1)
-              ax1.axis('auto')
-              ax2 = plt.Subplot(fig, inner[1])
-              ax2.imshow(xz, cmap='gray')
-              fig.add_subplot(ax2)
-              ax2.axis('auto')
-              ax2.get_yaxis().set_visible(False)
-              #ax1.get_shared_y_axes().join(ax1, ax2)
-              baseString = 'CM' + camera + '_CHN' + channel.zfill(2)
-              ax1.set_title(baseString + ' xy')#, fontsize=12)
-              ax2.set_title(baseString + ' xz')#, fontsize=12)
+            images = pool.starmap(insertImage,newList)
+            images = numpy.asarray(images).transpose(1,2,0)
+            xy = numpy.amax(images,axis=2)
+            xz = numpy.amax(images,axis=1)
+            ax1 = plt.Subplot(fig, inner[0])
+            ax1.imshow(xy, cmap='gray')
+            fig.add_subplot(ax1)
+            ax1.axis('auto')
+            ax2 = plt.Subplot(fig, inner[1])
+            ax2.imshow(xz, cmap='gray')
+            fig.add_subplot(ax2)
+            ax2.axis('auto')
+            ax2.get_yaxis().set_visible(False)
+            #ax1.get_shared_y_axes().join(ax1, ax2)
+            baseString = 'CM' + camera + '_CHN' + channel.zfill(2)
+            ax1.set_title(baseString + ' xy')#, fontsize=12)
+            ax2.set_title(baseString + ' xz')#, fontsize=12)
 
-      fig.savefig('/groups/lightsheet/lightsheet/home/ackermand/flask/lightsheetInterface/app/static/test.jpg')
-      pool.close()
+    fig.savefig(url_for('static', filename='img/test.jpg'))
+    pool.close()

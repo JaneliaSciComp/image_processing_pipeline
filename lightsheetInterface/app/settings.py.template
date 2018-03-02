@@ -2,5 +2,6 @@ class Settings:
    defaultFileBase = '<path>/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'
    outputDirectoryBase = '<path>/interface_output/'
    lightsheetProcessing = '<api_url>/api/rest-v2/async-services/lightsheetProcessing'
+   lightsheetApi = '<api_url>/api/rest-v2/services/'
    mongo = <host:port of mongo instance>
    username = <lightsheet username>
