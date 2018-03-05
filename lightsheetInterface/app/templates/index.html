@@ -28,14 +28,4 @@
   <div class="row lightsheet-row">
     <input class="btn btn-info" type="button" name="postJob" value="Submit Job" onclick="ls.processForm()" />
   </div>
-  <!-- Custom JavaScript code -->
-  <script>
-    var ls = ls || {};
-    ls.processForm = function() {
-      var forms = document.getElementsByClassName('step-form');
-      for (var i = 0; i < forms.length; i++) {
-        forms[i].submit();
-      }
-    }
-  </script>
 {% endblock %}

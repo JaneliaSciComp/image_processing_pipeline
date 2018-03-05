@@ -1,14 +1,14 @@
 import requests, json, random, os, math, datetime, bson, re, subprocess
 from flask import render_template, request
-from app import app
 from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
-from app.settings import Settings
 from pprint import pprint
+from app import app
+from app.settings import Settings
 from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON, getChildServiceData, getParentServiceData, getHeaders
+from app.utils import buildConfigObject, writeToJSON, getChildServiceData, getParentServiceData, getHeaders, loadParameters
 
 settings = Settings()
 
@@ -62,6 +62,7 @@ def index(jacsServiceIndex):
         #Check if currentStep was used in previous service
         if (jacsServiceIndex is not None) and (jacsServiceIndex!="favicon.ico") and (currentStep in parentServiceData[int(float(jacsServiceIndex))]["args"][3]):
             fileName = parentServiceData[int(jacsServiceIndex)]["args"][1] + str(currentStepIndex) + '_' + currentStep + '.json'
+            loadParameters(fileName)
             currentStepIndex = currentStepIndex+1
             #If loading previous run parameters for specific step, then it should be checked and editable
             editState = 'enabled'

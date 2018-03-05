@@ -7,14 +7,16 @@
         {{ pipelineStep.stepDescription }}
       </button> -->
       <label>
-        <input type="checkbox"
+        <input
+          id="check-{{pipelineStep.stepName}}"
+          type="checkbox"
           class="btn btn-link step-name"
           data-toggle="collapse"
           data-target="#collapse{{ pipelineStep.stepName }}"
-          aria-expanded="false"
+          aria-expanded={{ pipelineStep.checkboxState }}
           aria-controls="collapse{{ pipelineStep.stepName }}"
           value={{ pipelineStep.stepName }}+"_checkbox" {{ pipelineStep.checkboxState }}>
-        {{ pipelineStep.stepDescription }}
+          {{ pipelineStep.stepDescription }}
       </label>
     </h5>
   </div>
@@ -72,7 +74,7 @@
           {% endfor %}
         </div>
         <!-- json panel -->
-        <div role="tabpanel" class="tab-pane lightsheet-tab" id="json-{{ pipelineStep.stepName }}">
+        <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}">
           <!-- For now, show json in sometimes panel -->
           <fieldset>
             <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}
