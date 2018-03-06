@@ -1,11 +1,21 @@
 {% extends "branding.html" %}
 {% block content %}
+  <!--
+      Rows to configure a new job
+  -->
   <div class="row lightsheet-row">
-    <h3>Configure Job</h3>
+    <h4>Configure Job</h4>
   </div>
-  <!-- First row contains dropdown to select one of the previous jobs -->
-  <div class="row lightsheet-row">
-    <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
+  <div class="row">
+      <div class="form-group form-inline">
+        <label class="lightsheet-label">Name: </label>
+        <input type="text" class="form-control" name="job-name">
+      </div>
+      <div class="form-group form-inline">
+        <label class="lightsheet-label">Date: </label>
+        <input type="date" class="form-control" name="job-date">
+      </div>
+      <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
       <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
       {% if parentServiceData is not none %}
         {% for service in parentServiceData %}
@@ -14,7 +24,7 @@
       {% endif %}
     </select>
   </div>
-  <!-- This row contains the accordeon control which contains the steps -->
+  <!-- accordeon control which contains the steps -->
   <form action="" method="post">
     <div class="row lightsheet-row">
       <div id="steps">
@@ -25,9 +35,71 @@
         {% endif %}
       </div>
     </div>
-    <!-- This row contains the button to submit the forms -->
+    <!-- button to submit the forms -->
     <div class="row lightsheet-row">
       <input type="submit" name="postJob" class="btn btn-info" value="Submit Job" /></p>
     </div>
   </form>
+  <!--
+      Rows to select an existing job
+  -->
+  <div class="row lightsheet-row" style="margin-top: 2em;">
+    <h4>Previous Jobs</h4>
+  </div>
+  <div class="w3-container" style="margin-top: 1.5em;">
+    <input class="w3-input w3-border w3-padding" type="text" placeholder="Search for names.." id="myInput" onkeyup="filterTable()">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Date</th>
+          <th>Steps</th>
+          <th>InputFolder</th>
+        </tr>
+      </thead>
+      <tbody id="job-table-body">
+        {% if parentServiceData is not none %}
+        {% for service in parentServiceData %}
+          <tr>
+            <td>Name</td>
+            <td>{{ service.creationDate | strftime }}</td>
+            <td>{{ service.args[3]}}</td>
+            <td>{{ service.args[1]}}</td>
+          </tr>
+        {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <script type="text/javascript">
+    $(function () {
+      $('#datetimepicker').datetimepicker({
+          defaultDate: moment()
+        });
+    });
+
+    function filterTable() {
+      var input, filter, table, tr, td, i;
+      var input = document.getElementById("myInput");
+      var filter = input.value.toUpperCase();
+      var table = document.getElementById("job-table-body");
+      var tr = table.getElementsByTagName("tr");
+      for (var i = 0; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        if (td) {
+          for (var j = 0; j < td.length; j++) {
+            if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+              tr[i].style.display = "";
+            } else {
+              tr[i].style.display = "none";
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- contrib dependencies -->
+  <script src="{{url_for('static', filename='components/bootstrap-datetimepicker/src/js/bootstrap-datetimepicker.js')}}"></script>
+  <script src="{{url_for('static', filename='components/moment/min/moment.min.js')}}"></script>
+
 {% endblock %}

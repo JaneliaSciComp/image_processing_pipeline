@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!-- css dependencies -->
+    <!-- contrib css dependencies -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/css/bootstrap.min.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/w3css/w3.css') }}">
+
+    <!-- custom css dependencies -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/overrides.css') }}">
+
     <!-- contrib scripts -->
     <script src="{{url_for('static', filename='components/jquery/dist/jquery.min.js')}}"></script>
     <script src="{{url_for('static', filename='components/bootstrap/js/bootstrap.min.js')}}"></script>
+
+    <!-- custom scripts -->
+    <script src="{{url_for('static', filename='js/inputfields.js')}}"></script>
+    <script src="{{url_for('static', filename='js/steps.js')}}"></script>
+
     <title>Lightsheet Pipeline</title>
-    
   </head>
   <body>
     <div class="lightsheet-container container-fluid">
@@ -16,8 +24,5 @@
      {% block navbar %}{% endblock %}
      {% block content %}{% endblock %}
     </div>
-    <!-- custom scripts -->
-    <script src="{{url_for('static', filename='js/inputfields.js')}}"></script>
-    <script src="{{url_for('static', filename='js/steps.js')}}"></script>
   </body>
 </html>
