@@ -2,12 +2,13 @@ var plan = require('flightplan');
 
 var config = {
   srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the remote server
-  projectDir: '/opt/deploy/lightsheet',  // location on the remote server
+  projectDir: '/opt/projects/lightsheet',  // location on the remote server
+  pythonPath: '/usr/local/bin/python3.6',
   keepReleases: 3
 };
 
 plan.target('production', {
-  host: 'kazimiersa-ws1',
+  host: 'lightsheet',
   username: 'kazimiersa',
   agent: process.env.SSH_AUTH_SOCK
 },
@@ -72,7 +73,7 @@ plan.remote('deploy',function (remote) {
 
 plan.remote('deploy', function(remote) {
   remote.log('Create virtualenv');
-  remote.exec('cd ' + config.projectDir + '/current' + '; virtualenv env --no-site-packages');
+  remote.exec('cd ' + config.projectDir + '/current' + '; virtualenv env --no-site-packages -p ' + config.pythonPath);
 });
 
 plan.remote('deploy', function(remote) {
@@ -82,7 +83,7 @@ plan.remote('deploy', function(remote) {
 
 plan.remote('deploy', function(remote) {
   remote.log('Copy over settings.py');
-  remote.exec('cp ' + config.srcDir + '/app/settings.py ' + config.projectDir + '/current/app/');
+  remote.exec('cp ' + config.projectDir + '/settings.py ' + config.projectDir + '/current/app/');
 });
 
 plan.remote('deploy', function(remote) {

@@ -4,225 +4,28 @@
   <div class="row lightsheet-row">
     <h3>Configure Job</h3>
   </div>
+  <!-- First row contains dropdown to select one of the previous jobs -->
   <div class="row lightsheet-row">
     <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
       <option value={{serverInfoFullAddress}} selected>---Select Previous Run---</option>
       {% if serviceData is not none %}
         {% for service in serviceData %}
-          <option value={{serverInfoFullAddress + service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.selectedStepNames + ")"}} </option> 
+          <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.selectedStepNames + ")"}} </option>
         {% endfor %}
       {% endif %}
     </select>
   </div>
+  <!-- This row contains the accordeon control which contains the steps -->
   <div class="row lightsheet-row">
     <div id="steps">
       {% if pipelineSteps is not none %}
         {% for pipelineStep in pipelineSteps %}
-          <div class="card">
-            <div class="card-header" id="headingOne">
-              <h5 class="mb-0">
-                <button type="button"  class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{loop.index }}">
-                  <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}>
-                  {{ pipelineStep.stepDescription }}
-                </button>
-              </h5>
-            </div>
-            <div id="collapse{{ loop.index }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
-              <div class="card-body">
-                <ul class="nav nav-tabs" role="tablist">
-                  <li class="nav-item tab-frequent">
-                    <a class="nav-link active" href="#frequent{{ loop.index }}" role="tab" data-toggle="tab">Frequent</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#sometimes{{ loop.index }}" role="tab" data-toggle="tab">Sometimes</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#rare{{ loop.index }}" role="tab" data-toggle="tab">Rare</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#json{{ loop.index }}" role="tab" data-toggle="tab">JSON</a>
-                  </li>
-                </ul>
-                <!-- Tab panes -->
-                <div class="tab-content">
-                  <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent{{ loop.index }}">
-                    {% for step in config.steps %}
-                      {% if step.name == pipelineStep.stepName %}
-                          {% for param in step.parameter %}
-                            {% for p in config.parameter.frequent %}
-                              {% if param.name == p.name %}
-                                {% if p.description is not none %}
-                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
-                                {% else %}
-                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
-                                {% endif %}
-                                  <div class="input-group-prepend">
-                                  <span class="input-group-text lightsheet-input">
-                                    {{ param.name | capitalize }}
-                                  </span>
-                                  {% if p.type == 'Text' %}
-                                    <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}">
-                                  {% elif p.type == 'Number' %}
-                                    {% if p.count == '1' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                    {% elif p.count == '2' %}
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                    {% elif p.count == '3' %}
-                                      {% if p.formatting == 'R' %}
-                                        <div class="form-group form-inline">
-                                          <label class="lightsheet-label" for="{{ param.name }}-number1">From: </label>
-                                          <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number1" value="{{ param.number1 }}">
-                                        </div>
-                                        <div class="form-group form-inline">
-                                          <label class="lightsheet-label" for="{{ param.name }}-number2">To: </label>
-                                          <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number2" value="{{ param.number2 }}">
-                                        </div>
-                                        <div class="form-group form-inline">
-                                          <label class="lightsheet-label" for="{{ param.name }}-number3">Every:</label>
-                                          <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number3" value="{{ param.number3 }}">
-                                        </div>
-                                      {% else %}
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
-                                      {% endif %}
-                                    {% endif %}
-                                  {% endif %}
-                                  </div>
-                                </div>
-                              {% endif %}
-                            {% endfor %}
-                          {% endfor %}
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                  <!-- sometimes panel -->
-                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes{{ loop.index }}">
-                    {% for step in config.steps %}
-                      {% if step.name == pipelineStep.stepName %}
-                          {% for param in step.parameter %}
-                            {% for p in config.parameter.sometimes %}
-                              {% if param.name == p.name %}
-                                {% if p.description is not none %}
-                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
-                                {% else %}
-                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
-                                {% endif %}
-                                    <div class="input-group-prepend">
-                                    <span class="input-group-text lightsheet-input">
-                                      {{ param.name | capitalize }}
-                                    </span>
-                                    {% if p.type == 'Text' %}
-                                      <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}">
-                                    {% elif p.type == 'Number' %}
-                                      {% if p.count == '1' %}
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      {% elif p.count == '2' %}
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                      {% elif p.count == '3' %}
-                                        <!-- Check, if formatting is type or None -->
-                                        {% if p.formatting == 'R' %}
-                                          <div class="form-group form-inline">
-                                            <label class="lightsheet-label" for="{{ param.name }}-number1">From: </label>
-                                            <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number1" value="{{ param.number1 }}">
-                                          </div>
-                                          <div class="form-group form-inline">
-                                            <label class="lightsheet-label" for="{{ param.name }}-number2">To: </label>
-                                            <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number2" value="{{ param.number2 }}">
-                                          </div>
-                                          <div class="form-group form-inline">
-                                            <label class="lightsheet-label" for="{{ param.name }}-number3">Every:</label>
-                                            <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number3" value="{{ param.number3 }}">
-                                          </div>
-                                        {% else %}
-                                          <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                          <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                          <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
-                                        {% endif %}
-                                    {% endif %}
-                                  {% endif %}
-                                  </div>
-                                </div>
-                              {% endif %}
-                            {% endfor %}
-                          {% endfor %}
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                  <!-- rare panel -->
-                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare{{ loop.index }}">
-                    {% for step in config.steps %}
-                      {% if step.name == pipelineStep.stepName %}
-                          {% for param in step.parameter %}
-                            {% for p in config.parameter.rare %}
-                              {% if param.name == p.name %}
-                                {% if p.description is not none %}
-                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
-                                {% else %}
-                                  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
-                                {% endif %}
-                                    <div class="input-group-prepend">
-                                    <span class="input-group-text lightsheet-input">
-                                      {{ param.name | capitalize }}
-                                    </span>
-                                    {% if p.type == 'Text' %}
-                                      <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}">
-                                    {% elif p.type == 'Number' %}
-                                      {% if p.count == '1' %}
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                      {% elif p.count == '2' %}
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                        <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                      {% elif p.count == '3' %}
-                                        <!-- Check, if formatting is type or None -->
-                                        {% if p.formatting == 'R' %}
-                                          <div class="form-group form-inline">
-                                            <label class="lightsheet-label" for="{{ param.name }}-number1">From: </label>
-                                            <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number1" value="{{ param.number1 }}">
-                                          </div>
-                                          <div class="form-group form-inline">
-                                            <label class="lightsheet-label" for="{{ param.name }}-number2">To: </label>
-                                            <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number2" value="{{ param.number2 }}">
-                                          </div>
-                                          <div class="form-group form-inline">
-                                            <label class="lightsheet-label" for="{{ param.name }}-number3">Every:</label>
-                                            <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-number3" value="{{ param.number3 }}">
-                                          </div>
-                                        {% else %}                                          
-                                          <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}">
-                                          <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}">
-                                          <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}">
-                                        {% endif %}
-                                      {% endif %}
-                                    {% endif %}
-                                    </div>
-                                </div>
-                              {% endif %}
-                            {% endfor %}
-                          {% endfor %}
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                  <!-- json panel -->
-                  <div role="tabpanel" class="tab-pane lightsheet-tab" id="json{{ loop.index }}">
-                    <!-- For now, show json in sometimes panel -->
-                    <fieldset>
-                      <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>
-                        {{ pipelineStep.inputJson }}
-                      </textarea>
-                      <br>
-                    </fieldset>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {% include "step.html" ignore missing with context %}
         {% endfor %}
       {% endif %}
     </div>
   </div>
+  <!-- This row contains the button to submit the forms -->
   <div class="row lightsheet-row">
         <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job"/></p>
   </div>
@@ -265,6 +68,13 @@
   </div>
 
   <script>
+    var ls = ls || {};
+    ls.processForm = function() {
+    var forms = document.getElementsByClassName('step-form');
+    for (var i = 0; i < forms.length; i++) {
+			forms[i].submit();
+			}
+    }
     var ls = ls || {};
     jcc.myRoot = "{{ url_for('index')}}";
     function sortTable(n) {
@@ -321,6 +131,5 @@
     }
   }
 }
-
   </script>
 {% endblock %}

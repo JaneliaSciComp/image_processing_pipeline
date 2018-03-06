@@ -8,19 +8,25 @@ from datetime import datetime
 from app.settings import Settings
 from pprint import pprint
 from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON
-from pytz import timezone
+from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, getServiceDataFromDB, getHeaders
 
 settings = Settings()
-
-#Note: The endpoint to access JACS job information is currently being created, so in the meantime and FOR NONPRODUCTION work we are accessing a local mongo server directly
 
 #Prefix for all default pipeline step json file names
 defaultFileBase = settings.defaultFileBase
 #Location to store json files
 outputDirectoryBase = settings.outputDirectoryBase
-#Header for post request
-headers = {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'ackermand'}
+
+app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm(request.form)
+    if request.method == 'POST' and form.validate():
+        user = User(form.username.data, form.email.data,
+                    form.password.data)
+        db_session.add(user)
+        flash('Thanks for registering')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
 
 @app.route('/login')
 def login():
@@ -29,13 +35,10 @@ def login():
 @app.route('/submit', methods=['GET','POST'])
 def submit():
     if request.method == 'POST':
-        test = 'test'
-        print(test)
-        writeToJSON(test,test)
-    return render_template('index.html', logged_in=True)
-
-#Timezone for timings
-eastern = timezone('US/Eastern')
+        keys = request.form.keys()
+        for k in iter(keys):
+            print(k)
+    return 'form submitted'
 
 @app.route('/', defaults={'serviceIndex': None}, methods=['GET','POST'])
 @app.route('/<serviceIndex>', methods=['GET','Post'])
@@ -91,6 +94,7 @@ def index(serviceIndex):
             'checkboxState': checkboxState
         })
 
+    print(pipelineSteps)
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
@@ -98,6 +102,7 @@ def index(serviceIndex):
         allSelectedStepNames=""
         allSelectedTimePoints=""
         stepParameters=[]
+  
         for currentStep in pipelineOrder:
             text = request.form.get(currentStep) #will be none if checkbox is not checked
             if text is not None:
@@ -133,13 +138,17 @@ def index(serviceIndex):
             #Post to JACS
 
             requestOutput = requests.post('http://jacs-dev.int.janelia.org:9000/api/rest-v2/async-services/lightsheetProcessing',
-                                           headers=headers,
+                                           headers=getHeaders(),
                                            data=json.dumps(postBody))
             requestOutputJsonified = requestOutput.json()
             #Store information about the job in the lightsheet database
             currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/.git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
-    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, serviceIndex)
+    parentServiceData = []
+    #
+    # The below should be uncommented once figure out why JACS isn't showing jobs
+    #parentServiceData = getParentServiceDataFromJACS(lightsheetDB, serviceIndex)
+    #
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
                            title='Home',
@@ -172,7 +181,7 @@ def job_status(serviceIndex):
             if i<=len(childJobStatuses)-1:
                 childSummarizedStatuses.append({"step": steps[i], "status": childJobStatuses[i]["state"], "startTime": str(childJobStatuses[i]["creationDate"]), "endTime":str(childJobStatuses[i]["modificationDate"]), "elapsedTime":str(childJobStatuses[i]["modificationDate"]-childJobStatuses[i]["creationDate"])})
                 if childJobStatuses[i]["state"]=="RUNNING":
-                    childSummarizedStatuses[i]["elapsedTime"] = str(datetime.now(eastern)-childJobStatuses[i]["creationDate"])
+                    childSummarizedStatuses[i]["elapsedTime"] = str(datetime.now(utils.eastern)-childJobStatuses[i]["creationDate"])
             else:
                 childSummarizedStatuses.append({"step": steps[i], "status": "NOT YET QUEUED", "startTime": "N/A", "endTime":"N/A", "elapsedTime": "N/A"})
 
@@ -186,47 +195,3 @@ def job_status(serviceIndex):
 def search():
     return render_template('search.html',
                            logged_in=True)
-
-def getServiceDataFromDB(lightsheetDB):
-    serviceData = list(lightsheetDB.jobs.find())
-    for count, dictionary in enumerate(serviceData):
-        dictionary["selected"]='';
-        dictionary["creationDate"]=str(dictionary["_id"].generation_time)
-        dictionary["index"]=str(count)
-    return serviceData
-
-def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
-    #Function to get information about parent jobs from JACS database marks currently selected job
-    allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
-    allJACSids = [str(dictionary['jacs_id']) for dictionary in allJACSids]
-
-    requestOutputJsonified = [requests.get('http://jacs-dev.int.janelia.org:9000/api/rest-v2/services/',
-                                       params={'service-id':  JACSid},
-                                       headers=headers).json()
-                     for JACSid in allJACSids]
-    serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
-    for count, dictionary in enumerate(serviceData): #convert date to nicer string
-        dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
-        dictionary["selected"]=''
-        dictionary["index"] = str(count)
-   
-    if serviceIndex is not None and (serviceIndex!="favicon.ico"):
-        serviceData[int(float(serviceIndex))]["selected"] = 'selected'
-    return serviceData
-
-def getChildServiceData(parentId):
-    #Function to get information from JACS service databases
-    #Gets information about currently running and already completed jobs
-    requestOutput = requests.get('http://jacs-dev.int.janelia.org:9000/api/rest-v2/services/',
-                                 params={'parent-id': str(parentId)},
-                                 headers=headers)
-    requestOutputJsonified = requestOutput.json()
-    serviceData=requestOutputJsonified['resultList']
-    for dictionary in serviceData: #convert date to nicer string
-         dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
-    serviceData = requestOutputJsonified['resultList']
-    serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
-    return serviceData
-
-def convertEpochTime(v):
-    return datetime.fromtimestamp(int(v)/1000, eastern)

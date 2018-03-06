@@ -1,21 +1,6 @@
 {% extends "branding.html" %}
 {% block content %}
   <style>
-    table {
-        font-family: arial, sans-serif;
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    td, th {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }
-
-    tr:nth-child(even) {
-        background-color: #dddddd;
-    }
   </style>
   <div class="row lightsheet-row">
     <h3>Job Status</h3>
@@ -24,6 +9,7 @@
     <!-- Drop down menu to look up status of previous jobs, colorcoded by status of job -->
     <META HTTP-EQUIV="refresh" CONTENT="30">
     <select class="form-control lightsheet-dropdown" onchange="location = this.options[this.selectedIndex].value;">
+<!--
       <option value= {{serverInfoFullAddress + "job_status/"}} selected>---Select Previous Run---</option>
       {% if parentServiceData is not none %}
         {% for service in parentServiceData %}
@@ -40,6 +26,23 @@
           {% if service.state == "RUNNING" %}
             <option style="background-color: rgba(0,0,255,0.3)" value={{serverInfoFullAddress + "/job_status/"+ service.index }}
               {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}}
+-->
+      <option value="{{ url_for('job_status') }}" selected>---Select Previous Run---</option>
+      {% if parentServiceData is not none %}
+        {% for service in parentServiceData %}
+          {% if service.state == "ERROR" %}
+            <option class="status-error" value={{ url_for('job_status', jacsServiceIndex=service.index )}}
+              {{ service.selected }}>  {{   service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
+            </option>
+          {% endif %}
+          {% if service.state == "SUCCESSFUL" %}
+            <option class="status-successful" value={{ url_for('job_status', jacsServiceIndex=service.index )}}
+              {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
+            </option>
+          {% endif %}
+          {% if service.state == "RUNNING" %}
+            <option class="status-running" value={{ url_for('job_status', jacsServiceIndex=service.index )}}
+              {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
             </option>
           {% endif %}
         {% endfor %}
@@ -47,27 +50,30 @@
     </select>
   </div>
   <div class="row lightsheet-row">
-    <table>
-      <tr>
-        <th>Step</th>
-        <th>Status</th>
-        <th>Start Time</th>
-        <th>End Time</th>
-        <th>Elapsed Time</th>
-      </tr>
-      </br>
-      <!-- Status of child processes-->
-      {% if childSummarizedStatuses is not none %}
-        {% for status in childSummarizedStatuses %}
-          <tr>
-            <td>{{ status.step }}</td>
-            <td>{{ status.status }}</td>
-            <td>{{ status.startTime }}</td>
-            <td>{{ status.endTime }}</td>
-            <td>{{ status.elapsedTime }}</td>
-          </tr>
-        {% endfor %}
-      {% endif %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Step</th>
+          <th>Status</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Elapsed Time</th>
+        </tr>
+      <thead>
+      <tbody>
+        <!-- Status of child processes-->
+        {% if childSummarizedStatuses is not none %}
+          {% for status in childSummarizedStatuses %}
+            <tr>
+              <td>{{ status.step }}</td>
+              <td>{{ status.status }}</td>
+              <td>{{ status.startTime }}</td>
+              <td>{{ status.endTime }}</td>
+              <td>{{ status.elapsedTime }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
     </table>
   </div>
 {% endblock %}
