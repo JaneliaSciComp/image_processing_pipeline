@@ -15,17 +15,19 @@
     </select>
   </div>
   <!-- This row contains the accordeon control which contains the steps -->
-  <div class="row lightsheet-row">
-    <div id="steps">
-      {% if pipelineSteps is not none %}
-        {% for pipelineStep in pipelineSteps %}
-          {% include "step.html" ignore missing with context %}
-        {% endfor %}
-      {% endif %}
+  <form action="" method="post">
+    <div class="row lightsheet-row">
+      <div id="steps">
+        {% if pipelineSteps is not none %}
+          {% for pipelineStep in pipelineSteps %}
+            {% include "step.html" ignore missing with context %}
+          {% endfor %}
+        {% endif %}
+      </div>
     </div>
-  </div>
-  <!-- This row contains the button to submit the forms -->
-  <div class="row lightsheet-row">
-    <input class="btn btn-info" type="button" name="postJob" value="Submit Job" onclick="ls.processForm()" />
-  </div>
+    <!-- This row contains the button to submit the forms -->
+    <div class="row lightsheet-row">
+      <input type="submit" name="postJob" class="btn btn-info" value="Submit Job" /></p>
+    </div>
+  </form>
 {% endblock %}
