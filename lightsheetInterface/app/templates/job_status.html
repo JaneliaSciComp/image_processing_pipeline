@@ -9,24 +9,6 @@
     <!-- Drop down menu to look up status of previous jobs, colorcoded by status of job -->
     <META HTTP-EQUIV="refresh" CONTENT="30">
     <select class="form-control lightsheet-dropdown" onchange="location = this.options[this.selectedIndex].value;">
-<!--
-      <option value= {{serverInfoFullAddress + "job_status/"}} selected>---Select Previous Run---</option>
-      {% if parentServiceData is not none %}
-        {% for service in parentServiceData %}
-          {% if service.state == "ERROR" %}
-            <option style="background-color: rgba(255,0,0,0.3)" value={{serverInfoFullAddress + "job_status/" + service.index }}
-              {{ service.selected }}>  {{   service.creationDate + " " + "(" + service.args[3] + ")"}}
-            </option>
-          {% endif %}
-          {% if service.state == "SUCCESSFUL" %}
-            <option style="background-color: rgba(0,255,0,0.3)" value={{serverInfoFullAddress + "/job_status/"+ service.index }}
-              {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}}
-            </option>
-          {% endif %}
-          {% if service.state == "RUNNING" %}
-            <option style="background-color: rgba(0,0,255,0.3)" value={{serverInfoFullAddress + "/job_status/"+ service.index }}
-              {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}}
--->
       <option value="{{ url_for('job_status') }}" selected>---Select Previous Run---</option>
       {% if parentServiceData is not none %}
         {% for service in parentServiceData %}

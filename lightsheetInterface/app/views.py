@@ -44,7 +44,7 @@ def submit():
 @app.route('/<serviceIndex>', methods=['GET','Post'])
 def index(serviceIndex):
     #Mongo client
-    client = MongoClient('mongodb://10.40.3.155:27017/')
+    client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
 
@@ -137,18 +137,17 @@ def index(serviceIndex):
             #postBody["outputPath"] = outputDirectory
             #Post to JACS
 
-            requestOutput = requests.post('http://jacs-dev.int.janelia.org:9000/api/rest-v2/async-services/lightsheetProcessing',
+            requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
                                            headers=getHeaders(),
                                            data=json.dumps(postBody))
             requestOutputJsonified = requestOutput.json()
             #Store information about the job in the lightsheet database
             currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/.git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
-    parentServiceData = []
-    #
-    # The below should be uncommented once figure out why JACS isn't showing jobs
-    #parentServiceData = getParentServiceDataFromJACS(lightsheetDB, serviceIndex)
-    #
+    
+    
+    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, serviceIndex)
+    
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
                            title='Home',
@@ -163,7 +162,7 @@ def index(serviceIndex):
 @app.route('/job_status/<serviceIndex>', methods=['GET'])
 def job_status(serviceIndex):
     #Mongo client
-    client = MongoClient('mongodb://10.40.3.155:27017/')
+    client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
     

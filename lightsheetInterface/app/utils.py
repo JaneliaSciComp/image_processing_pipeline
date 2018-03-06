@@ -95,12 +95,11 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
     #Function to get information about parent jobs from JACS database marks currently selected job
     allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
     allJACSids = [str(dictionary['jacs_id']) for dictionary in allJACSids]
-    requestOutputJsonified = [requests.get('http://jacs-dev.int.janelia.org:9000/api/rest-v2/services/',
+    requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
                                            params={'service-id':  JACSid},
                                            headers=getHeaders(True)).json()
                               for JACSid in allJACSids]
-    print(requestOutputJsonified)
-    print(getHeaders(True))
+
     serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
     for count, dictionary in enumerate(serviceData): #convert date to nicer string
         dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
@@ -114,7 +113,7 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
 def getChildServiceDataFromJACS(parentId):
     #Function to get information from JACS service databases
     #Gets information about currently running and already completed jobs
-    requestOutput = requests.get('http://jacs-dev.int.janelia.org:9000/api/rest-v2/services/',
+    requestOutput = requests.get(settings.devOrProductionJACS+'/services/',
                                  params={'parent-id': str(parentId)},
                                  headers=getHeaders(True))
     requestOutputJsonified = requestOutput.json()
