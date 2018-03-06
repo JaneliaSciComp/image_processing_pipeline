@@ -1,22 +1,25 @@
 import requests
-from app.models import AppConfig, Step, Parameter
 from mongoengine.queryset.visitor import Q
 import sys, numpy, datetime, glob, scipy
 from scipy import misc
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from multiprocessing import Pool
+from pprint import pprint
 from pylab import figure, axes, pie, title, show
 from datetime import datetime
 from pytz import timezone
+import json
+import re
+from app.models import AppConfig, Step, Parameter
 from app.settings import Settings
+from wtforms import Form, StringField, validators
 
 settings = Settings()
 
 def testDatabaseStatus(db):
   # Issue the serverStatus command and print the results
   serverStatusResult=db.command("serverStatus")
-  pprint(serverStatusResult)
 
 # Calculate properties of parameter based on its values (e.g. if number or text field has been filled in or which frequency / which range is selected)
 def getType(parameter):
@@ -179,3 +182,22 @@ def generateThumbnailImages():
 
     fig.savefig(url_for('static', filename='img/test.jpg'))
     pool.close()
+
+def loadParameters(fileName):
+  with open(fileName) as data_file:
+    data = json.load(data_file)
+    parseJsonData(data)
+
+
+def parseJsonData(data):
+  keys = data.keys()
+  regSingleNum = '[\d|,]'
+  regNumParameter = '[,*?]'
+  parameter = {}
+
+  for key in keys:
+    if type(data[key]) is str:
+      parameter[key] = data[key]
+    elif type(data[key]) is int:
+      parameter[key] = data[key]
+

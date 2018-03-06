@@ -1,13 +1,12 @@
 {% extends "branding.html" %}
 {% block content %}
-<form action="" method="post">
   <div class="row lightsheet-row">
     <h3>Configure Job</h3>
   </div>
   <!-- First row contains dropdown to select one of the previous jobs -->
   <div class="row lightsheet-row">
     <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
-      <option value={{serverInfoFullAddress}} selected>---Select Previous Run---</option>
+      <option value={{serverInfoFullAddress}} selected>---Select Previous Run---</option> <!-- value="{{ url_for('index') }}"-->
       {% if serviceData is not none %}
         {% for service in serviceData %}
           <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.selectedStepNames + ")"}} </option>
@@ -16,20 +15,24 @@
     </select>
   </div>
   <!-- This row contains the accordeon control which contains the steps -->
-  <div class="row lightsheet-row">
-    <div id="steps">
-      {% if pipelineSteps is not none %}
-        {% for pipelineStep in pipelineSteps %}
-      {% include "step.html" ignore missing with context %}
-        {% endfor %}
-      {% endif %}
+
+
+  <form action="" method="post">
+    <div class="row lightsheet-row">
+      <div id="steps">
+        {% if pipelineSteps is not none %}
+          {% for pipelineStep in pipelineSteps %}
+            {% include "step.html" ignore missing with context %}
+          {% endfor %}
+        {% endif %}
+      </div>
     </div>
-  </div>
-  <!-- This row contains the button to submit the forms -->
-  <div class="row lightsheet-row">
-        <p><input class="btn btn-info" type="submit" name="postJob" value="Submit Job"/></p>
-  </div>
-</form>
+    <!-- This row contains the button to submit the forms -->
+    <div class="row lightsheet-row">
+      <input type="submit" name="postJob" class="btn btn-info" value="Submit Job" /></p>
+    </div>
+  </form>
+
   <style>
     table {
         font-family: arial, sans-serif;
