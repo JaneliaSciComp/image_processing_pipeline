@@ -1,0 +1,17 @@
+{
+  "name": "lightsheetinterface",
+  "version": "1.0.0",
+  "description": "LightSheet Pipeline Configurator",
+  "main": "flightplan.js",
+  "dependencies": {
+    "flightplan": "^0.6.17"
+  },
+  "devDependencies": {
+    "jquery": "^3.3.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,26 +1,50 @@
 import requests, json, random, os, math, datetime, bson, re, subprocess
 from flask import render_template, request
-from app import app
 from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
-from pytz import timezone
+from pprint import pprint
+from app import app
+from app.settings import Settings
+from app.models import AppConfig
+from app.utils import buildConfigObject, writeToJSON, getChildServiceData, getParentServiceData, getHeaders, loadParameters
 
-#Note: The endpoint to access JACS job information is currently being created, so in the meantime and FOR NONPRODUCTION work we are accessing a local mongo server directly
+settings = Settings()
 
 #Prefix for all default pipeline step json file names
-defaultFileBase = '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'
+defaultFileBase = settings.defaultFileBase
 #Location to store json files
-outputDirectoryBase = "/groups/lightsheet/lightsheet/home/ackermand/interface_output/" 
-#Header for post request
-headers = {'content-type': 'application/json', 'USERNAME': 'ackermand', 'RUNASUSER': 'lightsheet'}
-#Timezone for timings
-eastern = timezone('US/Eastern')
+outputDirectoryBase = settings.outputDirectoryBase
+
+app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm(request.form)
+    if request.method == 'POST' and form.validate():
+        user = User(form.username.data, form.email.data,
+                    form.password.data)
+        db_session.add(user)
+        flash('Thanks for registering')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
+@app.route('/login')
+def login():
+    return render_template('login.html', logged_in=False)
+
+@app.route('/submit', methods=['GET','POST'])
+def submit():
+    if request.method == 'POST':
+        keys = request.form.keys()
+        for k in iter(keys):
+            print(k)
+    return 'form submitted'
 
 @app.route('/', defaults={'jacsServiceIndex': None}, methods=['GET','POST'])
 @app.route('/<jacsServiceIndex>', methods=['GET','Post'])
 def index(jacsServiceIndex):
+
+    config = buildConfigObject()
     #index is the function to execute when url '/' or '/<jacsServiceIndex>' is reached and takes in the currently selected job index, if any
 
     #Access jacs database to get parent job service information
@@ -32,10 +56,13 @@ def index(jacsServiceIndex):
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []
     currentStepIndex = 0;
-    for currentStep in pipelineOrder:
+
+    for index, step in enumerate(config['steps']): # TODO make sure steps are ordered based on ordering
+        currentStep = step.name
         #Check if currentStep was used in previous service
         if (jacsServiceIndex is not None) and (jacsServiceIndex!="favicon.ico") and (currentStep in parentServiceData[int(float(jacsServiceIndex))]["args"][3]):
             fileName = parentServiceData[int(jacsServiceIndex)]["args"][1] + str(currentStepIndex) + '_' + currentStep + '.json'
+            loadParameters(fileName)
             currentStepIndex = currentStepIndex+1
             #If loading previous run parameters for specific step, then it should be checked and editable
             editState = 'enabled'
@@ -49,27 +76,20 @@ def index(jacsServiceIndex):
         jsonString = json.dumps(jsonData, indent=4, separators=(',', ': '))
         jsonString = re.sub(r'\[.*?\]', lambda m: m.group().replace("\n", ""), jsonString, flags=re.DOTALL)
         jsonString = re.sub(r'\[.*?\]', lambda m: m.group().replace(" ", ""), jsonString, flags=re.DOTALL)
+
         #Pipeline steps is passed to index.html for formatting the html based
         pipelineSteps.append({
             'stepName': currentStep,
-            'stepDescription':"",
+            'stepDescription':step.description,
             'inputJson': jsonString,
             'state': editState,
             'checkboxState': checkboxState
         })
 
-    pipelineSteps[0]["stepDescription"] = "Image Correction and Compression"
-    pipelineSteps[1]["stepDescription"] = "Multiview Image Fusion (MF)"
-    pipelineSteps[2]["stepDescription"] = "Preprocessing MF for Temporal Smoothing"
-    pipelineSteps[3]["stepDescription"] = "Temporal Smoothing of MF"
-    pipelineSteps[4]["stepDescription"] = "Preprocessing for 3D Drift Correction and Intensity Normalization"
-    pipelineSteps[5]["stepDescription"] = "Drift and Intensity Correction"
-    pipelineSteps[6]["stepDescription"] = "Filter Image Stacks and/or Max. Intensity Projections of Filtered Stacks"
-
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
-        client = MongoClient('mongodb://10.40.3.155:27017/')
+        client = MongoClient(settings.mongo)
         lightsheetDB = client.lightsheet
         numSteps = 0
         allSelectedStepNames=""
@@ -106,8 +126,10 @@ def index(jacsServiceIndex):
             #postBody["errorPath"] = outputDirectory
             #postBody["outputPath"] = outputDirectory
             #Post to JACS
-            requestOutput = requests.post('http://jacs-dev.int.janelia.org:9000/api/rest-v2/async-services/lightsheetProcessing',
-                                           headers=headers,
+
+         #   requestOutput = requests.post(settings.lightsheetProcessing,
+            requestOutput = requests.post(settings.lightsheetProcessing,
+                                           headers=getHeaders,
                                            data=json.dumps(postBody))
             requestOutputJsonified = requestOutput.json()
             #Store information about the job in the lightsheet database
@@ -118,7 +140,9 @@ def index(jacsServiceIndex):
     return render_template('index.html',
                            title='Home',
                            pipelineSteps=pipelineSteps,
-                           parentServiceData=parentServiceData)
+                           parentServiceData=parentServiceData,
+                           logged_in=True,
+                           config = config)
 
 @app.route('/job_status', defaults={'jacsServiceIndex': None}, methods=['GET'])
 @app.route('/job_status/<jacsServiceIndex>', methods=['GET'])
@@ -126,6 +150,7 @@ def job_status(jacsServiceIndex):
     #job_status is the function to execute when url '/job_status' or '/job_status/<jacsServiceIndex>' is reached and takes in the currently selected job index, if any
 
     #For now, get information from jacs database directly to monitor parent and child job statuses
+
     parentServiceData = getParentServiceData(jacsServiceIndex)
     childSummarizedStatuses=[]
     if jacsServiceIndex is not None:
@@ -136,45 +161,16 @@ def job_status(jacsServiceIndex):
             if i<=len(childJobStatuses)-1:
                 childSummarizedStatuses.append({"step": steps[i], "status": childJobStatuses[i]["state"], "startTime": str(childJobStatuses[i]["creationDate"]), "endTime":str(childJobStatuses[i]["modificationDate"]), "elapsedTime":str(childJobStatuses[i]["modificationDate"]-childJobStatuses[i]["creationDate"])})
                 if childJobStatuses[i]["state"]=="RUNNING":
-                    childSummarizedStatuses[i]["elapsedTime"] = str(datetime.now(eastern)-childJobStatuses[i]["creationDate"])
+                    childSummarizedStatuses[i]["elapsedTime"] = str(datetime.now(utils.eastern)-childJobStatuses[i]["creationDate"])
             else:
                 childSummarizedStatuses.append({"step": steps[i], "status": "NOT YET QUEUED", "startTime": "N/A", "endTime":"N/A", "elapsedTime": "N/A"})
 
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentServiceData=parentServiceData,
-                           childSummarizedStatuses=childSummarizedStatuses)
-
-def getParentServiceData(jacsServiceIndex=None):
-    #Function to get information about parent jobs from JACS database marks currently selected job
-    requestOutput = requests.get('http://jacs-dev.int.janelia.org:9000/api/rest-v2/services/',
-                                 params={'service-name':'lightsheetProcessing'},
-                                 headers=headers)
-    requestOutputJsonified = requestOutput.json()
-    serviceData = requestOutputJsonified['resultList']
-    count = 0
-    for dictionary in serviceData: #convert date to nicer string
-        dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
-        dictionary["selected"]=''
-        dictionary["index"] = str(count)
-        count=count+1
-    if jacsServiceIndex is not None and (jacsServiceIndex!="favicon.ico"):
-        serviceData[int(float(jacsServiceIndex))]["selected"] = 'selected'
-    return serviceData
-
-def getChildServiceData(parentId):
-    #Function to get information from JACS service databases
-    #Gets information about currently running and already completed jobs
-    requestOutput = requests.get('http://jacs-dev.int.janelia.org:9000/api/rest-v2/services/',
-                                 params={'parent-id': str(parentId)},
-                                 headers=headers)
-    requestOutputJsonified = requestOutput.json()
-    serviceData=requestOutputJsonified['resultList']
-    for dictionary in serviceData: #convert date to nicer string
-         dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
-    serviceData = requestOutputJsonified['resultList']
-    serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
-    return serviceData
-
-def convertEpochTime(v):
-    return datetime.fromtimestamp(int(v)/1000, eastern)
+                           childSummarizedStatuses=childSummarizedStatuses,
+                           logged_in=True)
+@app.route('/search')
+def search():
+    return render_template('search.html',
+                           logged_in=True)

@@ -1,0 +1,95 @@
+fieldset {
+  border: none;
+}
+
+.navbar {
+  margin-top: 1.5em;
+}
+
+.select-job {
+  width: 60%;
+}
+
+.right-align {
+  text-align: right;
+}
+
+.pipeline-config {
+  margin-top: 2em;
+}
+
+.lightsheet-container {
+  width: 75%;
+}
+
+.lightsheet-row {
+  margin-top: 1.5em;
+  margin-left: 0.2em;
+}
+
+.lightsheet-input {
+  max-width: 20em;
+  min-width: 8em;
+}
+
+.lightsheet-number {
+  margin-left: 1em;
+  max-width: 6em;
+}
+
+.lightsheet-text {
+  margin-left: 1em;
+}
+
+.lightsheet-heading {
+  margin-top: 2em;
+}
+
+.lightsheet-dropdown {
+  max-width: 50%;
+}
+
+.lightsheet-tab {
+  margin-top: 1em;
+}
+
+.lightsheet-label {
+  font-size: 0.9em;
+  min-width: 4em;
+}
+
+.empty-label {
+  margin-top: 1.8em;
+}
+
+.navbar-brand {
+  padding-left: 3em;
+}
+
+.field-left {
+  margin-left: 2em;
+}
+
+.last-camera-parameter {
+  margin-bottom: 1.2em;
+}
+
+.middle-camera-parameter {
+  margin-bottom: 0.4em;
+}
+
+.step-name {
+  color: black;
+}
+
+.status-error {
+  background-color: rgba(255,0,0,0.3)
+}
+
+.status-successful {
+  background-color: rgba(0,255,0,0.3)
+}
+
+.status-running {
+  background-color: rgba(0,0,255,0.3)
+}

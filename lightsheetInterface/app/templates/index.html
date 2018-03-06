@@ -1,33 +1,31 @@
-{% extends "base.html" %}
+{% extends "branding.html" %}
 {% block content %}
-<style>
-  fieldset {
-  border: none;
-  }   		 
-</style>
-<a href="http://10.36.13.18:5000/job_status"> Check Job Status </a
-<p></p>
-<p></p>
-
-<!-- Drop down menu to select a previously submitted job -->
-<select onchange="location = this.options[this.selectedIndex].value;">
-  <option value="http://10.36.13.18:5000/" selected>---Select Previous Run---</option>
-  {% for service in parentServiceData %}
-  <option value={{"http://10.36.13.18:5000/"+ service.index }} {{ service.selected }}>  {{ service.creationDate + " " + "(" + service.args[3] + ")"}} </option> 
-  {% endfor %}
-</select>
-<br>
-<br>
-<!-- Display step names and parameterization, with checked state determining if the text box is editable -->
-<form action="" method="post">
-  {% for pipelineStep in pipelineSteps %}
-  <fieldset>
-  <legend class="hide"><input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}} {{ pipelineStep.checkboxState }}> {{ pipelineStep.stepDescription }} </legend>
-  <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}  name={{ pipelineStep.stepName }}>{{ pipelineStep.inputJson }}</textarea><br>
-  </fieldset>
-  <br>
-  {% endfor %}
-  <p><input type="submit" name="postJob" value="Submit Job" /></p>
-</form>
+  <div class="row lightsheet-row">
+    <h3>Configure Job</h3>
+  </div>
+  <!-- First row contains dropdown to select one of the previous jobs -->
+  <div class="row lightsheet-row">
+    <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
+      <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
+      {% if parentServiceData is not none %}
+        {% for service in parentServiceData %}
+          <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}} </option>
+        {% endfor %}
+      {% endif %}
+    </select>
+  </div>
+  <!-- This row contains the accordeon control which contains the steps -->
+  <div class="row lightsheet-row">
+    <div id="steps">
+      {% if pipelineSteps is not none %}
+        {% for pipelineStep in pipelineSteps %}
+          {% include "step.html" ignore missing with context %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <!-- This row contains the button to submit the forms -->
+  <div class="row lightsheet-row">
+    <input class="btn btn-info" type="button" name="postJob" value="Submit Job" onclick="ls.processForm()" />
+  </div>
 {% endblock %}
-
