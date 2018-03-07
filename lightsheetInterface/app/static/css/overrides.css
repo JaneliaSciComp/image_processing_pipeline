@@ -58,6 +58,11 @@ fieldset {
   min-width: 4em;
 }
 
+.lightsheet-search {
+  margin-bottom: 1.2em;
+  width: 33%;
+}
+
 .empty-label {
   margin-top: 1.8em;
 }
