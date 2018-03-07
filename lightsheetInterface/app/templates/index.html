@@ -7,6 +7,7 @@
     <h4>Configure Job</h4>
   </div>
   <div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-3">
       <div class="form-group form-inline">
         <label class="lightsheet-label">Name: </label>
         <input type="text" class="form-control" name="job-name">
@@ -15,14 +16,17 @@
         <label class="lightsheet-label">Date: </label>
         <input type="date" class="form-control" name="job-date">
       </div>
+    </div>
+    <div class="col-lg-6 col-md-6 col-sm-6">
       <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
-      <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
-      {% if parentServiceData is not none %}
-        {% for service in parentServiceData %}
-          <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}} </option>
-        {% endfor %}
-      {% endif %}
-    </select>
+        <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
+          {% if parentServiceData is not none %}
+            {% for service in parentServiceData %}
+              <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}} </option>
+            {% endfor %}
+          {% endif %}
+      </select>
+    </div>
   </div>
   <!-- accordeon control which contains the steps -->
   <form action="" method="post">
@@ -47,7 +51,7 @@
     <h4>Previous Jobs</h4>
   </div>
   <div class="w3-container" style="margin-top: 1.5em;">
-    <input class="w3-input w3-border w3-padding" type="text" placeholder="Search for names.." id="myInput" onkeyup="filterTable()">
+    <input class="w3-input w3-border w3-padding" type="text" placeholder="Search for names.." id="search-input" onkeyup="filterTable()">
     <table class="table table-striped table-hover">
       <thead>
         <tr>
@@ -80,20 +84,27 @@
 
     function filterTable() {
       var input, filter, table, tr, td, i;
-      var input = document.getElementById("myInput");
+      var input = document.getElementById("search-input");
       var filter = input.value.toUpperCase();
       var table = document.getElementById("job-table-body");
       var tr = table.getElementsByTagName("tr");
+      var found = null;
       for (var i = 0; i < tr.length; i++) {
         var td = tr[i].getElementsByTagName("td");
+        found = false;
         if (td) {
           for (var j = 0; j < td.length; j++) {
             if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
-              tr[i].style.display = "";
-            } else {
-              tr[i].style.display = "none";
+              found = true;
+              break;
             }
           }
+        }
+        if (found) {
+          tr[i].style.display = "";
+        }
+        else {
+          tr[i].style.display = "none";
         }
       }
     }
