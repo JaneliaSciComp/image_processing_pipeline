@@ -169,8 +169,7 @@ def index():
                            serviceData=serviceData,
                            parentServiceData=parentServiceData,
                            logged_in=True,
-                           config = config,
-                           serverInfoFullAddress = Settings.serverInfo["fullAddress"])
+                           config = config)
 
 @app.route('/job_status/', methods=['GET'])
 def job_status():
@@ -204,8 +203,7 @@ def job_status():
     return render_template('job_status.html', 
                            parentServiceData=parentServiceData,
                            childSummarizedStatuses=childSummarizedStatuses,
-                           logged_in=True,
-                           serverInfoFullAddress = Settings.serverInfo["fullAddress"])
+                           logged_in=True)
 @app.route('/search')
 def search():
     return render_template('search.html',
