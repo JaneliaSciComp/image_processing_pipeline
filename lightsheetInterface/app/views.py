@@ -41,22 +41,28 @@ def submit():
             print(k)
     return 'form submitted'
 
-@app.route('/', defaults={'serviceIndex': None}, methods=['GET','POST'])
-@app.route('/<serviceIndex>', methods=['GET','Post'])
-def index(serviceIndex):
+#@app.route('/', defaults={'serviceIndex': None}, methods=['GET','POST'])
+#@app.route('/<serviceIndex>', methods=['GET','Post'])
+#def index(serviceIndex):
+#    serviceIndex = request.args.get('jacsServiceIndex')
+@app.route('/', methods=['GET','POST'])
+def index():
+    jobIndex = request.args.get('jacsServiceIndex')
+   
     #Mongo client
     client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
 
     config = buildConfigObject()
-    #index is the function to execute when url '/' or '/<serviceIndex>' is reached and takes in the currently selected job index, if any
+    #index is the function to execute when url '/' or '/<jobIndex>' is reached and takes in the currently selected job index, if any
 
     #Access jacs database to get parent job service information
     serviceData = getServiceDataFromDB(lightsheetDB)
     jobSelected = False;
-    if (serviceIndex is not None) and (serviceIndex!="favicon.ico"):
-        serviceData[(int(float(serviceIndex)))]["selected"]='selected'
+    if jobIndex is not None:
+        jobIndex = int(jobIndex)
+        serviceData[jobIndex]["selected"]='selected'
         jobSelected = True;
   
     #Order of pipeline steps
@@ -64,17 +70,18 @@ def index(serviceIndex):
 
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []
-    currentStepIndex = 0;
-
-    for index, step in enumerate(config['steps']): # TODO make sure steps are ordered based on ordering
+    jobStepIndex = 0;
+    
+    for step in config['steps']: # TODO make sure steps are ordered based on ordering
         currentStep = step.name
         #Check if currentStep was used in previous service
-        if jobSelected and (currentStep in serviceData[int(float(serviceIndex))]["selectedStepNames"]):
-            arrayOfStepDictionaries = serviceData[(int(float(serviceIndex)))]["steps"]
+        if jobSelected and (currentStep in serviceData[jobIndex]["selectedStepNames"]):
+            arrayOfStepDictionaries = serviceData[jobIndex]["steps"]
             #If loading previous run parameters for specific step, then it should be checked and editable
             editState = 'enabled'
             checkboxState = 'checked'
-            jsonString = json.dumps(arrayOfStepDictionaries[index]["parameters"], indent=4, separators=(',', ': '));
+            jsonString = json.dumps(arrayOfStepDictionaries[jobStepIndex]["parameters"], indent=4, separators=(',', ': '));
+            jobStepIndex = jobStepIndex+1
         else: #Defaults
             fileName = defaultFileBase + currentStep +'.json'
             editState = 'disabled'
@@ -95,7 +102,6 @@ def index(serviceIndex):
             'checkboxState': checkboxState
         })
 
-    print(pipelineSteps)
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
@@ -104,6 +110,7 @@ def index(serviceIndex):
         allSelectedTimePoints=""
         stepParameters=[]
   
+        userDefinedJobName=[]
         for currentStep in pipelineOrder:
             text = request.form.get(currentStep) #will be none if checkbox is not checked
             if text is not None:
@@ -111,9 +118,11 @@ def index(serviceIndex):
                     #Create new document in jobs collection in lightsheet database and create json output directory
                     newId = lightsheetDB.jobs.insert_one({"steps":{}}).inserted_id
                     outputDirectory = outputDirectoryBase + str(newId) + "/"
-                    postBody = { "processingLocation": "LSF_JAVA", 
+                    postBody = { "processingLocation": "LSF_JAVA",
                                  "args": ["-configDirectory",outputDirectory],
-                                 "resources": {"gridAccountId": "lightsheet"}}
+                                 "resources": {"gridAccountId": "lightsheet"}
+                                 ,"queueId":"jacs-dev"
+                    }
                     os.mkdir(outputDirectory)
                 #Write json files
                 fileName=str(numSteps) + "_" + currentStep + ".json"
@@ -137,17 +146,21 @@ def index(serviceIndex):
             #postBody["errorPath"] = outputDirectory
             #postBody["outputPath"] = outputDirectory
             #Post to JACS
-
             requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
                                            headers=getHeaders(),
                                            data=json.dumps(postBody))
+ 
             requestOutputJsonified = requestOutput.json()
             #Store information about the job in the lightsheet database
             currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/.git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
-            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
+            if not userDefinedJobName:
+                userDefinedJobName = requestOutputJsonified["_id"]
+            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jobName": userDefinedJobName,
+                                                                 "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, 
+                                                                 "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
     
     
-    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, serviceIndex)
+    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndex)
     
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
@@ -159,24 +172,26 @@ def index(serviceIndex):
                            config = config,
                            serverInfoFullAddress = Settings.serverInfo["fullAddress"])
 
-@app.route('/job_status', defaults={'serviceIndex': None}, methods=['GET'])
-@app.route('/job_status/<serviceIndex>', methods=['GET'])
-def job_status(serviceIndex):
+@app.route('/job_status/', methods=['GET'])
+def job_status():
+    jobIndex = request.args.get('jacsServiceIndex')
     #Mongo client
     client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
     
-    #job_status is the function to execute when url '/job_status' or '/job_status/<serviceIndex>' is reached and takes in the currently selected job index, if any
+    #job_status is the function to execute when url '/job_status' or '/job_status/<jobIndex>' is reached and takes in the currently selected job index, if any
 
     #For now, get information from jacs database directly to monitor parent and child job statuses
-
-    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, serviceIndex)
+    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndex)
     childSummarizedStatuses=[]
-    if serviceIndex is not None:
+
+    if jobIndex is not None:
+        jobIndex=int(jobIndex)
+        
         #If a specific parent job is selected, find all the child job status information and store the step name, status, start time, endtime and elapsedTime
-        childJobStatuses = getChildServiceData( parentServiceData[int(serviceIndex)]["_id"] )
-        steps = parentServiceData[int(serviceIndex)]["args"][3].split(",")
+        childJobStatuses = getChildServiceDataFromJACS( parentServiceData[jobIndex]["_id"] )
+        steps = parentServiceData[jobIndex]["args"][3].split(",")
         for i in range(0,len(steps)):
             if i<=len(childJobStatuses)-1:
                 childSummarizedStatuses.append({"step": steps[i], "status": childJobStatuses[i]["state"], "startTime": str(childJobStatuses[i]["creationDate"]), "endTime":str(childJobStatuses[i]["modificationDate"]), "elapsedTime":str(childJobStatuses[i]["modificationDate"]-childJobStatuses[i]["creationDate"])})
