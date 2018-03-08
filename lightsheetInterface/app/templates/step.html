@@ -2,10 +2,6 @@
 <div class="card">
   <div class="card-header" id="headingOne">
     <h5 class="mb-0">
-      <!-- <button class="btn btn-link step-name" data-toggle="collapse" data-target="#collapse{{ pipelineStep.stepName }}" aria-expanded="false" aria-controls="collapse{{ pipelineStep.stepName }}">
-        <input type="checkbox" value={{ pipelineStep.stepName }}+"_checkbox" {{ pipelineStep.checkboxState }}>
-        {{ pipelineStep.stepDescription }}
-      </button> -->
       <label>
         <input
           id="check-{{pipelineStep.stepName}}"
@@ -15,8 +11,10 @@
           data-target="#collapse{{ pipelineStep.stepName }}"
           aria-expanded={{ pipelineStep.checkboxState }}
           aria-controls="collapse{{ pipelineStep.stepName }}"
-          value={{ pipelineStep.stepName }}+"_checkbox" {{ pipelineStep.checkboxState }}>
-          {{ pipelineStep.stepDescription }}
+          value={{ pipelineStep.stepName }}+"_checkbox"
+	  onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}}
+	  {{ pipelineStep.checkboxState }}>
+        {{ pipelineStep.stepDescription }}
       </label>
     </h5>
   </div>
@@ -77,8 +75,7 @@
         <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}">
           <!-- For now, show json in sometimes panel -->
           <fieldset>
-            <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}}
-                name={{ pipelineStep.stepName }}>
+            <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}} name={{ pipelineStep.stepName }}>
               {{ pipelineStep.inputJson }}
             </textarea>
           </fieldset>

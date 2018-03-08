@@ -78,45 +78,58 @@ def writeToJSON(name, value):
   return result
 
 #Header for post request
-def getHeaders():
-  return {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'ackermand'}
-
+def getHeaders(forQuery=False):
+  if forQuery:
+    return {'content-type': 'application/json', 'USERNAME': settings.username}
+  else:
+    return {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'lightsheet'}
 #Timezone for timings
 eastern = timezone('US/Eastern')
 
-def getParentServiceData(jacsServiceIndex=None):
-  #Function to get information about parent jobs from JACS database marks currently selected job
-  requestOutput = requests.get(settings.lightsheetApi,
-                               params={'service-name':'lightsheetProcessing'},
-                               headers=getHeaders())
-  requestOutputJsonified = requestOutput.json()
-  serviceData = requestOutputJsonified['resultList']
-  count = 0
-  for dictionary in serviceData: #convert date to nicer string
-      dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
-      dictionary["selected"]=''
-      dictionary["index"] = str(count)
-      count=count+1
-  if jacsServiceIndex is not None and (jacsServiceIndex!="favicon.ico"):
-      serviceData[int(float(jacsServiceIndex))]["selected"] = 'selected'
-  return serviceData
+def getServiceDataFromDB(lightsheetDB):
+    serviceData = list(lightsheetDB.jobs.find())
+    for count, dictionary in enumerate(serviceData):
+        dictionary["selected"]='';
+        dictionary["creationDate"]=str(dictionary["_id"].generation_time)
+        dictionary["index"]=str(count)
+    return serviceData
 
-def getChildServiceData(parentId):
-  #Function to get information from JACS service databases
-  #Gets information about currently running and already completed jobs
-  requestOutput = requests.get(settings.lightsheetApi,
-                               params={'parent-id': str(parentId)},
-                               headers=getHeaders())
-  requestOutputJsonified = requestOutput.json()
-  serviceData=requestOutputJsonified['resultList']
-  for dictionary in serviceData: #convert date to nicer string
-       dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
-  serviceData = requestOutputJsonified['resultList']
-  serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
-  return serviceData
+def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
+    #Function to get information about parent jobs from JACS database marks currently selected job
+    allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
+    allJACSids = [str(dictionary['jacs_id']) for dictionary in allJACSids]
+    requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
+                                           params={'service-id':  JACSid},
+                                           headers=getHeaders(True)).json()
+                              for JACSid in allJACSids]
+
+    serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
+    for count, dictionary in enumerate(serviceData): #convert date to nicer string
+        dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
+        dictionary["selected"]=''
+        dictionary["index"] = str(count)
+   
+    if serviceIndex is not None and (serviceIndex!="favicon.ico"):
+        serviceData[int(float(serviceIndex))]["selected"] = 'selected'
+    return serviceData
+
+def getChildServiceDataFromJACS(parentId):
+    #Function to get information from JACS service databases
+    #Gets information about currently running and already completed jobs
+    requestOutput = requests.get(settings.devOrProductionJACS+'/services/',
+                                 params={'parent-id': str(parentId)},
+                                 headers=getHeaders(True))
+    requestOutputJsonified = requestOutput.json()
+    serviceData=requestOutputJsonified['resultList']
+    for dictionary in serviceData: #convert date to nicer string
+         dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
+    serviceData = requestOutputJsonified['resultList']
+    serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
+    return serviceData
 
 def convertEpochTime(v):
-  return datetime.fromtimestamp(int(v)/1000, eastern)
+    return datetime.fromtimestamp(int(v)/1000, eastern)
+
 
 def generateThumbnailImages():
   path = sys.argv[1]
@@ -170,7 +183,6 @@ def generateThumbnailImages():
     fig.savefig(url_for('static', filename='img/test.jpg'))
     pool.close()
 
-
 def loadParameters(fileName):
   with open(fileName) as data_file:
     data = json.load(data_file)
@@ -188,3 +200,4 @@ def parseJsonData(data):
       parameter[key] = data[key]
     elif type(data[key]) is int:
       parameter[key] = data[key]
+
