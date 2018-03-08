@@ -1,22 +1,34 @@
 {% extends "branding.html" %}
 {% block content %}
+  <!--
+      Rows to configure a new job
+  -->
   <div class="row lightsheet-row">
-    <h3>Configure Job</h3>
+    <h4>Configure Job</h4>
   </div>
-  <!-- First row contains dropdown to select one of the previous jobs -->
-  <div class="row lightsheet-row">
-    <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
-      <option value={{serverInfoFullAddress}} selected>---Select Previous Run---</option> <!-- value="{{ url_for('index') }}"-->
-      {% if serviceData is not none %}
-        {% for service in serviceData %}
-          <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.selectedStepNames + ")"}} </option>
-        {% endfor %}
-      {% endif %}
-    </select>
+  <div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-3">
+      <div class="form-group form-inline">
+        <label class="lightsheet-label">Name: </label>
+        <input type="text" class="form-control" name="job-name">
+      </div>
+      <div class="form-group form-inline">
+        <label class="lightsheet-label">Date: </label>
+        <input type="date" class="form-control" name="job-date">
+      </div>
+    </div>
+    <div class="col-lg-6 col-md-6 col-sm-6">
+      <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
+        <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
+          {% if parentServiceData is not none %}
+            {% for service in parentServiceData %}
+              <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}} </option>
+            {% endfor %}
+          {% endif %}
+      </select>
+    </div>
   </div>
-  <!-- This row contains the accordeon control which contains the steps -->
-
-
+  <!-- accordeon control which contains the steps -->
   <form action="" method="post">
     <div class="row lightsheet-row">
       <div id="steps">
@@ -27,62 +39,81 @@
         {% endif %}
       </div>
     </div>
-    <!-- This row contains the button to submit the forms -->
+    <!-- button to submit the forms -->
     <div class="row lightsheet-row">
       <input type="submit" name="postJob" class="btn btn-info" value="Submit Job" /></p>
     </div>
   </form>
 
-  <style>
-    table {
-        font-family: arial, sans-serif;
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    td, th {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }
-
-    tr:nth-child(even) {
-        background-color: #dddddd;
-    }
-  </style>
-
+  <!--
+      Rows to select an existing job
+  -->
+  <div class="row lightsheet-row" style="margin-top: 2em;">
+    <h4>Previous Jobs</h4>
+  </div>
   <div class="row lightsheet-row">
-    <table id="jobTable">
-      <tr>
-        <th onclick="sortTable(0)">Job</th>
-	<th onclick="sortTable(1)">Status</th>
-      </tr>
-      </br>
-      <!-- Status of child processes-->
-      {% if parentServiceData is not none %}
+    <input class="form-control lightsheet-search" type="text" placeholder="Search for names.." id="search-input" onkeyup="filterTable()">
+    <table class="table table-striped table-hover" id="job-table">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Name</th>
+          <th onclick="sortTable(1)">Date</th>
+          <th onclick="sortTable(2)">Steps</th>
+          <th onclick="sortTable(3)">InputFolder</th>
+        </tr>
+      </thead>
+      <tbody id="job-table-body">
+        {% if parentServiceData is not none %}
         {% for service in parentServiceData %}
           <tr>
-            <td>{{ service.creationDate+ "" + "(" + service.args[3] +")" }}</td>
-	    <td>{{ service.state }}</td>
+            <td>Name</td>
+            <td>{{ service.creationDate | strftime }}</td>
+            <td>{{ service.args[3]}}</td>
+            <td>{{ service.args[1]}}</td>
           </tr>
         {% endfor %}
-      {% endif %}
+        {% endif %}
+      </tbody>
     </table>
   </div>
+  <script type="text/javascript">
+    $(function () {
+      $('#datetimepicker').datetimepicker({
+          defaultDate: moment()
+        });
+    });
 
-  <script>
-    var ls = ls || {};
-    ls.processForm = function() {
-    var forms = document.getElementsByClassName('step-form');
-    for (var i = 0; i < forms.length; i++) {
-			forms[i].submit();
-			}
+    function filterTable() {
+      var input, filter, table, tr, td, i;
+      var input = document.getElementById("search-input");
+      var filter = input.value.toUpperCase();
+      var table = document.getElementById("job-table-body");
+      var tr = table.getElementsByTagName("tr");
+      var found = null;
+      for (var i = 0; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
+        found = false;
+        if (td) {
+          for (var j = 0; j < td.length; j++) {
+            if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+              found = true;
+              break;
+            }
+          }
+        }
+        if (found) {
+          tr[i].style.display = "";
+        }
+        else {
+          tr[i].style.display = "none";
+        }
+      }
     }
-    var ls = ls || {};
-    jcc.myRoot = "{{ url_for('index')}}";
+
+
     function sortTable(n) {
      var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-  table = document.getElementById("jobTable");
+  table = document.getElementById("job-table");
   switching = true;
   //Set the sorting direction to ascending:
   dir = "asc"; 
@@ -135,4 +166,8 @@
   }
 }
   </script>
+  <!-- contrib dependencies -->
+  <script src="{{url_for('static', filename='components/bootstrap-datetimepicker/src/js/bootstrap-datetimepicker.js')}}"></script>
+  <script src="{{url_for('static', filename='components/moment/min/moment.min.js')}}"></script>
+
 {% endblock %}
