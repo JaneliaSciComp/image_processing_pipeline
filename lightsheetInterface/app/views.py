@@ -178,8 +178,6 @@ def job_status():
     client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
-    
-    #job_status is the function to execute when url '/job_status' or '/job_status/<jobIndex>' is reached and takes in the currently selected job index, if any
 
     #For now, get information from jacs database directly to monitor parent and child job statuses
     parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndex)
