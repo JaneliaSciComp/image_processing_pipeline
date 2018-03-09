@@ -1,4 +1,4 @@
-import sys, numpy, datetime, glob, scipy, re, json, requests
+import sys, numpy, datetime, glob, scipy, re, json, requests, os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from wtforms import Form, StringField, validators
@@ -196,3 +196,10 @@ def parseJsonData(data):
     elif type(data[key]) is int:
       parameter[key] = data[key]
 
+def getAppVersion(path):
+  mpath = path.split('/')
+  result = '/'.join(mpath[0:(len(mpath)-1)]) + '/package.json'
+  with open(result) as package_data:
+    data = json.load(package_data)
+    package_data.close()
+    return data['version']
