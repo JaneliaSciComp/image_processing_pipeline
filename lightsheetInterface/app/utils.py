@@ -102,15 +102,20 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
                                            params={'service-id':  JACSid},
                                            headers=getHeaders(True)).json()
                               for JACSid in allJACSids]
+    serviceData = None
 
-    serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
-    for count, dictionary in enumerate(serviceData): #convert date to nicer string
-        dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
-        dictionary["selected"]=''
-        dictionary["index"] = str(count)
-   
-    if serviceIndex is not None and (serviceIndex!="favicon.ico"):
-        serviceData[int(float(serviceIndex))]["selected"] = 'selected'
+    for dictionary in requestOutputJsonified:
+      print(type(dictionary))
+      if dictionary['resultList'] != None and len(dictionary['resultList']) > 0:
+        serviceData = dictionary['resultList'][0]
+        for count, dictionary in enumerate(serviceData): #convert date to nicer string
+          dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
+          dictionary["selected"]=''
+          dictionary["index"] = str(count)
+
+        # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
+        if serviceIndex is not None and (serviceIndex!="favicon.ico"):
+            serviceData[int(float(serviceIndex))]["selected"] = 'selected'
     return serviceData
 
 def getChildServiceDataFromJACS(parentId):
