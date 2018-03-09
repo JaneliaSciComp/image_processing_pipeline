@@ -105,7 +105,6 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
     serviceData = None
 
     for dictionary in requestOutputJsonified:
-      print(type(dictionary))
       if dictionary['resultList'] != None and len(dictionary['resultList']) > 0:
         serviceData = dictionary['resultList'][0]
         for count, dictionary in enumerate(serviceData): #convert date to nicer string
