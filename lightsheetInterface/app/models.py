@@ -4,7 +4,7 @@ from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
                          connect, DecimalField, StringField, IntField, FloatField, ListField, Document, ReferenceField, NULLIFY)
 
 from flask_admin.contrib.mongoengine import ModelView
-from app import db, admin
+from app import admin
 
 types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))

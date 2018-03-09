@@ -69,3 +69,23 @@ If you're done with coding, you can deactivate the environment with the command
 ```bash
 $ deactivate
 ```
+
+### Deployment
+
+In the folder where package.json is located, create a new versionId with
+
+```bash
+$ npm version patch
+```
+
+or
+
+```bash
+$ npm version [minor|major]
+```
+
+Deploy the application with
+
+```bash
+$ fly deploy:production
+```

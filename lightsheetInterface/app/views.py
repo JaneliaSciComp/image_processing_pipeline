@@ -8,8 +8,8 @@ from pprint import pprint
 from app import app
 from app.settings import Settings
 from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, getServiceDataFromDB, getHeaders, loadParameters
-
+from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
+from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion
 
 settings = Settings()
 
@@ -17,6 +17,8 @@ settings = Settings()
 defaultFileBase = settings.defaultFileBase
 #Location to store json files
 outputDirectoryBase = settings.outputDirectoryBase
+
+app_version = getAppVersion(app.root_path)
 
 app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -27,11 +29,15 @@ def register():
         db_session.add(user)
         flash('Thanks for registering')
         return redirect(url_for('login'))
-    return render_template('register.html', form=form)
+    return render_template('register.html',
+                form=form,
+                version = app_version)
 
 @app.route('/login')
 def login():
-    return render_template('login.html', logged_in=False)
+    return render_template('login.html',
+                logged_in=False,
+                version = app_version)
 
 @app.route('/submit', methods=['GET','POST'])
 def submit():
@@ -169,7 +175,8 @@ def index():
                            serviceData=serviceData,
                            parentServiceData=parentServiceData,
                            logged_in=True,
-                           config = config)
+                           config = config,
+                           version = app_version)
 
 @app.route('/job_status/', methods=['GET'])
 def job_status():
@@ -178,8 +185,6 @@ def job_status():
     client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
-    
-    #job_status is the function to execute when url '/job_status' or '/job_status/<jobIndex>' is reached and takes in the currently selected job index, if any
 
     #For now, get information from jacs database directly to monitor parent and child job statuses
     parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndex)
@@ -203,8 +208,10 @@ def job_status():
     return render_template('job_status.html', 
                            parentServiceData=parentServiceData,
                            childSummarizedStatuses=childSummarizedStatuses,
-                           logged_in=True)
+                           logged_in=True,
+                           version = app_version)
 @app.route('/search')
 def search():
     return render_template('search.html',
-                           logged_in=True)
+                           logged_in=True,
+                           version = app_version)
