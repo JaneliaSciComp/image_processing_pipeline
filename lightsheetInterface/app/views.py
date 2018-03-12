@@ -158,7 +158,7 @@ def index():
  
             requestOutputJsonified = requestOutput.json()
             #Store information about the job in the lightsheet database
-            currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', '/groups/lightsheet/lightsheet/home/ackermand/Lightsheet-Processing-Pipeline/.git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
+            currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
             if not userDefinedJobName:
                 userDefinedJobName = requestOutputJsonified["_id"]
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jobName": userDefinedJobName,

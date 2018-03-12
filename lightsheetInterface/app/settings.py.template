@@ -1,9 +1,10 @@
 class Settings:
    defaultFileBase = '<path>/Lightsheet-Processing-Pipeline/Compiled_Functions/sampleInput_'
    outputDirectoryBase = '<path>/interface_output/'
+   lightsheetProcessing = ',path to jacs./api/rest-v2/async-services/lightsheetProcessing'
    lightsheetApi = '<api_url>/api/rest-v2/services/'
+   pipelineGit = '<path to lightsheet IO files/.git>'
+   devOrProductionJACS =  '<api_url>/api/rest-v2/services/'
    mongo = <host:port of mongo instance>
    username = <lightsheet username>
    serverInfo = {'IP': <server IP address>, 'port' : <server port number>}
-   serverInfo['fullAddress'] = 'http://' + serverInfo['IP'] + ':' + str(serverInfo['port']) + '/'
-   devOrProductionJACS =  '<api_url>/api/rest-v2/services/'	
