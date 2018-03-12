@@ -178,11 +178,18 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
   fig.savefig(url_for('static', filename='img/test.jpg'))
   pool.close()
 
+
+def getPipelineStepNames():
+  steps = Step.objects.all().order_by('order')
+  names = []
+  for step in steps:
+    names.append(step.name)
+  return names
+
 def loadParameters(fileName):
   with open(fileName) as data_file:
     data = json.load(data_file)
     parseJsonData(data)
-
 
 def parseJsonData(data):
   keys = data.keys()

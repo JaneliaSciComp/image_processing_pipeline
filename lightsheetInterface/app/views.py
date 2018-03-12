@@ -9,7 +9,7 @@ from app import app
 from app.settings import Settings
 from app.models import AppConfig
 from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
-from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion
+from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames
 
 settings = Settings()
 
@@ -72,7 +72,7 @@ def index():
         jobSelected = True;
   
     #Order of pipeline steps
-    pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']
+    pipelineOrder = getPipelineStepNames()
 
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []

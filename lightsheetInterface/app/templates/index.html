@@ -64,14 +64,14 @@
       </thead>
       <tbody id="job-table-body">
         {% if parentServiceData is not none %}
-        {% for service in parentServiceData %}
-          <tr>
-            <td>Name</td>
-            <td>{{ service.creationDate | strftime }}</td>
-            <td>{{ service.args[3]}}</td>
-            <td>{{ service.args[1]}}</td>
-          </tr>
-        {% endfor %}
+          {% for service in parentServiceData %}
+            <tr>
+              <td>Name</td>
+              <td>{{ service.creationDate | strftime }}</td>
+              <td>{{ service.args[3]}}</td>
+              <td>{{ service.args[1]}}</td>
+            </tr>
+          {% endfor %}
         {% endif %}
       </tbody>
     </table>

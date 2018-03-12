@@ -72,7 +72,13 @@ $ deactivate
 
 ### Deployment
 
-In the folder where package.json is located, create a new versionId with
+In the folder where package.json is located, install the npm packages
+
+```bash
+$ npm install
+```
+
+Then create a new versionId with
 
 ```bash
 $ npm version patch
@@ -84,7 +90,7 @@ or
 $ npm version [minor|major]
 ```
 
-Deploy the application with
+Finally, deploy the application with
 
 ```bash
 $ fly deploy:production
