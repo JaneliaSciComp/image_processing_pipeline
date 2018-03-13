@@ -95,19 +95,21 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
                                            params={'service-id':  JACSid},
                                            headers=getHeaders(True)).json()
                               for JACSid in allJACSids]
-    serviceData = None
-
-    for dictionary in requestOutputJsonified:
-      if dictionary['resultList'] != None and len(dictionary['resultList']) > 0:
-        serviceData = dictionary['resultList'][0]
-        for count, dictionary in enumerate(serviceData): #convert date to nicer string
-          dictionary.update((k,str(convertEpochTime(v))) for k, v in dictionary.items() if k=="creationDate")
-          dictionary["selected"]=''
-          dictionary["index"] = str(count)
+    serviceData = []
+    count=0
+    for jobInformation in requestOutputJsonified:
+      if jobInformation['resultList'] is not None and len(jobInformation['resultList']) > 0:
+        jobInformationResultListDictionary = jobInformation['resultList'][0]
+        jobInformationResultListDictionary.update((k,str(convertEpochTime(v))) for k, v in jobInformationResultListDictionary.items() if k=="creationDate")
+        jobInformationResultListDictionary["selected"]=''
+        jobInformationResultListDictionary["index"] = str(count)
+        serviceData.append(jobInformationResultListDictionary)
+        count=count+1
 
         # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
-        if serviceIndex is not None and (serviceIndex!="favicon.ico"):
-            serviceData[int(float(serviceIndex))]["selected"] = 'selected'
+    if serviceData and serviceIndex is not None:
+      serviceData[int(serviceIndex)]["selected"] = 'selected'
+
     return serviceData
 
 def getChildServiceDataFromJACS(parentId):
@@ -125,6 +127,9 @@ def getChildServiceDataFromJACS(parentId):
     return serviceData
 
 def convertEpochTime(v):
+  if type(v) is str:
+    return v
+  else:
     return datetime.fromtimestamp(int(v)/1000, eastern)
 
 def insertImage(camera, channel, plane):

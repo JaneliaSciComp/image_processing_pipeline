@@ -127,7 +127,7 @@ def index():
                     postBody = { "processingLocation": "LSF_JAVA",
                                  "args": ["-configDirectory",outputDirectory],
                                  "resources": {"gridAccountId": "lightsheet"}
-                                 ,"queueId":"jacs-dev"
+                                 #,"queueId":"jacs-dev"
                     }
                     os.mkdir(outputDirectory)
                 #Write json files
