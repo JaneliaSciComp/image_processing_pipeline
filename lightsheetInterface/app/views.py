@@ -215,3 +215,21 @@ def search():
     return render_template('search.html',
                            logged_in=True,
                            version = app_version)
+
+@app.route('/config/<uuid>', methods=['GET','POST'])
+def config(uuid):
+ #   if numsteps>0
+    client = MongoClient(settings.mongo)
+    lightsheetDB = client.lightsheet
+    if request.method=='POST':
+        #put it in database
+        #return the address to it, which will be the db _id
+        newId = lightsheetDB.jobs.insert_one({"jobName": userDefinedJobName,
+                                              "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, 
+                                              "selectedStepNames": allSelectedStepNames, "steps": stepParameters}).inserted_id
+        #run jacs which will call get....
+        lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"]}})
+    if request.method=='GET':
+        #write out json file to current directory from database?
+    
+    #request.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps({'text': 'lalala'})
