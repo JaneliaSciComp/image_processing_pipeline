@@ -90,7 +90,7 @@ def getServiceDataFromDB(lightsheetDB):
 def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
     #Function to get information about parent jobs from JACS database marks currently selected job
     allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
-    allJACSids = [str(dictionary['jacs_id']) for dictionary in allJACSids]
+    allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
     requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
                                            params={'service-id':  JACSid},
                                            headers=getHeaders(True)).json()
