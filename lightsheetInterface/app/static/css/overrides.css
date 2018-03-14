@@ -30,6 +30,7 @@ fieldset {
 .lightsheet-input {
   max-width: 20em;
   min-width: 8em;
+  height: 1.8em;
 }
 
 .lightsheet-number {
@@ -97,4 +98,8 @@ fieldset {
 
 .status-running {
   background-color: rgba(0,0,255,0.3)
+}
+
+.pika-datepicker {
+  width: 10.8em;
 }

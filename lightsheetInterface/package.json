@@ -4,7 +4,8 @@
   "description": "LightSheet Pipeline Configurator",
   "main": "flightplan.js",
   "dependencies": {
-    "flightplan": "^0.6.17"
+    "flightplan": "^0.6.17",
+    "pikaday": "^1.7.0"
   },
   "devDependencies": {
     "jquery": "^3.3.1"
