@@ -1,4 +1,4 @@
-import sys, numpy, datetime, glob, scipy, re, json, requests, os
+import sys, numpy, datetime, glob, scipy, re, json, requests, os, ipdb
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from wtforms import Form, StringField, validators
@@ -10,6 +10,7 @@ from scipy import misc
 from datetime import datetime
 from pytz import timezone
 from app.models import AppConfig, Step, Parameter
+from app.forms import StepForm
 from app.settings import Settings
 
 settings = Settings()
@@ -198,15 +199,25 @@ def loadParameters(fileName):
 
 def parseJsonData(data):
   keys = data.keys()
-  regSingleNum = '[\d|,]'
-  regNumParameter = '[,*?]'
-  parameter = {}
-
+  pFrequent = {}
+  pSometimes = {}
+  pRare = {}
   for key in keys:
-    if type(data[key]) is str:
-      parameter[key] = data[key]
-    elif type(data[key]) is int:
-      parameter[key] = data[key]
+    if type(data[key]) is str or type(data[key]) is int:
+      # Look up parameter type
+      p = Parameter.objects.filter(name=key).first()
+      if p is not None:
+        if p.frequency == 'F':
+          pFrequent[key] = data[key]
+        elif p.frequency == 'S':
+          pSometimes[key] = data[key]
+        elif p.frequency == 'R':
+          pRare[key] = data[key]
+  forms = {}
+  forms['frequent'] = StepForm(pFrequent)
+  forms['sometimes'] = StepForm(pSometimes)
+  forms['rare'] = StepForm(pRare)
+  return forms
 
 def getAppVersion(path):
   mpath = path.split('/')

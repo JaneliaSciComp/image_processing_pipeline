@@ -1,19 +1,20 @@
+{% from "_formhelpers.html" import render_field %}
 <!-- This file contains the template code for each and every pipeline step and includes a separate template to render each parameter -->
-<div class="card">
+<div class="card" id="{{ pipelineStep.stepName }}-card">
   <div class="card-header" id="headingOne">
     <h5 class="mb-0">
       <label>
         <input
           id="check-{{pipelineStep.stepName}}"
           type="checkbox"
-          class="btn btn-link step-name"
+          class="btn btn-link step-name step-checkbox"
           data-toggle="collapse"
           data-target="#collapse{{ pipelineStep.stepName }}"
           aria-expanded={{ pipelineStep.checkboxState }}
           aria-controls="collapse{{ pipelineStep.stepName }}"
           value={{ pipelineStep.stepName }}+"_checkbox"
-	  onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}}
-	  {{ pipelineStep.checkboxState }}>
+	        onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}}
+	        {{ pipelineStep.checkboxState }}>
         {{ pipelineStep.stepDescription }}
       </label>
     </h5>
@@ -37,39 +38,64 @@
       <!-- Tab panes -->
       <div class="tab-content">
         <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ pipelineStep.stepName }}">
-          {% for step in config.steps %}
-            {% if step.name == pipelineStep.stepName %}
-                {% for param in step.parameter %}
-                  {% for p in config.parameter.frequent %}
-                    {% include "parameter.html" ignore missing with context %}
+          {% if not jobExists %}
+            {% for step in config.steps %}
+              {% if step.name == pipelineStep.stepName %}
+                  {% for param in step.parameter %}
+                    {% for p in config.parameter.frequent %}
+                      {% include "parameter.html" ignore missing with context %}
+                    {% endfor %}
                   {% endfor %}
-                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            Some new parameters
+            {% if formData['forms'] is not none %}
+              {% for param in formData['forms']['frequent'].record %}
+                {{ param }}
+              {% endfor %}
             {% endif %}
-          {% endfor %}
+          {% endif %}
         </div>
         <!-- sometimes panel -->
         <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ pipelineStep.stepName }}">
-          {% for step in config.steps %}
-            {% if step.name == pipelineStep.stepName %}
-                {% for param in step.parameter %}
-                  {% for p in config.parameter.sometimes %}
-                    {% include "parameter.html" ignore missing with context %}
+          {% if not jobExists %}
+            {% for step in config.steps %}
+              {% if step.name == pipelineStep.stepName %}
+                  {% for param in step.parameter %}
+                    {% for p in config.parameter.sometimes %}
+                      {% include "parameter.html" ignore missing with context %}
+                    {% endfor %}
                   {% endfor %}
-                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            {% if formData['forms'] is not none %}
+              {% for param in formData['forms']['sometimes']['record'] %}
+                  {{ param }}
+              {% endfor %}
             {% endif %}
-          {% endfor %}
+          {% endif %}
         </div>
         <!-- rare panel -->
         <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ pipelineStep.stepName }}">
-          {% for step in config.steps %}
-            {% if step.name == pipelineStep.stepName %}
-                {% for param in step.parameter %}
-                  {% for p in config.parameter.rare %}
-                    {% include "parameter.html" ignore missing with context %}
+          {% if not jobExists %}
+            {% for step in config.steps %}
+              {% if step.name == pipelineStep.stepName %}
+                  {% for param in step.parameter %}
+                    {% for p in config.parameter.rare %}
+                      {% include "parameter.html" ignore missing with context %}
+                    {% endfor %}
                   {% endfor %}
-                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            {% if formData['forms'] is not none %}
+              {% for param in formData['forms']['rare']['record'] %}
+                  {{ param }}
+              {% endfor %}
             {% endif %}
-          {% endfor %}
+          {% endif %}
         </div>
         <!-- json panel -->
         <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}">
