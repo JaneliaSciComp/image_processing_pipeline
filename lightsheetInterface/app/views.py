@@ -1,5 +1,5 @@
 import requests, json, random, os, math, datetime, bson, re, subprocess
-from flask import render_template, request
+from flask import render_template, request, jsonify
 from pymongo import MongoClient
 from time import gmtime, strftime
 from collections import OrderedDict
@@ -10,6 +10,7 @@ from app.settings import Settings
 from app.models import AppConfig
 from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
 from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames
+from bson.objectid import ObjectId
 
 settings = Settings()
 
@@ -111,60 +112,44 @@ def index():
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
         #lightsheetDB is the database containing lightsheet job information and parameters
-        numSteps = 0
         allSelectedStepNames=""
         allSelectedTimePoints=""
         stepParameters=[]
   
         userDefinedJobName=[]
+        stepsSelected = False;
         for currentStep in pipelineOrder:
             text = request.form.get(currentStep) #will be none if checkbox is not checked
             if text is not None:
-                if numSteps==0:
-                    #Create new document in jobs collection in lightsheet database and create json output directory
-                    newId = lightsheetDB.jobs.insert_one({"steps":{}}).inserted_id
-                    outputDirectory = outputDirectoryBase + str(newId) + "/"
-                    postBody = { "processingLocation": "LSF_JAVA",
-                                 "args": ["-configDirectory",outputDirectory],
-                                 "resources": {"gridAccountId": "lightsheet"}
-                                 #,"queueId":"jacs-dev"
-                    }
-                    os.mkdir(outputDirectory)
-                #Write json files
-                fileName=str(numSteps) + "_" + currentStep + ".json"
-                fh = open(outputDirectory + fileName,"w")
-                fh.write(text)
-                fh.close()
                 #Store step parameters and step names/times to use as arguments for the post
                 jsonifiedText = json.loads(text, object_pairs_hook=OrderedDict)
                 stepParameters.append({"stepName":currentStep, "parameters": jsonifiedText})
-                numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
                 allSelectedStepNames = allSelectedStepNames+currentStep+","
+                numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
                 allSelectedTimePoints = allSelectedTimePoints+str(numTimePoints)+", "
-                numSteps+=1
+                stepsSelected=True
         
-        if numSteps>0:
+        if stepsSelected:
             #Finish preparing the post body
             allSelectedStepNames = allSelectedStepNames[0:-1]
             allSelectedTimePoints = allSelectedTimePoints[0:-2]
-            postBody["args"].extend(("-allSelectedStepNames",allSelectedStepNames))
-            postBody["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints))
-            #postBody["errorPath"] = outputDirectory
-            #postBody["outputPath"] = outputDirectory
             #Post to JACS
-            requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
-                                           headers=getHeaders(),
-                                           data=json.dumps(postBody))
- 
-            requestOutputJsonified = requestOutput.json()
-            #Store information about the job in the lightsheet database
-            currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
+            
             if not userDefinedJobName:
-                userDefinedJobName = requestOutputJsonified["_id"]
-            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jobName": userDefinedJobName,
-                                                                 "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, 
-                                                                 "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
-    
+                #userDefinedJobName = requestOutputJsonified["_id"]
+                userDefinedJobName=""
+            currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
+            dictionaryToPost = {"jobName": userDefinedJobName,
+                                "lightsheetCommit":currentLightsheetCommit, 
+                                "selectedStepNames": allSelectedStepNames, 
+                                "steps": stepParameters}
+            print("about to post to config")
+            configURL=settings.serverInfo['fullAddress'] + 'config/'
+            print(configURL)
+            requestOuput = requests.post(settings.serverInfo['fullAddress'] + 'dcdvxcconfig/', 
+                                         headers={'Content-Type': 'application/json'}, 
+                                         data=json.dumps(dictionaryToPost))
+                          
     
     parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndex)
     
@@ -216,20 +201,45 @@ def search():
                            logged_in=True,
                            version = app_version)
 
-@app.route('/config/<uuid>', methods=['GET','POST'])
-def config(uuid):
- #   if numsteps>0
-    client = MongoClient(settings.mongo)
-    lightsheetDB = client.lightsheet
-    if request.method=='POST':
-        #put it in database
-        #return the address to it, which will be the db _id
-        newId = lightsheetDB.jobs.insert_one({"jobName": userDefinedJobName,
-                                              "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory, 
-                                              "selectedStepNames": allSelectedStepNames, "steps": stepParameters}).inserted_id
-        #run jacs which will call get....
+@app.route('/config/', defaults={'_id':None}, methods=['Get','Post'])
+@app.route('/config/<_id>', methods=['GET','POST'])
+def config(_id):
+    print("in config")
+    if request.method == 'GET':
+        stepName = request.args.get('stepName')
+        client = MongoClient(settings.mongo)
+        lightsheetDB = client.lightsheet
+        print(_id)
+        jobSteps = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+        print(jobSteps)
+        if jobSteps:
+            jobStepsList = jobSteps[0]["steps"]
+            if stepName is not None:
+                stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["stepName"] == stepName), None) 
+                return jsonify(stepDictionary["parameters"])
+            else:
+                return jsonify(jobSteps)
+        else:
+            return "No Job 404"
+    if request.method == 'POST':
+        #Mongo client
+        client = MongoClient(settings.mongo)
+        #lightsheetDB is the database containing lightsheet job information and parameters
+        lightsheetDB = client.lightsheet
+        print("posted to config")
+        postedData = request.get_json()
+        newId = lightsheetDB.jobs.insert_one(postedData).inserted_id
+        configAddress = settings.serverInfo['fullAddress'] + str(newId)
+        postBody = { "processingLocation": "LSF_JAVA",
+                     "args": ["-configAddress",configAddress,
+                              "-allSelectedStepNames",postedData["args"][1],
+                              "-allSelectedTimePoints",postedData["args"][3]],
+                     "resources": {"gridAccountId": "lightsheet"}
+                 }
+        requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
+                                      headers=getHeaders(),
+                                      data=json.dumps(postBody))
+        requestOutputJsonified = requestOutput.json()
         lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"]}})
-    if request.method=='GET':
-        #write out json file to current directory from database?
-    
-    #request.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps({'text': 'lalala'})
+        return configAddress
+   
