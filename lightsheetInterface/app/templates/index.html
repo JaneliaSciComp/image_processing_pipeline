@@ -42,10 +42,10 @@
       <div id="steps">
         {% if pipelineSteps is not none %}
           {% for pipelineStep in pipelineSteps %}
-            {% if formData is none %}
-              {% include "stepDefault.html" ignore missing with context %}
-            {% else %}
+            {% if formData is defined %}
               {% include "stepLoadJob.html" ignore missing with context %}
+            {% else %}
+              {% include "stepDefault.html" ignore missing with context %}
             {% endif %}
           {% endfor %}
         {% endif %}
