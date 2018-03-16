@@ -9,7 +9,7 @@ from app import app
 from app.settings import Settings
 from app.models import AppConfig
 from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
-from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData
+from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData, loadJobDataFromLocal
 
 settings = Settings()
 
@@ -74,10 +74,9 @@ def index():
         #Access jacs database to get parent job service information
         serviceData = getServiceDataFromDB(lightsheetDB)
         pipelineSteps = None
-        formObject = None
+        formData = None
 
         if len(serviceData) > 0:
-            ipdb.set_trace()
             jobSelected = False;
             if jobIndex is not None:
                 jobIndex = int(jobIndex)
@@ -183,7 +182,9 @@ def index():
         # Give the user the ability to define local jobs, for development purposes for instance
         if hasattr(settings, 'localJobs') and len(settings.localJobs) > 0:
             for job in settings.localJobs:
-                parentServiceData.append(job)
+                jobData = loadJobDataFromLocal(job)
+                formData = parseJsonData(jobData)
+                #parentServiceData.append(jobData)
         
         #Return index.html with pipelineSteps and serviceData
         return render_template('index.html',

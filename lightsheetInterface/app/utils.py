@@ -185,7 +185,6 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
   fig.savefig(url_for('static', filename='img/test.jpg'))
   pool.close()
 
-
 def getPipelineStepNames():
   steps = Step.objects.all().order_by('order')
   names = []
@@ -203,22 +202,29 @@ def parseJsonData(data):
   pFrequent = {}
   pSometimes = {}
   pRare = {}
-  for key in keys:
-    if type(data[key]) is str or type(data[key]) is int:
-      # Look up parameter type
-      p = Parameter.objects.filter(name=key).first()
-      if p is not None:
-        if p.frequency == 'F':
-          pFrequent[key] = data[key]
-        elif p.frequency == 'S':
-          pSometimes[key] = data[key]
-        elif p.frequency == 'R':
-          pRare[key] = data[key]
   forms = {}
+  # For each key, look up the parameter type and add parameter to the right type of form based on that:
+  for key in keys:
+    param = Parameter.objects.filter(name=key).first()
+    if param != None:
+      if param.frequency == 'F':
+        pFrequent[key] = data[key]
+      elif param.frequency == 'S':
+        pSometimes[key] = data[key]
+      elif param.frequency == 'R':
+        pRare[key] = data[key]
   forms['frequent'] = StepForm(pFrequent)
   forms['sometimes'] = StepForm(pSometimes)
   forms['rare'] = StepForm(pRare)
   return forms
+
+def loadJobDataFromLocal(mydir):
+  files = os.listdir(mydir)
+  for filename in files:
+    file = mydir + '/' + filename
+    with open(file, 'r') as f:
+      data = json.load(f)
+      return data
 
 def getAppVersion(path):
   mpath = path.split('/')
