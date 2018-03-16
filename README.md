@@ -72,22 +72,16 @@ $ deactivate
 
 ### Deployment
 
-In the folder where package.json is located, install the npm packages
+If you haven't done so, in the folder where package.json is located, install the npm packages to install flightplan:
 
 ```bash
 $ npm install
 ```
 
-Then create a new versionId with
+Make changes to target and config in flightplan.js as necessary. Then use flightplan to create a new version entry in package.json and as a git commit with
 
 ```bash
-$ npm version patch
-```
-
-or
-
-```bash
-$ npm version [minor|major]
+$ fly version:local [ patch | minor | major ]
 ```
 
 Finally, deploy the application with

@@ -1,4 +1,4 @@
-import requests, json, random, os, math, datetime, bson, re, subprocess
+import requests, json, random, os, math, datetime, bson, re, subprocess, ipdb
 from flask import render_template, request, jsonify, abort
 from pymongo import MongoClient
 from time import gmtime, strftime
@@ -9,7 +9,7 @@ from app import app
 from app.settings import Settings
 from app.models import AppConfig
 from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
-from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames
+from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData
 from bson.objectid import ObjectId
 
 settings = Settings()
@@ -48,10 +48,6 @@ def submit():
             print(k)
     return 'form submitted'
 
-#@app.route('/', defaults={'serviceIndex': None}, methods=['GET','POST'])
-#@app.route('/<serviceIndex>', methods=['GET','Post'])
-#def index(serviceIndex):
-#    serviceIndex = request.args.get('jacsServiceIndex')
 @app.route('/', methods=['GET','POST'])
 def index():
     jobIndex = request.args.get('jacsServiceIndex')
@@ -71,15 +67,11 @@ def index():
         jobIndex = int(jobIndex)
         serviceData[jobIndex]["selected"]='selected'
         jobSelected = True;
-  
-    #Order of pipeline steps
-    pipelineOrder = getPipelineStepNames()
 
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []
     jobStepIndex = 0;
-    
-    for step in config['steps']: # TODO make sure steps are ordered based on ordering
+    for step in config['steps']:
         currentStep = step.name
         #Check if currentStep was used in previous service
         if jobSelected and (currentStep in serviceData[jobIndex]["selectedStepNames"]):
@@ -94,6 +86,10 @@ def index():
             editState = 'disabled'
             checkboxState = ''
             jsonData = json.load(open(fileName), object_pairs_hook=OrderedDict)
+            formObject = {}
+            formObject['step'] = step
+            formData = parseJsonData(jsonData)
+            formObject['forms'] = formData # get the form data separated into tabs for frequent / sometimes / rare
             #Reformat json data into a more digestable format
             jsonString = json.dumps(jsonData, indent=4, separators=(',', ': '))
 
@@ -117,6 +113,7 @@ def index():
         stepParameters=[]
         currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
         userDefinedJobName=[]
+
         postedData = request.get_json()
         if not postedData:
             #Then submission from webpage itself
@@ -145,10 +142,10 @@ def index():
                 userDefinedJobName=""
         
             dataToPostToDB = {"jobName": userDefinedJobName,
-                                "lightsheetCommit":currentLightsheetCommit, 
-                                "selectedStepNames": allSelectedStepNames, 
-                                "selectedTimePoints": allSelectedTimePoints,
-                                "steps": stepParameters}
+                              "lightsheetCommit":currentLightsheetCommit, 
+                              "selectedStepNames": allSelectedStepNames, 
+                              "selectedTimePoints": allSelectedTimePoints,
+                              "steps": stepParameters}
             newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
             configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
             postBody = { "processingLocation": "LSF_JAVA",
@@ -173,7 +170,9 @@ def index():
                            parentServiceData=parentServiceData,
                            logged_in=True,
                            config = config,
-                           version = app_version)
+                           version = app_version,
+                           formData = formObject,
+                           jobIndex = jobIndex)
 
 @app.route('/job_status/', methods=['GET'])
 def job_status():

@@ -7,6 +7,16 @@ var config = {
   keepReleases: 3
 };
 
+plan.target('local', {
+  host: 'localhost',
+  username: 'kazimiersa',
+  agent: process.env.SSH_AUTH_SOCK
+},
+{
+  // Shouldn't be overridden, so please don't try.
+  gitCheck: true
+});
+
 plan.target('production', {
   host: 'lightsheet',
   username: 'kazimiersa',
@@ -15,6 +25,14 @@ plan.target('production', {
 {
   // Shouldn't be overridden, so please don't try.
   gitCheck: true
+});
+
+plan.local('version', function(local) {
+  var versionType = plan.runtime.options.argv.remain[1];
+  var command = local.exec('npm version ' + versionType);
+  var command = local.exec('cat package.json | grep version');
+  var myVersion =  "v" + (JSON.stringify(command).split(':')[3]).substr(3,5);
+  var command = local.exec('git add package.json; git commit -m' + '"' + myVersion + '"');
 });
 
 // Check if there are files that have not been committed to git. This stops
