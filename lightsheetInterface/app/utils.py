@@ -80,6 +80,27 @@ def getHeaders(forQuery=False):
 #Timezone for timings
 eastern = timezone('US/Eastern')
 
+
+def getConfigurationsFromDB(_id, stepName=None):
+    client = MongoClient(settings.mongo)
+    lightsheetDB = client.lightsheet
+    if _id=="templateConfigurations":
+        jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
+    else:
+        jobSteps = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+    if jobSteps:
+        jobStepsList = jobSteps[0]["steps"]
+        if stepName is not None:
+            stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["stepName"] == stepName), None)
+            if stepDictionary is not None:
+                return stepDictionary["parameters"]
+            else:
+                return 404
+        else:
+            return jobSteps
+    else:
+        return 404
+
 def getServiceDataFromDB(lightsheetDB):
     serviceData = list(lightsheetDB.jobs.find())
     if (len(serviceData) > 0):
