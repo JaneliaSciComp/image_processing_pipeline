@@ -9,7 +9,7 @@ from app import app
 from app.settings import Settings
 from app.models import AppConfig
 from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
-from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData
+from app.utils import getServiceDataFromDB, getConfigurationsFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData
 from bson.objectid import ObjectId
 
 settings = Settings()
@@ -70,7 +70,7 @@ def index():
 
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []
-    jobStepIndex = 0;
+    jobStepIndex = 0
     for step in config['steps']:
         currentStep = step.name
         #Check if currentStep was used in previous service
@@ -82,10 +82,9 @@ def index():
             jsonString = json.dumps(arrayOfStepDictionaries[jobStepIndex]["parameters"], indent=4, separators=(',', ': '));
             jobStepIndex = jobStepIndex+1
         else: #Defaults
-            fileName = defaultFileBase + currentStep +'.json'
             editState = 'disabled'
             checkboxState = ''
-            jsonData = json.load(open(fileName), object_pairs_hook=OrderedDict)
+            jsonData = getConfigurationsFromDB("templateConfigurations", currentStep) 
             formObject = {}
             formObject['step'] = step
             formData = parseJsonData(jsonData)
@@ -117,6 +116,7 @@ def index():
         postedData = request.get_json()
         if not postedData:
             #Then submission from webpage itself
+            pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']
             for currentStep in pipelineOrder:
                 text = request.form.get(currentStep) #will be none if checkbox is not checked
                 if text is not None:
@@ -215,15 +215,8 @@ def search():
 @app.route('/config/<_id>', methods=['GET'])
 def config(_id):
     stepName = request.args.get('stepName')
-    client = MongoClient(settings.mongo)
-    lightsheetDB = client.lightsheet
-    jobSteps = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
-    if jobSteps:
-        jobStepsList = jobSteps[0]["steps"]
-        if stepName is not None:
-            stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["stepName"] == stepName), None) 
-            return jsonify(stepDictionary["parameters"])
-        else:
-            return jsonify(jobSteps)
-    else:
+    output=getConfigurationsFromDB(_id, stepName)
+    if output==404:
         abort(404)
+    else:
+        return jsonify(output)
