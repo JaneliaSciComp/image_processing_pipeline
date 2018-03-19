@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cache import Cache
 from flask_mongoengine import MongoEngine
 from mongoengine import connect
 from flask_admin import Admin
@@ -13,6 +14,7 @@ app.config['MONGODB_SETTINGS'] = {
     'port': 27017
 }
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+cache = Cache(app)
 db = MongoEngine(app)
 
 from app import views, models #app package from which views will be imported
