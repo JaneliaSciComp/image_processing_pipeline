@@ -8,7 +8,7 @@ from pprint import pprint
 from app import app
 from app.settings import Settings
 from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS
+from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, getConfigurationsFromDB
 from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData, loadJobDataFromLocal
 
 settings = Settings()
@@ -27,8 +27,6 @@ global_error = None
 client = MongoClient(settings.mongo)
 #lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
-
-config = buildConfigObject()
 
 app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -59,6 +57,7 @@ def submit():
 
 @app.route('/<job_id>', methods=['GET','POST'])
 def load_job(job_id):
+    config = buildConfigObject()
     if job_id == 'favicon.ico':
         jobIndex = None
     else:
@@ -81,6 +80,7 @@ def load_job(job_id):
         jobStepIndex = 0;
         for step in config['steps']:
             currentStep = step.name
+            configData = getConfigurationsFromDB("templateConfigurations", client, currentStep)
             #Check if currentStep was used in previous service
             if jobSelected and (currentStep in serviceData[jobIndex]["selectedStepNames"]):
                 arrayOfStepDictionaries = serviceData[jobIndex]["steps"]
@@ -172,9 +172,7 @@ def load_job(job_id):
 
     if jobIndex != None:
         jobIndexId = serviceData[jobIndex]['jacs_id']
-        print('load parent service data')
         parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndexId)
-        pprint(parentServiceData)
     else:
         parentServiceData = None;
     
@@ -199,6 +197,7 @@ def load_job(job_id):
 
 @app.route('/', methods=['GET','POST'])
 def index():
+    config = buildConfigObject()
     #For each step, load default parameter configuration from model
     pipelineSteps = []
     jobStepIndex = 0;
@@ -318,16 +317,26 @@ def job_status():
                            logged_in=True,
                            version = getAppVersion(app.root_path))
 
+
+@app.route('/config/<_id>', methods=['GET'])
+def config(_id):
+    stepName = request.args.get('stepName')
+    output=getConfigurationsFromDB(_id, client, stepName)
+    if output==404:
+        abort(404)
+    else:
+        return jsonify(output)
+
 @app.route('/search')
 def search():
     return render_template('search.html',
                            logged_in=True,
                            version = getAppVersion(app.root_path))
 
-@app.errorhandler(404)
-def error_page(error):
-    err = 'There was an error using that page. Please make sure, you are connected to the internal network of '
-    err += 'Janelia and check with SciComp, if the application is configured correctly.';
-    if global_error != None:
-        err += '\n' + global_error
-    return render_template('error.html', err=err), 404
+# @app.errorhandler(404)
+# def error_page(error):
+#     err = 'There was an error using that page. Please make sure, you are connected to the internal network of '
+#     err += 'Janelia and check with SciComp, if the application is configured correctly.';
+#     if global_error != None:
+#         err += '\n' + global_error
+#     return render_template('error.html', err=err), 404

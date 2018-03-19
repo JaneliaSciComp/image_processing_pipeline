@@ -9,6 +9,7 @@ from pprint import pprint
 from scipy import misc
 from datetime import datetime
 from pytz import timezone
+from bson.objectid import ObjectId
 from app.models import AppConfig, Step, Parameter
 from app.forms import StepForm
 from app.settings import Settings
@@ -80,10 +81,9 @@ def getHeaders(forQuery=False):
 #Timezone for timings
 eastern = timezone('US/Eastern')
 
-
-def getConfigurationsFromDB(_id, stepName=None):
-    client = MongoClient(settings.mongo)
-    lightsheetDB = client.lightsheet
+def getConfigurationsFromDB(_id, mongoClient, stepName=None):
+    result = None
+    lightsheetDB = mongoClient.lightsheet
     if _id=="templateConfigurations":
         jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
     else:
@@ -93,13 +93,25 @@ def getConfigurationsFromDB(_id, stepName=None):
         if stepName is not None:
             stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["stepName"] == stepName), None)
             if stepDictionary is not None:
-                return stepDictionary["parameters"]
+              result = stepDictionary["parameters"]
             else:
-                return 404
+              result = 404
         else:
-            return jobSteps
+          result = jobSteps
     else:
-        return 404
+      result = 404
+    if stepName != None:
+      message = 'result for stepname ' + stepName + " for id " + _id
+    else:
+      message = 'result for id " + _id'
+    customPrint(result, message)
+    return result
+
+def customPrint(printObj, message):
+    pprint(">>>>>>>>>>>>>>>>>>>>>>")
+    pprint(message)
+    pprint(printObj)
+    pprint(">>>>>>>>>>>>>>>>>>>>>>")
 
 def getServiceDataFromDB(lightsheetDB):
     serviceData = list(lightsheetDB.jobs.find())
@@ -113,7 +125,6 @@ def getServiceDataFromDB(lightsheetDB):
 def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None, serviceIndexId=None):
     #Function to get information about parent jobs from JACS database marks currently selected j
     allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
-    print(allJACSids)
     allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
     requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
                                            params={'service-id':  JACSid},
@@ -129,8 +140,6 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None, serviceIndexId
         jobInformationResultListDictionary["index"] = str(count)
         serviceData.append(jobInformationResultListDictionary)
         count=count+1
-    print('servicedata')
-    pprint(serviceData)
         # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
     if serviceData and serviceIndex is not None:
       serviceData[int(serviceIndex)]["selected"] = 'selected'
