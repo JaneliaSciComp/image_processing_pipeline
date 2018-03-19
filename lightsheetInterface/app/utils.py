@@ -89,9 +89,10 @@ def getServiceDataFromDB(lightsheetDB):
           dictionary["index"]=str(count)
     return serviceData
 
-def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
-    #Function to get information about parent jobs from JACS database marks currently selected job
+def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None, serviceIndexId=None):
+    #Function to get information about parent jobs from JACS database marks currently selected j
     allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
+    print(allJACSids)
     allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
     requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
                                            params={'service-id':  JACSid},
@@ -107,10 +108,12 @@ def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
         jobInformationResultListDictionary["index"] = str(count)
         serviceData.append(jobInformationResultListDictionary)
         count=count+1
-
+    print('servicedata')
+    pprint(serviceData)
         # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
     if serviceData and serviceIndex is not None:
       serviceData[int(serviceIndex)]["selected"] = 'selected'
+
 
     return serviceData
 

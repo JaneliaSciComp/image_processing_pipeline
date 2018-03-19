@@ -59,7 +59,10 @@ def submit():
 
 @app.route('/<job_id>', methods=['GET','POST'])
 def load_job(job_id):
-    jobIndex = job_id
+    if job_id == 'favicon.ico':
+        jobIndex = None
+    else:
+        jobIndex = job_id
 
     #Access jacs database to get parent job service information
     serviceData = getServiceDataFromDB(lightsheetDB)
@@ -151,8 +154,7 @@ def load_job(job_id):
             allSelectedTimePoints = allSelectedTimePoints[0:-2]
             postBody["args"].extend(("-allSelectedStepNames",allSelectedStepNames))
             postBody["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints))
-            #postBody["errorPath"] = outputDirectory
-            #postBody["outputPath"] = outputDirectory
+            
             #Post to JACS
             requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
                                            headers=getHeaders(),
@@ -163,17 +165,24 @@ def load_job(job_id):
             currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
             if not userDefinedJobName:
                 userDefinedJobName = requestOutputJsonified["_id"]
+
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jobName": userDefinedJobName,
                                                                  "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory,
                                                                  "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
+
+    if jobIndex != None:
+        jobIndexId = serviceData[jobIndex]['jacs_id']
+        print('load parent service data')
+        parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndexId)
+        pprint(parentServiceData)
+    else:
+        parentServiceData = None;
     
-    
-    parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndex)
     # Give the user the ability to define local jobs, for development purposes for instance
-    if hasattr(settings, 'localJobs') and len(settings.localJobs) > 0:
-        for job in settings.localJobs:
-            jobData = loadJobDataFromLocal(job)
-            formData = parseJsonData(jobData)
+    # if hasattr(settings, 'localJobs') and len(settings.localJobs) > 0:
+    #     for job in settings.localJobs:
+            # jobData = loadJobDataFromLocal(job)
+            # formData = parseJsonData(jobData)
             #parentServiceData.append(jobData)
     
     #Return index.html with pipelineSteps and serviceData
@@ -258,12 +267,12 @@ def index():
                                                                  "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
     
     
-    # Give the user the ability to define local jobs, for development purposes for instance
-    if hasattr(settings, 'localJobs') and len(settings.localJobs) > 0:
-        for job in settings.localJobs:
-            jobData = loadJobDataFromLocal(job)
-            formData = parseJsonData(jobData)
-            #parentServiceData.append(jobData)
+    # # Give the user the ability to define local jobs, for development purposes for instance
+    # if hasattr(settings, 'localJobs') and len(settings.localJobs) > 0:
+    #     for job in settings.localJobs:
+    #         # jobData = loadJobDataFromLocal(job)
+    #         formData = parseJsonData(jobData)
+    #         #parentServiceData.append(jobData)
     
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
