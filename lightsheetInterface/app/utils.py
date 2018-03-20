@@ -84,6 +84,7 @@ eastern = timezone('US/Eastern')
 def getConfigurationsFromDB(_id, mongoClient, stepName=None):
     result = None
     lightsheetDB = mongoClient.lightsheet
+
     if _id=="templateConfigurations":
         jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
     else:
@@ -91,20 +92,10 @@ def getConfigurationsFromDB(_id, mongoClient, stepName=None):
     if jobSteps:
         jobStepsList = jobSteps[0]["steps"]
         if stepName is not None:
-            stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["stepName"] == stepName), None)
+            stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["name"] == stepName), None)
             if stepDictionary is not None:
-              result = stepDictionary["parameters"]
-            else:
-              result = 404
-        else:
-          result = jobSteps
-    else:
-      result = 404
-    if stepName != None:
-      message = 'result for stepname ' + stepName + " for id " + _id
-    else:
-      message = 'result for id " + _id'
-    return result
+              return stepDictionary["parameters"]
+    return None
 
 def customPrint(printObj, message):
     pprint("\n>>>>>>>>>>>>>>>>>>>>>>")

@@ -68,80 +68,78 @@ def load_job(job_id):
     for step in config['steps']:
         currentStep = step.name
         configData = getConfigurationsFromDB(job_id, client, currentStep)
-        pprint(configData)
-        # Check, if job_id is given and if currentStep was used in previous service
-        if job_id != None and True: # Todo one more check
+        if configData != None and job_id != None:
             #If loading previous run parameters for specific step, then it should be checked and editable
             editState = 'enabled'
             checkboxState = 'checked'
             countJobs += 1
+            forms = parseJsonData(configData)
+            #Pipeline steps is passed to index.html for formatting the html based
+            pipelineSteps.append({
+                'stepName': currentStep,
+                'stepDescription':step.description,
+                'inputJson': None,
+                'state': editState,
+                'checkboxState': checkboxState,
+                'forms': forms
+            })
 
-    
-        #Pipeline steps is passed to index.html for formatting the html based
-        pipelineSteps.append({
-            'stepName': currentStep,
-            'stepDescription':step.description,
-            'inputJson': None,
-            'state': editState,
-            'checkboxState': checkboxState
-        })
+        if request.method == 'POST':
+            #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
+            #lightsheetDB is the database containing lightsheet job information and parameters
+            numSteps = 0
+            allSelectedStepNames=""
+            allSelectedTimePoints=""
+            stepParameters=[]
 
-    if request.method == 'POST':
-        #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-        #lightsheetDB is the database containing lightsheet job information and parameters
-        numSteps = 0
-        allSelectedStepNames=""
-        allSelectedTimePoints=""
-        stepParameters=[]
+            userDefinedJobName=[]
+            for currentStep in config['steps']:
+                text = request.form.get(currentStep) #will be none if checkbox is not checked
+                if text is not None:
+                    if numSteps==0:
+                        #Create new document in jobs collection in lightsheet database and create json output directory
+                        newId = lightsheetDB.jobs.insert_one({"steps":{}}).inserted_id
+                        outputDirectory = outputDirectoryBase + str(newId) + "/"
+                        postBody = { "processingLocation": "LSF_JAVA",
+                                     "args": ["-configDirectory",outputDirectory],
+                                     "resources": {"gridAccountId": "lightsheet"}
+                                     #,"queueId":"jacs-dev"
+                        }
+                        os.mkdir(outputDirectory)
+                    #Write json files
+                    fileName=str(numSteps) + "_" + currentStep + ".json"
+                    fh = open(outputDirectory + fileName,"w")
+                    fh.write(text)
+                    fh.close()
+                    #Store step parameters and step names/times to use as arguments for the post
+                    jsonifiedText = json.loads(text, object_pairs_hook=OrderedDict)
+                    stepParameters.append({"stepName":currentStep, "parameters": jsonifiedText})
+                    numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
+                    allSelectedStepNames = allSelectedStepNames+currentStep+","
+                    allSelectedTimePoints = allSelectedTimePoints+str(numTimePoints)+", "
+                    numSteps+=1
 
-        userDefinedJobName=[]
-        for currentStep in config['steps']:
-            text = request.form.get(currentStep) #will be none if checkbox is not checked
-            if text is not None:
-                if numSteps==0:
-                    #Create new document in jobs collection in lightsheet database and create json output directory
-                    newId = lightsheetDB.jobs.insert_one({"steps":{}}).inserted_id
-                    outputDirectory = outputDirectoryBase + str(newId) + "/"
-                    postBody = { "processingLocation": "LSF_JAVA",
-                                 "args": ["-configDirectory",outputDirectory],
-                                 "resources": {"gridAccountId": "lightsheet"}
-                                 #,"queueId":"jacs-dev"
-                    }
-                    os.mkdir(outputDirectory)
-                #Write json files
-                fileName=str(numSteps) + "_" + currentStep + ".json"
-                fh = open(outputDirectory + fileName,"w")
-                fh.write(text)
-                fh.close()
-                #Store step parameters and step names/times to use as arguments for the post
-                jsonifiedText = json.loads(text, object_pairs_hook=OrderedDict)
-                stepParameters.append({"stepName":currentStep, "parameters": jsonifiedText})
-                numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
-                allSelectedStepNames = allSelectedStepNames+currentStep+","
-                allSelectedTimePoints = allSelectedTimePoints+str(numTimePoints)+", "
-                numSteps+=1
+            if numSteps>0:
+                #Finish preparing the post body
+                allSelectedStepNames = allSelectedStepNames[0:-1]
+                allSelectedTimePoints = allSelectedTimePoints[0:-2]
+                postBody["args"].extend(("-allSelectedStepNames",allSelectedStepNames))
+                postBody["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints))
 
-        if numSteps>0:
-            #Finish preparing the post body
-            allSelectedStepNames = allSelectedStepNames[0:-1]
-            allSelectedTimePoints = allSelectedTimePoints[0:-2]
-            postBody["args"].extend(("-allSelectedStepNames",allSelectedStepNames))
-            postBody["args"].extend(("-allSelectedTimePoints",allSelectedTimePoints))
-            
-            #Post to JACS
-            requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
-                                           headers=getHeaders(),
-                                           data=json.dumps(postBody))
+                #Post to JACS
+                requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
+                                               headers=getHeaders(),
+                                               data=json.dumps(postBody))
 
-            requestOutputJsonified = requestOutput.json()
-            #Store information about the job in the lightsheet database
-            currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
-            if not userDefinedJobName:
-                userDefinedJobName = requestOutputJsonified["_id"]
+                requestOutputJsonified = requestOutput.json()
+                #Store information about the job in the lightsheet database
+                currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
+                if not userDefinedJobName:
+                    userDefinedJobName = requestOutputJsonified["_id"]
 
-            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jobName": userDefinedJobName,
-                                                                 "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory,
-                                                                 "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
+                lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "jobName": userDefinedJobName,
+                                                                     "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory,
+                                                                     "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
 
 
     # Give the user the ability to define local jobs, for development purposes for instance
@@ -154,14 +152,10 @@ def load_job(job_id):
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
-                           serviceData=None,
-                           parentServiceData=None,
                            logged_in=True,
                            config = config,
                            version = getAppVersion(app.root_path),
-                           formData = formData,
                            jobIndex = job_id)
-
 
 @app.route('/', methods=['GET','POST'])
 def index():
