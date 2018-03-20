@@ -8,7 +8,7 @@ from pprint import pprint
 from app import app
 from app.settings import Settings
 from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, getConfigurationsFromDB
+from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, getConfigurationsFromDB, customPrint
 from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData, loadJobDataFromLocal
 
 settings = Settings()
@@ -45,7 +45,7 @@ def register():
 def login():
     return render_template('login.html',
                 logged_in=False,
-                version = app_version)
+                version = getAppVersion(app.root_path))
 
 @app.route('/submit', methods=['GET','POST'])
 def submit():
@@ -55,63 +55,36 @@ def submit():
             print(k)
     return 'form submitted'
 
-@app.route('/<job_id>', methods=['GET','POST'])
+@app.route('/job/<job_id>', methods=['GET','POST'])
 def load_job(job_id):
     config = buildConfigObject()
     if job_id == 'favicon.ico':
-        jobIndex = None
-    else:
-        jobIndex = job_id
+        job_id = None
 
-    #Access jacs database to get parent job service information
-    serviceData = getServiceDataFromDB(lightsheetDB)
-    pipelineSteps = None
+    pipelineSteps = []
     formData = None
+    countJobs = 0
+    # go through all steps and find those, which are used by the current job
+    for step in config['steps']:
+        currentStep = step.name
+        configData = getConfigurationsFromDB(job_id, client, currentStep)
+        pprint(configData)
+        # Check, if job_id is given and if currentStep was used in previous service
+        if job_id != None and True: # Todo one more check
+            #If loading previous run parameters for specific step, then it should be checked and editable
+            editState = 'enabled'
+            checkboxState = 'checked'
+            countJobs += 1
 
-    if len(serviceData) > 0:
-        jobSelected = False;
-        if jobIndex is not None:
-            jobIndex = int(jobIndex)
-            serviceData[jobIndex]["selected"]='selected'
-            jobSelected = True;
-
-        #For each step, load either the default json files or the stored json files from a previously selected run
-        pipelineSteps = []
-        jobStepIndex = 0;
-        for step in config['steps']:
-            currentStep = step.name
-            configData = getConfigurationsFromDB("templateConfigurations", client, currentStep)
-            #Check if currentStep was used in previous service
-            if jobSelected and (currentStep in serviceData[jobIndex]["selectedStepNames"]):
-                arrayOfStepDictionaries = serviceData[jobIndex]["steps"]
-                #If loading previous run parameters for specific step, then it should be checked and editable
-                editState = 'enabled'
-                checkboxState = 'checked'
-                jsonString = json.dumps(arrayOfStepDictionaries[jobStepIndex]["parameters"], indent=4, separators=(',', ': '));
-                jobStepIndex = jobStepIndex+1
-            else: #Defaults
-                fileName = defaultFileBase + currentStep +'.json'
-                editState = 'disabled'
-                checkboxState = ''
-                jsonData = json.load(open(fileName), object_pairs_hook=OrderedDict)
-                formObject = {}
-                formObject['step'] = step
-                formData = parseJsonData(jsonData)
-                formObject['forms'] = formData # get the form data separated into tabs for frequent / sometimes / rare
-                #Reformat json data into a more digestable format
-                jsonString = json.dumps(jsonData, indent=4, separators=(',', ': '))
-
-            jsonString = re.sub(r'\[.*?\]', lambda m: m.group().replace("\n", ""), jsonString, flags=re.DOTALL)
-            jsonString = re.sub(r'\[.*?\]', lambda m: m.group().replace(" ", ""), jsonString, flags=re.DOTALL)
-
-            #Pipeline steps is passed to index.html for formatting the html based
-            pipelineSteps.append({
-                'stepName': currentStep,
-                'stepDescription':step.description,
-                'inputJson': jsonString,
-                'state': editState,
-                'checkboxState': checkboxState
-            })
+    
+        #Pipeline steps is passed to index.html for formatting the html based
+        pipelineSteps.append({
+            'stepName': currentStep,
+            'stepDescription':step.description,
+            'inputJson': None,
+            'state': editState,
+            'checkboxState': checkboxState
+        })
 
     if request.method == 'POST':
         #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
@@ -170,12 +143,7 @@ def load_job(job_id):
                                                                  "lightsheetCommit":currentLightsheetCommit, "jsonDirectory":outputDirectory,
                                                                  "selectedStepNames": allSelectedStepNames, "steps": stepParameters}})
 
-    if jobIndex != None:
-        jobIndexId = serviceData[jobIndex]['jacs_id']
-        parentServiceData = getParentServiceDataFromJACS(lightsheetDB, jobIndexId)
-    else:
-        parentServiceData = None;
-    
+
     # Give the user the ability to define local jobs, for development purposes for instance
     # if hasattr(settings, 'localJobs') and len(settings.localJobs) > 0:
     #     for job in settings.localJobs:
@@ -186,17 +154,18 @@ def load_job(job_id):
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
-                           serviceData=serviceData,
-                           parentServiceData=parentServiceData,
+                           serviceData=None,
+                           parentServiceData=None,
                            logged_in=True,
                            config = config,
                            version = getAppVersion(app.root_path),
                            formData = formData,
-                           jobIndex = jobIndex)
+                           jobIndex = job_id)
 
 
 @app.route('/', methods=['GET','POST'])
 def index():
+    print('load initial configuration')
     config = buildConfigObject()
     #For each step, load default parameter configuration from model
     pipelineSteps = []

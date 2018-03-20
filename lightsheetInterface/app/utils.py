@@ -104,14 +104,13 @@ def getConfigurationsFromDB(_id, mongoClient, stepName=None):
       message = 'result for stepname ' + stepName + " for id " + _id
     else:
       message = 'result for id " + _id'
-    customPrint(result, message)
     return result
 
 def customPrint(printObj, message):
-    pprint(">>>>>>>>>>>>>>>>>>>>>>")
+    pprint("\n>>>>>>>>>>>>>>>>>>>>>>")
     pprint(message)
     pprint(printObj)
-    pprint(">>>>>>>>>>>>>>>>>>>>>>")
+    pprint("<<<<<<<<<<<<<<<<<<<<<<\n")
 
 def getServiceDataFromDB(lightsheetDB):
     serviceData = list(lightsheetDB.jobs.find())
