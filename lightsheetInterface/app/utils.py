@@ -82,10 +82,11 @@ eastern = timezone('US/Eastern')
 
 def getServiceDataFromDB(lightsheetDB):
     serviceData = list(lightsheetDB.jobs.find())
-    for count, dictionary in enumerate(serviceData):
-        dictionary["selected"]='';
-        dictionary["creationDate"]=str(dictionary["_id"].generation_time)
-        dictionary["index"]=str(count)
+    if (len(serviceData) > 0):
+      for count, dictionary in enumerate(serviceData):
+          dictionary["selected"]='';
+          dictionary["creationDate"]=str(dictionary["_id"].generation_time)
+          dictionary["index"]=str(count)
     return serviceData
 
 def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
