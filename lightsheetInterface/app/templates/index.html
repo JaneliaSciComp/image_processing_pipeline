@@ -23,7 +23,7 @@
           {% if parentServiceData is not none %}
             {% for service in parentServiceData %}
               <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>
-                {% if 'creationDate' in service and 'args' in service %}
+                {% if 'creationDate' in service and 'args' in service and service.args|length >3 %}
                   {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
                 {% else %}
                   job {{ loop.index }}
