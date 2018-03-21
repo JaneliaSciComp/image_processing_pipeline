@@ -1,15 +1,12 @@
-import requests, json, random, os, math, datetime, bson, re, subprocess, ipdb
+import requests, json, os, math, datetime, bson, re, subprocess, ipdb
 from flask import render_template, request, abort
 from pymongo import MongoClient
-from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
 from pprint import pprint
 from app import app
 from app.settings import Settings
-from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, getConfigurationsFromDB, customPrint
-from app.utils import getServiceDataFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData, loadJobDataFromLocal
+from app.utils import *
 
 settings = Settings()
 # Prefix for all default pipeline step json file names
@@ -169,11 +166,14 @@ def load_job(job_id):
 
 @app.route('/', methods=['GET'])
 def index():
+  lightsheetDB_id = request.args.get('lightsheetDB_id')
   config = buildConfigObject()
+  parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
 
   # Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                          steps=config['steps'],
+                         parentJobInfo = parentJobInfo,
                          logged_in=True,
                          config=config,
                          version=getAppVersion(app.root_path))

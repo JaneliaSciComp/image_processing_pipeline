@@ -6,35 +6,34 @@
   <div class="row lightsheet-row">
     <h4>Configure Job</h4>
   </div>
-  <div class="row">
-    <div class="col-lg-9 col-md-9 col-sm-9">
-      <div class="form-group form-inline">
-        <label class="lightsheet-label">Name: </label>
-        <input type="text" class="form-control lightsheet-input" name="job-name">
+   <div class="row">
+      <div class="col-lg-3 col-md-3 col-sm-3">
+         <div class="form-group form-inline">
+            <label class="lightsheet-label">Name: </label>
+            <input type="text" class="form-control lightsheet-input" name="job-name">
+         </div>
+         <div class="form-group form-inline">
+            <label class="lightsheet-label">Date: </label>
+            <input type="text" id="datepicker" class="pika-datepicker">
+         </div>
       </div>
-      <div class="form-group form-inline">
-        <label class="lightsheet-label">Date: </label>
-        <input type="text" id="datepicker" class="pika-datepicker">
-      </div>
-      <div class="form-group form-inline">
-        <label class="lightsheet-label">Select Job: </label>
-        <select class="form-control" onchange="location = this.options[this.selectedIndex].value;">
-          <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
-            {% if parentServiceData is not none %}
-              {% for service in parentServiceData %}
-                <option value={{ url_for('index', jacsServiceIndex=service.index) }} {{ service.selected }}>
-                  {% if 'creationDate' in service and 'args' in service and service.args|length > 3 %}
-                    {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
-                  {% else %}
-                    job {{ loop.index }}
-                  {% endif %}
-                </option>
-              {% endfor %}
+      <div class="col-lg-6 col-md-6 col-sm-6">
+         <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
+            <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
+            {% if parentJobInfo is not none %}
+               {% for currentJobInfo in parentJobInfo %}
+                  <option value={{ url_for('index', lightsheetDB_id=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
+                     {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo%}
+                        {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
+                     {% else %}
+                        job {{ loop.index }}
+                     {% endif %}
+                  </option>
+               {% endfor %}
             {% endif %}
-        </select>
+         </select>
       </div>
-    </div>
-  </div>
+   </div>
   <!--
     Accordeon control which contains the steps
   -->

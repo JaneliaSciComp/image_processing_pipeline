@@ -17,11 +17,23 @@ from app.settings import Settings
 
 settings = Settings()
 
-
-def testDatabaseStatus(db):
-  # Issue the serverStatus command and print the results
-  serverStatusResult = db.command("serverStatus")
-
+def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
+  if _id:
+    _id = ObjectId(_id)
+    if parentOrChild=="parent":
+      parentJobInfo = list(lightsheetDB.jobs.find({},{"steps":0}))
+      for currentJobInfo in parentJobInfo:
+        currentJobInfo.update({"selected":""})
+        if currentJobInfo["_id"]==_id:
+          currentJobInfo.update({"selected":"selected"})
+      return parentJobInfo
+    else:
+      if getParameters:
+        return list(lightsheetDB.jobs.find({"_id":_id}))
+      else:
+        return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
+  else:
+    return list(lightsheetDB.jobs.find({},{"steps":0}))
 
 # Calculate properties of parameter based on its values (e.g. if number or text field has been filled in or which frequency / which range is selected)
 def getType(parameter):
@@ -106,13 +118,6 @@ def getConfigurationsFromDB(_id, mongoClient, stepName=None):
       if stepDictionary is not None:
         return stepDictionary["parameters"]
   return None
-
-
-def customPrint(printObj, message):
-  pprint("\n>>>>>>>>>>>>>>>>>>>>>>")
-  pprint(message)
-  pprint(printObj)
-  pprint("<<<<<<<<<<<<<<<<<<<<<<\n")
 
 
 def getServiceDataFromDB(lightsheetDB):
