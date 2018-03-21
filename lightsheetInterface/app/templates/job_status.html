@@ -13,17 +13,17 @@
       {% if parentJobInfo is not none %}
         {% for currentJobInfo in parentJobInfo %}
           {% if currentJobInfo.state == "ERROR" %}
-            <option class="status-error" value={{ url_for('job_status', jacsServiceIndex=currentJobInfo._id )}}
+            <option class="status-error" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
               {{ currentJobInfo.selected }}>  {{   currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
           {% endif %}
           {% if currentJobInfo.state == "SUCCESSFUL" %}
-            <option class="status-successful" value={{ url_for('job_status', jacsServiceIndex=currentJobInfo._id )}}
+            <option class="status-successful" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
               {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
           {% endif %}
           {% if currentJobInfo.state == "RUNNING" %}
-            <option class="status-running" value={{ url_for('job_status', jacsServiceIndex=currentJobInfo._id )}}
+            <option class="status-running" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
               {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
           {% endif %}
@@ -40,6 +40,7 @@
           <th>Start Time</th>
           <th>End Time</th>
           <th>Elapsed Time</th>
+          <th>Log Path</th>
         </tr>
       <thead>
       <tbody>
@@ -52,6 +53,7 @@
               <td>{{ currentChildJob.creationTime }}</td>
               <td>{{ currentChildJob.endTime }}</td>
               <td>{{ currentChildJob.elapsedTime }}</td>
+              <td>{{ currentChildJob.logAndErrorPath}}</td>
             </tr>
           {% endfor %}
         {% endif %}

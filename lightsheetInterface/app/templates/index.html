@@ -22,7 +22,7 @@
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
           {% if parentJobInfo is not none %}
             {% for currentJobInfo in parentJobInfo %}
-              <option value={{ url_for('index', jacsServiceIndex=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
+              <option value={{ url_for('index', lightsheetDB_id=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
                 {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo%}
                   {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
                 {% else %}

@@ -1,23 +1,16 @@
-import requests, json, random, os, math, datetime, bson, re, subprocess, ipdb
+import requests, json, datetime, bson, subprocess, re, math
 from flask import render_template, request, jsonify, abort
 from pymongo import MongoClient
-from time import gmtime, strftime
 from collections import OrderedDict
 from datetime import datetime
-from pprint import pprint
 from app import app
 from app.settings import Settings
 from app.models import AppConfig
-from app.utils import buildConfigObject, writeToJSON, getChildServiceDataFromJACS, getParentServiceDataFromJACS, eastern, UTC
-from app.utils import updateDBStatesAndTimes, getJobInfoFromDB, getConfigurationsFromDB, getHeaders, loadParameters, getAppVersion, getPipelineStepNames, parseJsonData
+from app.utils import buildConfigObject, eastern, UTC
+from app.utils import updateDBStatesAndTimes, getJobInfoFromDB, getConfigurationsFromDB, getHeaders, loadParameters, getAppVersion, parseJsonData
 from bson.objectid import ObjectId
 
 settings = Settings()
-
-#Prefix for all default pipeline step json file names
-defaultFileBase = settings.defaultFileBase
-#Location to store json files
-outputDirectoryBase = settings.outputDirectoryBase
 
 app_version = getAppVersion(app.root_path)
 
@@ -50,24 +43,20 @@ def submit():
 
 @app.route('/', methods=['GET','POST'])
 def index():
-    jobIndex = request.args.get('jacsServiceIndex')
+    lightsheetDB_id = request.args.get('lightsheetDB_id')
     client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
-    if jobIndex is not None:
+    if lightsheetDB_id is not None:
         jobSelected=True
-        selectedJobInfo = getJobInfoFromDB(lightsheetDB, jobIndex)
-        selectedJobInfo = selectedJobInfo[0]
-        arrayOfStepDictionaries = selectedJobInfo["steps"]
+        childJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "child", True)
+        childJobInfo = childJobInfo[0]
+        arrayOfStepDictionaries = childJobInfo["steps"]
     else:
         jobSelected=False
     #Mongo client
-
     config = buildConfigObject()
-    #index is the function to execute when url '/' or '/<jobIndex>' is reached and takes in the currently selected job index, if any
-
-    #Access jacs database to get parent job service information
-    # allJobInfo,jobSelected, _ = getAllJobInfoFromDB(lightsheetDB, jobIndex)
+    #index is the function to execute when url '/' or '/<lightsheetDB_id>' is reached and takes in the currently selected job index, if any
 
     #For each step, load either the default json files or the stored json files from a previously selected run
     pipelineSteps = []
@@ -75,12 +64,13 @@ def index():
     for step in config['steps']:
         currentStep = step.name
         #Check if currentStep was used in previous service
-        if jobSelected and (currentStep in selectedJobInfo["selectedStepNames"]):
+        if jobSelected and (currentStep in childJobInfo["selectedStepNames"]):
             #If loading previous run parameters for specific step, then it should be checked and editable
             editState = 'enabled'
             checkboxState = 'checked'
             jsonString = json.dumps(arrayOfStepDictionaries[jobStepIndex]["parameters"], indent=4, separators=(',', ': '));
             jobStepIndex = jobStepIndex+1
+            formObject = {}
         else: #Defaults
             editState = 'disabled'
             checkboxState = ''
@@ -122,7 +112,10 @@ def index():
                 if text is not None:
                     #Store step parameters and step names/times to use as arguments for the post
                     jsonifiedText = json.loads(text, object_pairs_hook=OrderedDict)
-                    stepParameters.append({"name":currentStep, "state":"NOT YET QUEUED", "creationTime":"N/A", "endTime":"N/A", "elapsedTime":"N/A","parameters": jsonifiedText})
+                    stepParameters.append({"name":currentStep, "state":"NOT YET QUEUED", 
+                                           "creationTime":"N/A", "endTime":"N/A", 
+                                           "elapsedTime":"N/A","logAndErrorPath": "N/A",
+                                           "parameters": jsonifiedText})
                     allSelectedStepNames = allSelectedStepNames+currentStep+","
                     numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
                     allSelectedTimePoints = allSelectedTimePoints+str(numTimePoints)+", "
@@ -168,11 +161,7 @@ def index():
     # if any are not Canceled, timeout, error, or successful then 
     #updateLightsheetDatabaseStatus
     updateDBStatesAndTimes(lightsheetDB)
-    parentJobInfo = getJobInfoFromDB(lightsheetDB)
-    for currentJobInfo in parentJobInfo:
-        currentJobInfo.update({"selected":""})
-        if currentJobInfo["_id"]==ObjectId(jobIndex):
-            currentJobInfo.update({"selected":"selected"})
+    parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
   
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
@@ -183,27 +172,24 @@ def index():
                            config = config,
                            version = app_version,
                            formData = formObject,
-                           jobIndex = jobIndex)
+                           lightsheetDB_id = lightsheetDB_id)
 
-@app.route('/job_status/', methods=['GET'])
+@app.route('/job_status', methods=['GET'])
 def job_status():
+    before=datetime.now()
     client = MongoClient(settings.mongo)
     #lightsheetDB is the database containing lightsheet job information and parameters
     lightsheetDB = client.lightsheet
 
-    jobIndex = request.args.get('jacsServiceIndex')
+    lightsheetDB_id = request.args.get('lightsheetDB_id')
     #Mongo client
     updateDBStatesAndTimes(lightsheetDB)
-    parentJobInfo = getJobInfoFromDB(lightsheetDB)
-        
+    parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "parent")
     childJobInfo=[]
-    if jobIndex is not None:
-        for currentJobInfo in parentJobInfo:
-            currentJobInfo.update({"selected":""})
-            if currentJobInfo["_id"]==ObjectId(jobIndex):
-                currentJobInfo.update({"selected":"selected"})
-        childJobInfo = getJobInfoFromDB(lightsheetDB, jobIndex)
+    if lightsheetDB_id is not None:
+        childJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "child")
         childJobInfo = childJobInfo[0]["steps"] 
+
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentJobInfo=parentJobInfo,
@@ -216,10 +202,10 @@ def search():
                            logged_in=True,
                            version = app_version)
 
-@app.route('/config/<_id>', methods=['GET'])
-def config(_id):
+@app.route('/config/<lightsheetDB_id>', methods=['GET'])
+def config(lightsheetDB_id):
     stepName = request.args.get('stepName')
-    output=getConfigurationsFromDB(_id, stepName)
+    output=getConfigurationsFromDB(lightsheetDB_id, stepName)
     if output==404:
         abort(404)
     else:
