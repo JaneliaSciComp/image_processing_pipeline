@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+   <html lang="en">
+      <head>
+         <!-- contrib stylesheets -->
+         <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/datatables.net-bs/css/dataTables.bootstrap.css') }}">
+         <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/dist/css/bootstrap.min.css') }}">
+
+         <!-- custom stylesheet -->
+         <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/overrides.css') }}">
+         <meta charset="UTF-8">
+         <title>Error on page</title>
+      </head>
+      <body>
+         <div class="row lightsheet-row">
+            <h3>Error on page</h3>
+            {{ err }}
+         </div>
+      </body>
+   </html>
+{% endblock %}
