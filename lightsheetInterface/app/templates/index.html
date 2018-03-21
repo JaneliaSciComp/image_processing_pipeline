@@ -110,7 +110,7 @@
       var picker = new Pikaday({ field: document.getElementById('datepicker') });
       var myJobIndex = null;
       {% if jobIndex is defined and jobIndex is not none %}
-        myJobIndex = {{ jobIndex|safe }};
+        myJobIndex = "{{ jobIndex|safe }}";
       {% endif %}
       if (myJobIndex !== null) {
         lightsheet.stepsExistingJob();
