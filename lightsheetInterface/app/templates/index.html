@@ -41,15 +41,14 @@
   <form action="" method="post">
     <div class="row lightsheet-row">
       <div id="steps">
-        {% if pipelineSteps is not none %}
-          {% for pipelineStep in pipelineSteps %}
-            {% if formData is defined %}
-              {% include "stepLoadJob.html" ignore missing with context %}
+         {% for step in config['steps'] %}
+            {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+               {% set pipelineStep = pipelineSteps[step.name] %}
+               {% include "stepLoadJob.html" ignore missing with context %}
             {% else %}
-              {% include "stepDefault.html" ignore missing with context %}
-            {% endif %}
-          {% endfor %}
-        {% endif %}
+               {% include "stepDefault.html" ignore missing with context %}
+            {%  endif %}
+         {% endfor %}
       </div>
     </div>
     <!-- button to submit the forms -->
