@@ -20,7 +20,6 @@
     <div class="col-lg-6 col-md-6 col-sm-6">
       <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
-<<<<<<< HEAD
           {% if parentJobInfo is not none %}
             {% for currentJobInfo in parentJobInfo %}
               <option value={{ url_for('index', lightsheetDB_id=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
@@ -32,19 +31,6 @@
               </option>
             {% endfor %}
           {% endif %}
-=======
-        {% if parentJobInfo is not none %}
-          {% for currentJobInfo in parentJobInfo %}
-            <option value={{ url_for('index', lightsheetDB_id=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
-              {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo %}
-                {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")" }}
-              {% else %}
-                job {{ loop.index }}
-              {% endif %}
-            </option>
-          {% endfor %}
-        {% endif %}
->>>>>>> origin
       </select>
     </div>
   </div>
@@ -80,7 +66,6 @@
            onkeyup="lightsheet.filterTable()">
     <table class="table table-striped table-hover" id="job-table">
       <thead>
-<<<<<<< HEAD
         <tr>
           <th onclick="lightsheet.sortTable(0)"></th>
           <th onclick="lightsheet.sortTable(1)">Name</th>
@@ -119,46 +104,6 @@
             </tr>
           {% endfor %}
         {% endif %}
-=======
-      <tr>
-        <th onclick="lightsheet.sortTable(0)"></th>
-        <th onclick="lightsheet.sortTable(1)">Name</th>
-        <th onclick="lightsheet.sortTable(2)">Date</th>
-        <th onclick="lightsheet.sortTable(3)">Steps</th>
-        <th onclick="lightsheet.sortTable(4)">Configuration Path</th>
-        <th onclick="lightsheet.sortTable(5)">Status</th>
-      </tr>
-      </thead>
-      <tbody id="job-table-body">
-      {% if parentJobInfo is not none %}
-        {% for currentJobInfo in parentJobInfo %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>Name</td>
-            {% if 'creationDate' in currentJobInfo and currentJobInfo.creationDate is not none %}
-              <td> {{ currentJobInfo.creationDate }}</td>
-            {% else %}
-              <td>N/A</td>
-            {% endif %}
-            {% if 'selectedStepNames' in currentJobInfo and currentJobInfo.selectedStepNames is not none %}
-              <td>{{ currentJobInfo.selectedStepNames }}</td>
-            {% else %}
-              <td>N/A</td>
-            {% endif %}
-            {% if 'configAddress' in currentJobInfo and currentJobInfo.configAddress %}
-              <td>{{ currentJobInfo.configAddress }}</td>
-            {% else %}
-              <td>N/A</td>
-            {% endif %}
-            {% if 'state' in currentJobInfo and currentJobInfo.state %}
-              <td>{{ currentJobInfo.state }}</td>
-            {% else %}
-              <td>N/A</td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-      {% endif %}
->>>>>>> origin
       </tbody>
     </table>
   </div>
