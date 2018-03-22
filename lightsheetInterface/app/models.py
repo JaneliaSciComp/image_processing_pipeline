@@ -22,7 +22,7 @@ class Parameter(Document):
     number2 = FloatField()
     number3 = FloatField()
     text1 = StringField(max_length=100)
-    description = StringField(max_length=200)
+    description = StringField(max_length=500)
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
     def __unicode__(self):
@@ -30,7 +30,7 @@ class Parameter(Document):
 
 class Step(Document):
     name = StringField(max_length=50)
-    description = StringField(max_length=200)
+    description = StringField(max_length=500)
     order = IntField()
     parameter = ListField(ReferenceField(Parameter))
     def __unicode__(self):
