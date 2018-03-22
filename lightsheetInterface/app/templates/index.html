@@ -72,7 +72,7 @@
           <th onclick="lightsheet.sortTable(2)">Date</th>
           <th onclick="lightsheet.sortTable(3)">Steps</th>
           <th onclick="lightsheet.sortTable(4)">Configuration Path</th>
-	  <th onclick="lightsheet.sortTable(5)">Status</th>
+	        <th onclick="lightsheet.sortTable(5)">Status</th>
         </tr>
       </thead>
       <tbody id="job-table-body">
@@ -96,7 +96,7 @@
               {% else %}
                 <td>N/A</td>
               {% endif %}
-	      {% if 'state' in currentJobInfo and currentJobInfo.state %}
+	            {% if 'state' in currentJobInfo and currentJobInfo.state %}
                 <td>{{ currentJobInfo.state}}</td>
               {% else %}
                 <td>N/A</td>
@@ -114,8 +114,8 @@
     $(document).ready(function () {
       var picker = new Pikaday({field: document.getElementById('datepicker')});
       var myJobIndex = null;
-      {% if jobIndex is defined and jobIndex is not none %}
-        myJobIndex = "{{ jobIndex|safe }}";
+      {% if lightsheetDB_id is defined and jobIndex is not none %}
+        myJobIndex = "{{ lightsheetDB_id|safe }}";
       {% endif %}
       if (myJobIndex !== null) {
         lightsheet.stepsExistingJob();
