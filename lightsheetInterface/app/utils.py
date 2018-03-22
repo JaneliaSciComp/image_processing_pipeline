@@ -1,6 +1,8 @@
 import sys, numpy, datetime, glob, scipy, re, json, requests, os, ipdb
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 from wtforms import Form, StringField, validators
 from mongoengine.queryset.visitor import Q
 from pylab import figure, axes, pie, title, show
@@ -101,9 +103,29 @@ def getHeaders(forQuery=False):
 
 # Timezone for timings
 eastern = timezone('US/Eastern')
+UTC = timezone('UTC')
 
 
-def getConfigurationsFromDB(_id, mongoClient, stepName=None):
+def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
+  if _id:
+    _id = ObjectId(_id)
+    if parentOrChild=="parent":
+      parentJobInfo = list(lightsheetDB.jobs.find({},{"steps":0}))
+      for currentJobInfo in parentJobInfo:
+        currentJobInfo.update({"selected":""})
+        if currentJobInfo["_id"]==_id:
+          currentJobInfo.update({"selected":"selected"})
+      return parentJobInfo
+    else:
+      if getParameters:
+        return list(lightsheetDB.jobs.find({"_id":_id}))
+      else:
+        return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
+  else:
+    return list(lightsheetDB.jobs.find({},{"steps":0}))
+
+
+def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
   result = None
   lightsheetDB = mongoClient.lightsheet
 
@@ -119,57 +141,108 @@ def getConfigurationsFromDB(_id, mongoClient, stepName=None):
         return stepDictionary["parameters"]
   return None
 
+def getConfigurationsFromDB(_id, stepName=None):
+    client = MongoClient(settings.mongo)
+    lightsheetDB = client.lightsheet
+    if stepName:
+      if _id=="templateConfigurations":
+          output = list(lightsheetDB.templateConfigurations.find({'steps.name':stepName}, {'_id':0,"steps.$.parameters":1}))
+      else:
+          output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
+      if output:
+          output=output[0]["steps"][0]["parameters"]
+    else:
+      if _id=="templateConfigurations":
+          output = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
+      else:
+          output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+    if output:
+      return output
+    else:
+      return 404
 
-def getServiceDataFromDB(lightsheetDB):
-  serviceData = list(lightsheetDB.jobs.find())
-  if (len(serviceData) > 0):
-    for count, dictionary in enumerate(serviceData):
-      dictionary["selected"] = '';
-      dictionary["creationDate"] = str(dictionary["_id"].generation_time)
-      dictionary["index"] = str(count)
-  return serviceData
+def updateDBStatesAndTimes(lightsheetDB):
+  allJobInfoFromDB = list(lightsheetDB.jobs.find())
+  for parentJobInfoFromDB in allJobInfoFromDB:
+    if parentJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+      parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
+                                                  params={'service-id':  parentJobInfoFromDB["jacs_id"]},
+                                                  headers=getHeaders(True)).json()
+      if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
+        parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
+        lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
+                                     {"$set": {"state":parentJobInfoFromJACS["state"] }})
+        allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
+                                            params={'parent-id': parentJobInfoFromDB["jacs_id"]},
+                                            headers=getHeaders(True)).json()
+        allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
+        if allChildJobInfoFromJACS:
+          for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
+            if currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+              currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
+              if currentChildJobInfoFromJACS:
+                creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
+                outputPath = "N/A"
+                if "outputPath" in currentChildJobInfoFromJACS:
+                  outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
 
+                lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
+                                             {"$set": {"steps.$.state":currentChildJobInfoFromJACS["state"],
+                                                       "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                       "steps.$.elapsedTime":str(datetime.now(eastern)-creationTime),
+                                                       "steps.$.logAndErrorPath":outputPath
+                                                     }})
+              
+                if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+                  endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
+                  lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
+                                               {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                         "steps.$.elapsedTime": str(endTime-creationTime)
+                                                       }})
+  
+def convertJACStime(t):
+   t=datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
+   t=UTC.localize(t).astimezone(eastern)
+   return t
 
-def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None, serviceIndexId=None):
-  # Function to get information about parent jobs from JACS database marks currently selected j
-  allJACSids = list(lightsheetDB.jobs.find({}, {'_id': 0, 'jacs_id': 1}))
-  allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
-  requestOutputJsonified = [requests.get(settings.devOrProductionJACS + '/services/',
-                                         params={'service-id': JACSid},
-                                         headers=getHeaders(True)).json()
-                            for JACSid in allJACSids]
-  serviceData = []
-  count = 0
-  for jobInformation in requestOutputJsonified:
-    if jobInformation['resultList'] is not None and len(jobInformation['resultList']) > 0:
-      jobInformationResultListDictionary = jobInformation['resultList'][0]
-      jobInformationResultListDictionary.update(
-        (k, str(convertEpochTime(v))) for k, v in jobInformationResultListDictionary.items() if k == "creationDate")
-      jobInformationResultListDictionary["selected"] = ''
-      jobInformationResultListDictionary["index"] = str(count)
-      serviceData.append(jobInformationResultListDictionary)
-      count = count + 1
-      # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
-  if serviceData and serviceIndex is not None:
-    serviceData[int(serviceIndex)]["selected"] = 'selected'
+def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
+    #Function to get information about parent jobs from JACS database marks currently selected job
+    allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
+    allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
+    requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
+                                           params={'service-id':  JACSid},
+                                           headers=getHeaders(True)).json()
+                              for JACSid in allJACSids]
+    serviceData = []
+    count=0
+    for jobInformation in requestOutputJsonified:
+      if jobInformation['resultList'] is not None and len(jobInformation['resultList']) > 0:
+        jobInformationResultListDictionary = jobInformation['resultList'][0]
+        jobInformationResultListDictionary.update((k,str(convertEpochTime(v))) for k, v in jobInformationResultListDictionary.items() if k=="creationDate")
+        jobInformationResultListDictionary["selected"]=''
+        jobInformationResultListDictionary["index"] = str(count)
+        serviceData.append(jobInformationResultListDictionary)
+        count=count+1
 
-  return serviceData
+        # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
+    if serviceData and serviceIndex is not None:
+      serviceData[int(serviceIndex)]["selected"] = 'selected'
 
+    return serviceData
 
 def getChildServiceDataFromJACS(parentId):
-  # Function to get information from JACS service databases
-  # Gets information about currently running and already completed jobs
-  requestOutput = requests.get(settings.devOrProductionJACS + '/services/',
-                               params={'parent-id': str(parentId)},
-                               headers=getHeaders(True))
-  requestOutputJsonified = requestOutput.json()
-  serviceData = requestOutputJsonified['resultList']
-  for dictionary in serviceData:  # convert date to nicer string
-    dictionary.update(
-      (k, convertEpochTime(v)) for k, v in dictionary.items() if (k == "creationDate" or k == "modificationDate"))
-  serviceData = requestOutputJsonified['resultList']
-  serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
-  return serviceData
+    #Function to get information from JACS service databases
+    #Gets information about currently running and already completed jobs
+    requestOutput = requests.get(settings.devOrProductionJACS+'/services/',
+                                 params={'parent-id': str(parentId)},
+                                 headers=getHeaders(True)).json()
+    serviceData=requestOutput['resultList']
+    for dictionary in serviceData: #convert date to nicer string
+         dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
+    serviceData = requestOutputJsonified['resultList']
+    serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
+    return serviceData
+
 
 
 def convertEpochTime(v):
