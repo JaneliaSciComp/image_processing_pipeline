@@ -105,7 +105,7 @@ def getHeaders(forQuery=False):
 eastern = timezone('US/Eastern')
 UTC = timezone('UTC')
 
-<<<<<<< HEAD
+
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
     _id = ObjectId(_id)
@@ -123,7 +123,23 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
         return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
   else:
     return list(lightsheetDB.jobs.find({},{"steps":0}))
-      
+
+
+def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
+  result = None
+  lightsheetDB = mongoClient.lightsheet
+
+  if _id == "templateConfigurations":
+    jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id': 0, 'steps': 1}))
+  else:
+    jobSteps = list(lightsheetDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'steps': 1}))
+  if jobSteps:
+    jobStepsList = jobSteps[0]["steps"]
+    if stepName is not None:
+      stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["name"] == stepName), None)
+      if stepDictionary is not None:
+        return stepDictionary["parameters"]
+  return None
 
 def getConfigurationsFromDB(_id, stepName=None):
     client = MongoClient(settings.mongo)
@@ -152,7 +168,7 @@ def updateDBStatesAndTimes(lightsheetDB):
       parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
                                                   params={'service-id':  parentJobInfoFromDB["jacs_id"]},
                                                   headers=getHeaders(True)).json()
-      if parentJobInfoFromJACS:
+      if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
         parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
         lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
                                      {"$set": {"state":parentJobInfoFromJACS["state"] }})
@@ -226,77 +242,8 @@ def getChildServiceDataFromJACS(parentId):
     serviceData = requestOutputJsonified['resultList']
     serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
     return serviceData
-=======
-
-def getConfigurationsFromDB(_id, mongoClient, stepName=None):
-  result = None
-  lightsheetDB = mongoClient.lightsheet
-
-  if _id == "templateConfigurations":
-    jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id': 0, 'steps': 1}))
-  else:
-    jobSteps = list(lightsheetDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'steps': 1}))
-  if jobSteps:
-    jobStepsList = jobSteps[0]["steps"]
-    if stepName is not None:
-      stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["name"] == stepName), None)
-      if stepDictionary is not None:
-        return stepDictionary["parameters"]
-  return None
 
 
-def getServiceDataFromDB(lightsheetDB):
-  serviceData = list(lightsheetDB.jobs.find())
-  if (len(serviceData) > 0):
-    for count, dictionary in enumerate(serviceData):
-      dictionary["selected"] = '';
-      dictionary["creationDate"] = str(dictionary["_id"].generation_time)
-      dictionary["index"] = str(count)
-  return serviceData
-
-
-def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None, serviceIndexId=None):
-  # Function to get information about parent jobs from JACS database marks currently selected j
-  allJACSids = list(lightsheetDB.jobs.find({}, {'_id': 0, 'jacs_id': 1}))
-  allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
-  requestOutputJsonified = [requests.get(settings.devOrProductionJACS + '/services/',
-                                         params={'service-id': JACSid},
-                                         headers=getHeaders(True)).json()
-                            for JACSid in allJACSids]
-  serviceData = []
-  count = 0
-  for jobInformation in requestOutputJsonified:
-    if jobInformation['resultList'] is not None and len(jobInformation['resultList']) > 0:
-      jobInformationResultListDictionary = jobInformation['resultList'][0]
-      jobInformationResultListDictionary.update(
-        (k, str(convertEpochTime(v))) for k, v in jobInformationResultListDictionary.items() if k == "creationDate")
-      jobInformationResultListDictionary["selected"] = ''
-      jobInformationResultListDictionary["index"] = str(count)
-      serviceData.append(jobInformationResultListDictionary)
-      count = count + 1
-      # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
-  if serviceData and serviceIndex is not None:
-    serviceData[int(serviceIndex)]["selected"] = 'selected'
-
-  return serviceData
-
-
-def getChildServiceDataFromJACS(parentId):
-  # Function to get information from JACS service databases
-  # Gets information about currently running and already completed jobs
-  requestOutput = requests.get(settings.devOrProductionJACS + '/services/',
-                               params={'parent-id': str(parentId)},
-                               headers=getHeaders(True))
-  requestOutputJsonified = requestOutput.json()
-  serviceData = requestOutputJsonified['resultList']
-  for dictionary in serviceData:  # convert date to nicer string
-    dictionary.update(
-      (k, convertEpochTime(v)) for k, v in dictionary.items() if (k == "creationDate" or k == "modificationDate"))
-  serviceData = requestOutputJsonified['resultList']
-  serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
-  return serviceData
-
->>>>>>> origin
 
 def convertEpochTime(v):
   if type(v) is str:

@@ -57,12 +57,10 @@ def submit():
   return 'form submitted'
 
 
-
-def load_job(job_id):
-
 @app.route('/', methods=['GET','POST'])
 def index():
-    config = buildConfigObject()
+  job_id = request.args.get('lightsheetDB_id')
+  config = buildConfigObject()
   if job_id == 'favicon.ico':
     job_id = None
 
@@ -72,7 +70,7 @@ def index():
   # go through all steps and find those, which are used by the current job
   for step in config['steps']:
     currentStep = step.name
-    configData = getConfigurationsFromDB(job_id, client, currentStep)
+    configData = getConfigurationsFromDB2(job_id, client, currentStep)
     print(configData)
     if configData != None and job_id != None:
       # If loading previous run parameters for specific step, then it should be checked and editable
@@ -157,7 +155,7 @@ def index():
     # if any are not Canceled, timeout, error, or successful then 
     #updateLightsheetDatabaseStatus
     updateDBStatesAndTimes(lightsheetDB)
-    parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
+    parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   
     #Return index.html with pipelineSteps and serviceData
     return render_template('index.html',
@@ -166,23 +164,8 @@ def index():
                            parentJobInfo = parentJobInfo,
                            logged_in=True,
                            config = config,
-                           version = app_version,
-                           formData = formObject,
-                           lightsheetDB_id = lightsheetDB_id)
-
-  # Return index.html with pipelineSteps and serviceData
-  #return render_template('index.html',
-  #                       pipelineSteps=pipelineSteps,
-  #                       logged_in=True,
-  #                       config=config,
-  #                       version=getAppVersion(app.root_path),
-  #                       jobIndex=job_id)
-   return render_template('index.html',
-                         steps=config['steps'],
-                         parentJobInfo = parentJobInfo,
-                         logged_in=True,
-                         config=config,
-                         version=getAppVersion(app.root_path))
+                           version = getAppVersion(app.root_path),
+                           lightsheetDB_id = job_id)
 
 
 @app.route('/job_status', methods=['GET'])
@@ -206,7 +189,7 @@ def job_status():
                            parentJobInfo=parentJobInfo,
                            childJobInfo=childJobInfo,
                            logged_in=True,
-                           version = app_version)
+                           version = getAppVersion(app.root_path))
 @app.route('/search')
 def search():
     return render_template('search.html',
