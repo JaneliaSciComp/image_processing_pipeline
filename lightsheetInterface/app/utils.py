@@ -105,7 +105,6 @@ def getHeaders(forQuery=False):
 eastern = timezone('US/Eastern')
 UTC = timezone('UTC')
 
-
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
     _id = ObjectId(_id)
@@ -124,15 +123,20 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
   else:
     return list(lightsheetDB.jobs.find({},{"steps":0}))
 
+def getJobStepData(_id, mongoClient):
+  result = getConfigurationsFromDB(_id, mongoClient, stepName=None)
+  if result != None and result != 404 and len(result) > 0 and 'steps' in result[0]:
+    return result[0]['steps']
+  return None
 
 def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
   result = None
   lightsheetDB = mongoClient.lightsheet
-
   if _id == "templateConfigurations":
     jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id': 0, 'steps': 1}))
   else:
     jobSteps = list(lightsheetDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'steps': 1}))
+
   if jobSteps:
     jobStepsList = jobSteps[0]["steps"]
     if stepName is not None:
@@ -141,25 +145,24 @@ def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
         return stepDictionary["parameters"]
   return None
 
-def getConfigurationsFromDB(_id, stepName=None):
-    client = MongoClient(settings.mongo)
-    lightsheetDB = client.lightsheet
-    if stepName:
-      if _id=="templateConfigurations":
-          output = list(lightsheetDB.templateConfigurations.find({'steps.name':stepName}, {'_id':0,"steps.$.parameters":1}))
-      else:
-          output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
-      if output:
-          output=output[0]["steps"][0]["parameters"]
+def getConfigurationsFromDB(_id, client, stepName=None):
+  lightsheetDB = client.lightsheet
+  if stepName:
+    if _id=="templateConfigurations":
+        output = list(lightsheetDB.templateConfigurations.find({'steps.name':stepName}, {'_id':0,"steps.$.parameters":1}))
     else:
-      if _id=="templateConfigurations":
-          output = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
-      else:
-          output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+        output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
     if output:
-      return output
+        output=output[0]["steps"][0]["parameters"]
+  else:
+    if _id=="templateConfigurations":
+        output = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
     else:
-      return 404
+        output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+  if output:
+    return output
+  else:
+    return 404
 
 def updateDBStatesAndTimes(lightsheetDB):
   allJobInfoFromDB = list(lightsheetDB.jobs.find())
@@ -322,26 +325,27 @@ def loadParameters(fileName):
 
 
 def parseJsonData(data):
-  keys = data.keys()
-  pFrequent = {}
-  pSometimes = {}
-  pRare = {}
-  forms = {}
-  # For each key, look up the parameter type and add parameter to the right type of form based on that:
-  for key in keys:
-    param = Parameter.objects.filter(name=key).first()
-    if param != None:
-      if param.frequency == 'F':
-        pFrequent[key] = data[key]
-      elif param.frequency == 'S':
-        pSometimes[key] = data[key]
-      elif param.frequency == 'R':
-        pRare[key] = data[key]
-  forms['frequent'] = StepForm(pFrequent)
-  forms['sometimes'] = StepForm(pSometimes)
-  forms['rare'] = StepForm(pRare)
-  return forms
-
+  if (type(data) is dict):
+    keys = data.keys()
+    pFrequent = {}
+    pSometimes = {}
+    pRare = {}
+    forms = {}
+    # For each key, look up the parameter type and add parameter to the right type of form based on that:
+    for key in keys:
+      param = Parameter.objects.filter(name=key).first()
+      if param != None:
+        if param.frequency == 'F':
+          pFrequent[key] = data[key]
+        elif param.frequency == 'S':
+          pSometimes[key] = data[key]
+        elif param.frequency == 'R':
+          pRare[key] = data[key]
+    forms['frequent'] = StepForm(pFrequent)
+    forms['sometimes'] = StepForm(pSometimes)
+    forms['rare'] = StepForm(pRare)
+    return forms
+  return None
 
 def loadJobDataFromLocal(mydir):
   files = os.listdir(mydir)

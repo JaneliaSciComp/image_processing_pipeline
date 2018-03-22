@@ -94,5 +94,3 @@ lightsheet.stepsExistingJob = function(){
     }
   });
 }
-
-
