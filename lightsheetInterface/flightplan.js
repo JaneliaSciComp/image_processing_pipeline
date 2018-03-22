@@ -31,7 +31,7 @@ plan.local('version', function(local) {
   var versionType = plan.runtime.options.argv.remain[1];
   var command = local.exec('npm version ' + versionType);
   var command = local.exec('cat package.json | grep version');
-  var myVersion =  "v" + (JSON.stringify(command).split(':')[3]).substr(3,5);
+  var myVersion =  "v" + (JSON.stringify(command).split(':')[3]).split('"')[1].replace('\\','');
   var command = local.exec('git add package.json; git commit -m' + '"' + myVersion + '"');
 });
 

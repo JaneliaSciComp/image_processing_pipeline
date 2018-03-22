@@ -1,20 +1,26 @@
+import dateutil, ipdb
 from flask import Flask
+from flask_debugtoolbar import DebugToolbarExtension
+from flask_cache import Cache
 from flask_mongoengine import MongoEngine
 from mongoengine import connect
 from flask_admin import Admin
-import dateutil
 
 app = Flask(__name__) #app variable, an object of class FLask
-app.secret_key = 'this_is_secret_key'
+
+app.config.from_pyfile('lightsheet-config.cfg')
+app.cache = Cache(app)
+
+# db settings
 admin=Admin(app)
 app.config['MONGODB_SETTINGS'] = {
     'db': 'lightsheet-config',
     'host': '10.40.3.155',
     'port': 27017
 }
-app.config['TEMPLATES_AUTO_RELOAD'] = True
-db = MongoEngine(app)
 
+db = MongoEngine(app)
+toolbar = DebugToolbarExtension(app)
 from app import views, models #app package from which views will be imported
 
 @app.template_filter('strftime')

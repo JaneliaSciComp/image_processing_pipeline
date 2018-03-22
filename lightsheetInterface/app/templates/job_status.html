@@ -10,6 +10,7 @@
     <META HTTP-EQUIV="refresh" CONTENT="30">
     <select class="form-control lightsheet-dropdown" onchange="location = this.options[this.selectedIndex].value;">
       <option value="{{ url_for('job_status') }}" selected>---Select Previous Run---</option>
+<<<<<<< HEAD
       {% if parentJobInfo is not none %}
         {% for currentJobInfo in parentJobInfo %}
           {% if currentJobInfo.state == "ERROR" %}
@@ -27,6 +28,27 @@
               {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
           {% endif %}
+=======
+      {% if parentServiceData is not none %}
+        {% for service in parentServiceData %}
+          {% if 'args' in service and args|length > 3 %}
+            {% if service.state == "ERROR" %}
+              <option class="status-error" value={{ url_for('job_status', jacsServiceIndex=service.index )}}
+                {{ service.selected }}>  {{   service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
+              </option>
+            {% endif %}
+            {% if service.state == "SUCCESSFUL" %}
+              <option class="status-successful" value={{ url_for('job_status', jacsServiceIndex=service.index )}}
+                {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
+              </option>
+            {% endif %}
+            {% if service.state == "RUNNING" %}
+              <option class="status-running" value={{ url_for('job_status', jacsServiceIndex=service.index )}}
+                {{ service.selected }}>  {{ service.creationDate | strftime + " " + "(" + service.args[3] + ")"}}
+              </option>
+            {% endif %}
+          {% endif %}      
+>>>>>>> origin
         {% endfor %}
       {% endif %}
     </select>
