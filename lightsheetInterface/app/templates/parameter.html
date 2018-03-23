@@ -9,7 +9,7 @@
   {% endif %}
     <div class="input-group-prepend">
     <span class="input-group-text lightsheet-input">
-      {{ param.name | capitalize }}
+      {{ param.name | capitalize | trimend }}
     </span>
     {% if p.type == 'Text' %}
       <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}">
