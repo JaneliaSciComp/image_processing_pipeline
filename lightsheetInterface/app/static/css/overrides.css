@@ -64,6 +64,10 @@ fieldset {
   width: 33%;
 }
 
+#steps .card:first-child .card-header {
+  background-color: rgba(0,0,0,0.1);
+}
+
 .empty-label {
   margin-top: 1.8em;
 }
