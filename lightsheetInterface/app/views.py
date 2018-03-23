@@ -59,6 +59,7 @@ def submit():
 
 @app.route('/', methods=['GET','POST'])
 def index():
+  # ipdb.set_trace()
   job_id = request.args.get('lightsheetDB_id')
   config = buildConfigObject()
   if job_id == 'favicon.ico':

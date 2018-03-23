@@ -354,17 +354,25 @@ def parseJsonData(data):
     forms = {}
     # For each key, look up the parameter type and add parameter to the right type of form based on that:
     for key in keys:
-      param = Parameter.objects.filter(name=key).first()
-      if param != None:
-        if param.frequency == 'F':
-          pFrequent[key] = data[key]
-        elif param.frequency == 'S':
-          pSometimes[key] = data[key]
-        elif param.frequency == 'R':
-          pRare[key] = data[key]
-    forms['frequent'] = StepForm(pFrequent)
-    forms['sometimes'] = StepForm(pSometimes)
-    forms['rare'] = StepForm(pRare)
+      value = pFrequent[key]
+      setattr(F, key, TextField(key))
+      frequentForm = F()
+
+      keys = pSometimes.keys()
+      for key in keys:
+        value = pSometimes[key]
+        setattr(S, key, TextField(key))
+      sometimesForm = S()
+
+      keys = pRare.keys()
+      for key in keys:
+        value = pRare[key]
+        setattr(R, key, TextField(key))
+      rareForm = R()
+
+    forms['frequent'] = frequentForm
+    forms['sometimes'] = sometimesForm
+    forms['rare'] = rareForm
     return forms
   return None
 
