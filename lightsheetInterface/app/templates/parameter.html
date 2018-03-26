@@ -3,13 +3,13 @@
 -->
 {% if param.name == p.name %}
   {% if p.description is not none %}
-    <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description | capitalize }}">
+    <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}" title="{{ p.description }}">
   {% else %}
     <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
   {% endif %}
     <div class="input-group-prepend">
     <span class="input-group-text lightsheet-input">
-      {{ param.name | capitalize | trimend }}
+      {{ param.name | trimend }}
     </span>
     {% if p.type == 'Text' %}
       <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}">
