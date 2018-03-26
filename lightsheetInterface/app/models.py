@@ -21,6 +21,7 @@ class Parameter(Document):
     number1 = FloatField()
     number2 = FloatField()
     number3 = FloatField()
+    number4 = FloatField()
     text1 = StringField(max_length=100)
     description = StringField(max_length=500)
     frequency = StringField(max_length=20, choices=frequency)
