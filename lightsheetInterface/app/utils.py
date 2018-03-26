@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from wtforms import Form, StringField, validators
+from wtforms import Form, StringField, validators, TextField
 from mongoengine.queryset.visitor import Q
 from pylab import figure, axes, pie, title, show
 from multiprocessing import Pool
@@ -338,42 +338,65 @@ def getPipelineStepNames():
     names.append(step.name)
   return names
 
-
 def loadParameters(fileName):
   with open(fileName) as data_file:
     data = json.load(data_file)
     parseJsonData(data)
 
+def parseJsonData(data, stepName):
+  class F(Form):
+    pass
 
-def parseJsonData(data):
-  if (type(data) is dict):
-    keys = data.keys()
-    pFrequent = {}
-    pSometimes = {}
-    pRare = {}
-    forms = {}
-    # For each key, look up the parameter type and add parameter to the right type of form based on that:
-    for key in keys:
-      value = pFrequent[key]
-      setattr(F, key, TextField(key))
+  class S(Form):
+    pass
+
+  class R(Form):
+    pass
+
+  # ipdb.set_trace()
+  keys = None
+  if type(data) is list and len(data) > 0 and data[0]['parameters'] != None:
+    parameterData = data[0]['parameters']
+    keys = parameterData.keys()
+    if keys != None:
+      pFrequent = {}
+      pSometimes = {}
+      pRare = {}
+      forms = {}
+      # For each key, look up the parameter type and add parameter to the right type of form based on that:
+      for key in keys:
+        param = Parameter.objects.filter(name=key).first()
+        if param == None:
+          extendedKey = key + "_" + stepName
+          param = Parameter.objects.filter(name=extendedKey).first()
+        pprint(param)
+        if param != None:
+          if param.frequency == 'F':
+            pFrequent[key] = parameterData[key]
+          elif param.frequency == 'S':
+            pSometimes[key] = parameterData[key]
+          elif param.frequency == 'R':
+            pRare[key] = parameterData[key]
+
+      keys = pFrequent.keys()
+      for k in keys:
+        setattr(F, k, TextField(k))
       frequentForm = F()
 
       keys = pSometimes.keys()
-      for key in keys:
-        value = pSometimes[key]
-        setattr(S, key, TextField(key))
+      for k in keys:
+        setattr(S, k, TextField(k))
       sometimesForm = S()
 
       keys = pRare.keys()
-      for key in keys:
-        value = pRare[key]
-        setattr(R, key, TextField(key))
+      for k in keys:
+        setattr(R, k, TextField(k))
       rareForm = R()
 
-    forms['frequent'] = frequentForm
-    forms['sometimes'] = sometimesForm
-    forms['rare'] = rareForm
-    return forms
+      forms['frequent'] = frequentForm
+      forms['sometimes'] = sometimesForm
+      forms['rare'] = rareForm
+      return forms
   return None
 
 def loadJobDataFromLocal(mydir):
@@ -384,7 +407,6 @@ def loadJobDataFromLocal(mydir):
       data = json.load(f)
       return data
 
-
 def getAppVersion(path):
   mpath = path.split('/')
   result = '/'.join(mpath[0:(len(mpath) - 1)]) + '/package.json'
@@ -392,3 +414,7 @@ def getAppVersion(path):
     data = json.load(package_data)
     package_data.close()
     return data['version']
+
+
+def trimStepName(name):
+  return name.split('_',1)[0]

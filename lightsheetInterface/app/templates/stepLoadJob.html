@@ -25,15 +25,24 @@
          <!-- Tab panes -->
          <div class="tab-content">
             <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ pipelineStep.stepName }}">
-              {{ pipelineStep['forms']['frequent'] }}
+              {% set myForm = pipelineStep['forms']['frequent'] %}
+              {% for field in myForm %}
+                 {{ render_field(field) }}
+              {% endfor %}
             </div>
             <!-- sometimes panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ pipelineStep.stepName }}">
-               {{ pipelineStep['forms']['sometimes'] }}
+              {% set myForm = pipelineStep['forms']['sometimes'] %}
+              {% for field in myForm %}
+                 {{ render_field(field) }}
+              {% endfor %}
             </div>
             <!-- rare panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ pipelineStep.stepName }}">
-               {{ pipelineStep['forms']['sometimes'] }}
+              {% set myForm = pipelineStep['forms']['rare'] %}
+              {% for field in myForm %}
+                 {{ render_field(field) }}
+              {% endfor %}
             </div>
             <!-- json panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}">
