@@ -11,18 +11,18 @@ frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
 formats = (('', None), ('R', 'Range'))
 
 class AppConfig(Document):
-    name = StringField(max_length=100)
+    name = StringField(max_length=200)
     value = StringField(max_length=200)
     def __repr__(self):
       return self.name
 
 class Parameter(Document):
-    name = StringField(max_length=100)
+    name = StringField(max_length=200)
     number1 = FloatField()
     number2 = FloatField()
     number3 = FloatField()
     number4 = FloatField()
-    text1 = StringField(max_length=100)
+    text1 = StringField(max_length=500)
     description = StringField(max_length=500)
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
@@ -30,7 +30,7 @@ class Parameter(Document):
       return self.name
 
 class Step(Document):
-    name = StringField(max_length=50)
+    name = StringField(max_length=200)
     description = StringField(max_length=500)
     order = IntField()
     parameter = ListField(ReferenceField(Parameter))
