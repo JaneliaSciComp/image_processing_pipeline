@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from wtforms import Form, StringField, validators, TextField
+from wtforms import Form, StringField, validators, TextField, FloatField
 from mongoengine.queryset.visitor import Q
 from pylab import figure, axes, pie, title, show
 from multiprocessing import Pool
@@ -14,7 +14,6 @@ from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter
-from app.forms import StepForm
 from app.settings import Settings
 
 settings = Settings()
@@ -65,13 +64,40 @@ def getType(parameter):
   result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
   return result
 
+def getParameters(parameter):
+  frequent = {}
+  sometimes = {}
+  rare = {}
+  for param in parameter:
+    if param.number1 != None:
+      param.type = 'Number'
+      if param.number2 == None:
+        param.count = '1'
+      elif param.number3 == None:
+        param.count = '2'
+      else:
+        param.count = '3'
+    else:
+      param.type = 'Text'
+      param.count = '1'
+
+    if param.frequency == 'F':
+      frequent[param.name] = param
+    elif param.frequency == 'S':
+      sometimes[param.name] = param
+    elif param.frequency == 'R':
+      rare[param.name] = param
+
+  result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
+  return result  
 
 def buildConfigObject():
   try:
     steps = Step.objects.all().order_by('order')
-    parameter = Parameter.objects.all()
-    paramNew = getType(parameter)
-    config = {'steps': steps, 'parameter': paramNew}
+    p = Parameter.objects.all()
+    parameters = getType(p)
+    paramDict = getParameters(p)
+    config = {'steps': steps, 'parameter': parameters, 'parameterDictionary': paramDict}
   except ServerSelectionTimeoutError:
     return 404
   return config
@@ -344,6 +370,7 @@ def loadParameters(fileName):
     parseJsonData(data)
 
 def parseJsonData(data, stepName):
+  config = buildConfigObject()
   class F(Form):
     pass
 
@@ -353,7 +380,6 @@ def parseJsonData(data, stepName):
   class R(Form):
     pass
 
-  # ipdb.set_trace()
   keys = None
   if type(data) is list and len(data) > 0 and data[0]['parameters'] != None:
     parameterData = data[0]['parameters']
@@ -362,15 +388,14 @@ def parseJsonData(data, stepName):
       pFrequent = {}
       pSometimes = {}
       pRare = {}
-      forms = {}
       # For each key, look up the parameter type and add parameter to the right type of form based on that:
       for key in keys:
         param = Parameter.objects.filter(name=key).first()
         if param == None:
           extendedKey = key + "_" + stepName
           param = Parameter.objects.filter(name=extendedKey).first()
-        pprint(param)
         if param != None:
+          
           if param.frequency == 'F':
             pFrequent[key] = parameterData[key]
           elif param.frequency == 'S':
@@ -378,21 +403,58 @@ def parseJsonData(data, stepName):
           elif param.frequency == 'R':
             pRare[key] = parameterData[key]
 
-      keys = pFrequent.keys()
-      for k in keys:
-        setattr(F, k, TextField(k))
-      frequentForm = F()
+      keyList = []
+      formClassList = []
+      formList = []
 
-      keys = pSometimes.keys()
-      for k in keys:
-        setattr(S, k, TextField(k))
-      sometimesForm = S()
+      keyList.append(pFrequent.keys())
+      keyList.append(pSometimes.keys())
+      keyList.append(pRare.keys())
 
-      keys = pRare.keys()
-      for k in keys:
-        setattr(R, k, TextField(k))
-      rareForm = R()
+      formClassList.append(F)
+      formClassList.append(S)
+      formClassList.append(R)
 
+      formList = []
+      length = len(keyList) # make sure formList matches keyList
+
+      for i in range(0, length):
+        tmpKeys = keyList[i]
+        for k in tmpKeys:
+          pConfig = None
+          if i == 0:
+            configParamDict = config['parameterDictionary']['frequent']
+          elif i == 1:
+            configParamDict = config['parameterDictionary']['sometimes']
+          elif i == 2:
+            configParamDict = config['parameterDictionary']['rare']
+          configParam = None
+          if k in configParamDict.keys():
+            configParam = configParamDict[k]
+          elif (k + '_' + stepName) in configParamDict.keys():
+            configParam = configParamDict[k + '_' + stepName]
+          if configParam != None:
+            if configParam.type == 'Number':
+              if configParam.formatting == "Range":
+                print('Add range attribute')
+              else:
+                setattr(formClassList[i], k, FloatField(k, default=parameterData[k]))
+            elif configParam.type == 'Text':
+              setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
+
+      frequentForm = formClassList[0]()
+      sometimesForm = formClassList[1]()
+      rareForm = formClassList[2]()
+
+      # keys = pSometimes.keys()
+      # for k in keys:
+      #   setattr(S, k, TextField(k))
+
+      # keys = pRare.keys()
+      # for k in keys:
+      #   setattr(R, k, TextField(k))
+
+      forms = {}
       forms['frequent'] = frequentForm
       forms['sometimes'] = sometimesForm
       forms['rare'] = rareForm

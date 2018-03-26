@@ -1,12 +1,13 @@
 {% macro render_field(field) %}
-  <dt>{{ field.label }}
-  <dd>{{ field(**kwargs)|safe }}
-  {% if field.errors %}
-    <ul class=errors>
-    {% for error in field.errors %}
-      <li>{{ error }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-  </dd>
+    <div class="input-group input-group-sm mb-3" id="clusterMF-outputID_clusterMF">
+        <div class="input-group-prepend">
+            {% if field.type == "TextField" %}
+              <td>{{ field.label(class_="input-group-text lightsheet-input") }}</td><br/>
+              <td>{{ field(class_="lightsheet-text") }}</td><br/>
+            {% elif field.type == "FloatField" %}
+              <td>{{ field.label(class_="input-group-text lightsheet-input") }}</td><br/>
+              <td>{{ field(class_="lightsheet-number") }}</td>
+            {% endif %}
+        </div>
+    </div>
 {% endmacro %}
