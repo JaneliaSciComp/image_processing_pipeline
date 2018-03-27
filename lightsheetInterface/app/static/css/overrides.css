@@ -107,3 +107,21 @@ fieldset {
 .pika-datepicker {
   width: 10.8em;
 }
+
+@media (min-width: 769px) {
+  .lightsheet-text {
+    min-width: 20em;
+  }
+}
+
+@media (min-width: 1200px) {
+  .lightsheet-text {
+    min-width: 35em;
+  }
+}
+
+@media (min-width: 1900px) {
+  .lightsheet-text {
+    min-width: 60em;
+  }
+}
