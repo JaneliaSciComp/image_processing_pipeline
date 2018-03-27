@@ -8,7 +8,7 @@ from app import admin
 
 types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
-formats = (('', None), ('R', 'Range'))
+formats = (('', None), ('R', 'Range'), ('A', 'Array'))
 
 class AppConfig(Document):
     name = StringField(max_length=200)
