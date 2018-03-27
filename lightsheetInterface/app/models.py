@@ -45,7 +45,7 @@ class StepView(ModelView):
     column_filters = ['name', 'description']
 
 class ParameterView(ModelView):
-    column_filters = ['name', 'description', 'frequency']
+    column_filters = ['name', 'description', 'frequency', 'formatting']
 
 admin.add_view(ConfigView(AppConfig))
 admin.add_view(StepView(Step))
