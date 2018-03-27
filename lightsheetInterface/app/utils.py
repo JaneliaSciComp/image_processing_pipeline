@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from wtforms import Form, StringField, validators
+from wtforms import Form, StringField, validators, TextField, FloatField
 from mongoengine.queryset.visitor import Q
 from pylab import figure, axes, pie, title, show
 from multiprocessing import Pool
@@ -14,7 +14,6 @@ from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter
-from app.forms import StepForm
 from app.settings import Settings
 
 settings = Settings()
@@ -65,13 +64,40 @@ def getType(parameter):
   result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
   return result
 
+def getParameters(parameter):
+  frequent = {}
+  sometimes = {}
+  rare = {}
+  for param in parameter:
+    if param.number1 != None:
+      param.type = 'Number'
+      if param.number2 == None:
+        param.count = '1'
+      elif param.number3 == None:
+        param.count = '2'
+      else:
+        param.count = '3'
+    else:
+      param.type = 'Text'
+      param.count = '1'
+
+    if param.frequency == 'F':
+      frequent[param.name] = param
+    elif param.frequency == 'S':
+      sometimes[param.name] = param
+    elif param.frequency == 'R':
+      rare[param.name] = param
+
+  result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
+  return result  
 
 def buildConfigObject():
   try:
     steps = Step.objects.all().order_by('order')
-    parameter = Parameter.objects.all()
-    paramNew = getType(parameter)
-    config = {'steps': steps, 'parameter': paramNew}
+    p = Parameter.objects.all()
+    parameters = getType(p)
+    paramDict = getParameters(p)
+    config = {'steps': steps, 'parameter': parameters, 'parameterDictionary': paramDict}
   except ServerSelectionTimeoutError:
     return 404
   return config
@@ -338,34 +364,101 @@ def getPipelineStepNames():
     names.append(step.name)
   return names
 
-
 def loadParameters(fileName):
   with open(fileName) as data_file:
     data = json.load(data_file)
     parseJsonData(data)
 
+def parseJsonData(data, stepName):
+  config = buildConfigObject()
+  class F(Form):
+    pass
 
-def parseJsonData(data):
-  if (type(data) is dict):
-    keys = data.keys()
-    pFrequent = {}
-    pSometimes = {}
-    pRare = {}
-    forms = {}
-    # For each key, look up the parameter type and add parameter to the right type of form based on that:
-    for key in keys:
-      param = Parameter.objects.filter(name=key).first()
-      if param != None:
-        if param.frequency == 'F':
-          pFrequent[key] = data[key]
-        elif param.frequency == 'S':
-          pSometimes[key] = data[key]
-        elif param.frequency == 'R':
-          pRare[key] = data[key]
-    forms['frequent'] = StepForm(pFrequent)
-    forms['sometimes'] = StepForm(pSometimes)
-    forms['rare'] = StepForm(pRare)
-    return forms
+  class S(Form):
+    pass
+
+  class R(Form):
+    pass
+
+  keys = None
+  if type(data) is list and len(data) > 0 and data[0]['parameters'] != None:
+    parameterData = data[0]['parameters']
+    keys = parameterData.keys()
+    if keys != None:
+      pFrequent = {}
+      pSometimes = {}
+      pRare = {}
+      # For each key, look up the parameter type and add parameter to the right type of form based on that:
+      for key in keys:
+        param = Parameter.objects.filter(name=key).first()
+        if param == None:
+          extendedKey = key + "_" + stepName
+          param = Parameter.objects.filter(name=extendedKey).first()
+        if param != None:
+          
+          if param.frequency == 'F':
+            pFrequent[key] = parameterData[key]
+          elif param.frequency == 'S':
+            pSometimes[key] = parameterData[key]
+          elif param.frequency == 'R':
+            pRare[key] = parameterData[key]
+
+      keyList = []
+      formClassList = []
+      formList = []
+
+      keyList.append(pFrequent.keys())
+      keyList.append(pSometimes.keys())
+      keyList.append(pRare.keys())
+
+      formClassList.append(F)
+      formClassList.append(S)
+      formClassList.append(R)
+
+      formList = []
+      length = len(keyList) # make sure formList matches keyList
+
+      for i in range(0, length):
+        tmpKeys = keyList[i]
+        for k in tmpKeys:
+          pConfig = None
+          if i == 0:
+            configParamDict = config['parameterDictionary']['frequent']
+          elif i == 1:
+            configParamDict = config['parameterDictionary']['sometimes']
+          elif i == 2:
+            configParamDict = config['parameterDictionary']['rare']
+          configParam = None
+          if k in configParamDict.keys():
+            configParam = configParamDict[k]
+          elif (k + '_' + stepName) in configParamDict.keys():
+            configParam = configParamDict[k + '_' + stepName]
+          if configParam != None:
+            if configParam.type == 'Number':
+              if configParam.formatting == "Range":
+                print('Add range attribute')
+              else:
+                setattr(formClassList[i], k, FloatField(k, default=parameterData[k]))
+            elif configParam.type == 'Text':
+              setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
+
+      frequentForm = formClassList[0]()
+      sometimesForm = formClassList[1]()
+      rareForm = formClassList[2]()
+
+      # keys = pSometimes.keys()
+      # for k in keys:
+      #   setattr(S, k, TextField(k))
+
+      # keys = pRare.keys()
+      # for k in keys:
+      #   setattr(R, k, TextField(k))
+
+      forms = {}
+      forms['frequent'] = frequentForm
+      forms['sometimes'] = sometimesForm
+      forms['rare'] = rareForm
+      return forms
   return None
 
 def loadJobDataFromLocal(mydir):
@@ -376,7 +469,6 @@ def loadJobDataFromLocal(mydir):
       data = json.load(f)
       return data
 
-
 def getAppVersion(path):
   mpath = path.split('/')
   result = '/'.join(mpath[0:(len(mpath) - 1)]) + '/package.json'
@@ -384,3 +476,7 @@ def getAppVersion(path):
     data = json.load(package_data)
     package_data.close()
     return data['version']
+
+
+def trimStepName(name):
+  return name.split('_',1)[0]

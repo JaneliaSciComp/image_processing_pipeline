@@ -59,6 +59,7 @@ def submit():
 
 @app.route('/', methods=['GET','POST'])
 def index():
+  # ipdb.set_trace()
   job_id = request.args.get('lightsheetDB_id')
   config = buildConfigObject()
   if job_id == 'favicon.ico':
@@ -74,11 +75,12 @@ def index():
     if stepData != None and job_id != None:
       # If loading previous run parameters for specific step, then it should be checked and editable
       for jobStep in stepData:
-        if currentStep == jobStep['name']:
+        jobStepName = trimStepName(jobStep['name'])
+        if currentStep == jobStepName:
           editState = 'enabled'
           checkboxState = 'checked'
           countJobs += 1
-          forms = parseJsonData(stepData)
+          forms = parseJsonData(stepData, currentStep)
           # Pipeline steps is passed to index.html for formatting the html based
           pipelineSteps[currentStep] = {
             'stepName': step.name,
