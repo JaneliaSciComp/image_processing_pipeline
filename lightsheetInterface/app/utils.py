@@ -208,6 +208,27 @@ def convertJACStime(t):
    t=UTC.localize(t).astimezone(eastern)
    return t
 
+def convertArrayFieldValue(stringValue):
+  stringValue = stringValue.replace("{","") #remove cell formatting
+  stringValue = stringValue.replace("}","")
+  stringValue = stringValue.replace(" ",",") #replace commas with spaces
+  #stringValue = ' '.join(stringValue.split()) #make sure everything is singlespaced
+  #stringValue = stringValue.replace(" ",",") #replace spaces by commas
+  stringValue = re.sub(',,+' , ',', stringValue) #replace two or more commas with single comma
+  #lots of substitutions to have it make sense. First get rid of extra commas
+  #Then get rid of semicolon-comma pairs
+  #Then make sure arrays are separated properly
+  #Finally add brackets to the beginning/end if necessary
+  stringValue = re.sub('\[,' , '[', stringValue) 
+  stringValue = re.sub(',\]' , ']', stringValue)
+  stringValue = re.sub(';,' , ';', stringValue)
+  stringValue = re.sub(',;' , ';', stringValue)
+  stringValue = re.sub('\];\[' , '],[', stringValue)
+  stringValue = re.sub(';', '],[', stringValue)
+  if '],[' in stringValue:
+    stringValue = "[" + stringValue + "]"
+  return 
+
 def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
     #Function to get information about parent jobs from JACS database marks currently selected job
     allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
