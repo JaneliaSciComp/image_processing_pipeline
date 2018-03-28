@@ -412,6 +412,7 @@ def parseJsonData(data, stepName):
 
       length = len(keyList) # make sure formList matches keyList
       saveRangeKeys = []
+      saveArrays = []
       for i in range(0, length):
         tmpKeys = keyList[i]
         for k in tmpKeys:
@@ -431,24 +432,39 @@ def parseJsonData(data, stepName):
               if configParam.formatting == "R":
                 setattr(formClassList[i], k, FieldList(TextField('')))
                 saveRangeKeys.append((i,k))
+              elif type(parameterData[k]) is list:
+                setattr(formClassList[i], k, FieldList(TextField('')))
+                saveArrays.append((i,k))
               else:
                 setattr(formClassList[i], k, FloatField(k, default=parameterData[k]))
             elif configParam.type == 'Text':
               setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
 
+      # create instances for each form
       formInstances = []
       formInstances.append(formClassList[0]())
       formInstances.append(formClassList[1]())
       formInstances.append(formClassList[2]())
+
+      # fill the special range fields with default values
       for i,j in saveRangeKeys:
         rangeData = parameterData[j]
-        formInstances[i][j].append_entry(rangeData['start'])
-        formInstances[i][j].append_entry(rangeData['end'])
-        formInstances[i][j].append_entry(rangeData['every'])
-        formInstances[i][j].entries[0].label = 'From: '
-        formInstances[i][j].entries[1].label = 'To: '
-        formInstances[i][j].entries[2].label = 'Every: '
+        if type(rangeData) is dict:
+          formInstances[i][j].append_entry(rangeData['start'])
+          formInstances[i][j].append_entry(rangeData['end'])
+          formInstances[i][j].append_entry(rangeData['every'])
+          formInstances[i][j].entries[0].label = 'From: '
+          formInstances[i][j].entries[1].label = 'To: '
+          formInstances[i][j].entries[2].label = 'Every: '
 
+      # fill the special array fields with default values
+      for i,j in saveArrays:
+        arrayData = parameterData[j]
+        if type(arrayData) is list:
+          for l in arrayData:
+            formInstances[i][j].append_entry(l)
+
+      # build the result form object with forms for each frequency
       forms = {}
       forms['frequent'] = formInstances[0]
       forms['sometimes'] = formInstances[1]
