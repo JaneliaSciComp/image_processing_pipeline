@@ -7,6 +7,14 @@
             {% elif field.type == "FloatField" %}
               <td>{{ field.label(class_="input-group-text lightsheet-input") }}</td><br/>
               <td>{{ field(class_="lightsheet-number") }}</td>
+            {% elif field.type == "FormField" %}
+                <td>{{ field.label(class_="input-group-text lightsheet-input") }}</td><br/>
+                <td>{{ field(class_="lightsheet-number") }}</td>
+            {% elif field.type == "FieldList" %}
+              <td>{{ field.label(class_="input-group-text lightsheet-input") }}</td><br/>
+              {%  for e in field.entries %}
+                <div>{{ e(class_="lightsheet-number") }}</div>
+              {% endfor %}
             {% endif %}
         </div>
     </div>

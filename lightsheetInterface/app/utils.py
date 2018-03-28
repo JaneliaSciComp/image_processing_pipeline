@@ -1,11 +1,7 @@
-import sys, numpy, datetime, glob, scipy, re, json, requests, os, ipdb
+import numpy, datetime, glob, scipy, re, json, requests, os, ipdb
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from pymongo import MongoClient
-from bson.objectid import ObjectId
-from wtforms import Form, StringField, validators, TextField, FloatField
-from mongoengine.queryset.visitor import Q
-from pylab import figure, axes, pie, title, show
+from wtforms import *
 from multiprocessing import Pool
 from pprint import pprint
 from scipy import misc
@@ -405,7 +401,6 @@ def parseJsonData(data, stepName):
 
       keyList = []
       formClassList = []
-      formList = []
 
       keyList.append(pFrequent.keys())
       keyList.append(pSometimes.keys())
@@ -415,13 +410,12 @@ def parseJsonData(data, stepName):
       formClassList.append(S)
       formClassList.append(R)
 
-      formList = []
       length = len(keyList) # make sure formList matches keyList
-
+      saveRangeKeys = []
+      saveArrays = []
       for i in range(0, length):
         tmpKeys = keyList[i]
         for k in tmpKeys:
-          pConfig = None
           if i == 0:
             configParamDict = config['parameterDictionary']['frequent']
           elif i == 1:
@@ -435,29 +429,51 @@ def parseJsonData(data, stepName):
             configParam = configParamDict[k + '_' + stepName]
           if configParam != None:
             if configParam.type == 'Number':
-              if configParam.formatting == "Range":
-                print('Add range attribute')
+              if configParam.formatting == "R":
+                setattr(formClassList[i], k, FieldList(TextField('')))
+                saveRangeKeys.append((i,k))
+              elif type(parameterData[k]) is list:
+                setattr(formClassList[i], k, FieldList(TextField('')))
+                saveArrays.append((i,k))
               else:
                 setattr(formClassList[i], k, FloatField(k, default=parameterData[k]))
             elif configParam.type == 'Text':
-              setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
+              data = parameterData[k]
+              if type(data) is dict and '_ArrayData_' in data and data['_ArrayData_'] == None:
+                setattr(formClassList[i], k, TextField(k, default=None))
+              else:
+                setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
 
-      frequentForm = formClassList[0]()
-      sometimesForm = formClassList[1]()
-      rareForm = formClassList[2]()
 
-      # keys = pSometimes.keys()
-      # for k in keys:
-      #   setattr(S, k, TextField(k))
+      # create instances for each form
+      formInstances = []
+      formInstances.append(formClassList[0]())
+      formInstances.append(formClassList[1]())
+      formInstances.append(formClassList[2]())
 
-      # keys = pRare.keys()
-      # for k in keys:
-      #   setattr(R, k, TextField(k))
+      # fill the special range fields with default values
+      for i,j in saveRangeKeys:
+        rangeData = parameterData[j]
+        if type(rangeData) is dict:
+          formInstances[i][j].append_entry(rangeData['start'])
+          formInstances[i][j].append_entry(rangeData['end'])
+          formInstances[i][j].append_entry(rangeData['every'])
+          formInstances[i][j].entries[0].label = 'From: '
+          formInstances[i][j].entries[1].label = 'To: '
+          formInstances[i][j].entries[2].label = 'Every: '
 
+      # fill the special array fields with default values
+      for i,j in saveArrays:
+        arrayData = parameterData[j]
+        if type(arrayData) is list:
+          for l in arrayData:
+            formInstances[i][j].append_entry(l)
+
+      # build the result form object with forms for each frequency
       forms = {}
-      forms['frequent'] = frequentForm
-      forms['sometimes'] = sometimesForm
-      forms['rare'] = rareForm
+      forms['frequent'] = formInstances[0]
+      forms['sometimes'] = formInstances[1]
+      forms['rare'] = formInstances[2]
       return forms
   return None
 
