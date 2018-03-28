@@ -438,7 +438,12 @@ def parseJsonData(data, stepName):
               else:
                 setattr(formClassList[i], k, FloatField(k, default=parameterData[k]))
             elif configParam.type == 'Text':
-              setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
+              data = parameterData[k]
+              if type(data) is dict and '_ArrayData_' in data and data['_ArrayData_'] == None:
+                setattr(formClassList[i], k, TextField(k, default=None))
+              else:
+                setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
+
 
       # create instances for each form
       formInstances = []
