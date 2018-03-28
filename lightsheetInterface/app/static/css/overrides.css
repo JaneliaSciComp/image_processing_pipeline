@@ -116,7 +116,7 @@ fieldset {
 
 @media (min-width: 1200px) {
   .lightsheet-text {
-    min-width: 35em;
+    min-width: 50em;
   }
 }
 
