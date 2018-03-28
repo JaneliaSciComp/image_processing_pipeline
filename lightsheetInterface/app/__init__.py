@@ -34,3 +34,10 @@ def _jinja2_filter_datetime(date, fmt=None):
 @app.template_filter('trimend')
 def trimstepname(paramName):
     return paramName.split('_',1)[0]
+
+@app.template_filter('show_attr')
+def show_all_attrs(value):
+    res = []
+    for k in dir(value):
+        res.append('%r %r<br/>' % (k, getattr(value, k)))
+    return '\n'.join(res)
