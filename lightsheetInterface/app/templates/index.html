@@ -71,14 +71,14 @@
           <th onclick="lightsheet.sortTable(1)">Name</th>
           <th onclick="lightsheet.sortTable(2)">Date</th>
           <th onclick="lightsheet.sortTable(3)">Steps</th>
-          <th onclick="lightsheet.sortTable(4)">Configuration Path</th>
+          <th onclick="lightsheet.sortTable(4)">Job ID (and Configuration Link)</th>
 	        <th onclick="lightsheet.sortTable(5)">Status</th>
         </tr>
       </thead>
       <tbody id="job-table-body">
         {% if parentJobInfo is not none %}
           {% for currentJobInfo in parentJobInfo %}
-            <tr>
+            <tr onclick="window.location = '?lightsheetDB_id={{ currentJobInfo._id }}' ;">
               <td>{{ loop.index }}</td>
               <td>Name</td>
               {% if 'creationDate' in currentJobInfo and currentJobInfo.creationDate is not none %}
@@ -92,7 +92,7 @@
                 <td>N/A</td>
               {% endif %}
               {% if 'configAddress' in currentJobInfo and currentJobInfo.configAddress %}
-                <td>{{ currentJobInfo.configAddress}}</td>
+                <td><a href="/config/{{ currentJobInfo._id }}">{{ currentJobInfo._id }}</a></td>
               {% else %}
                 <td>N/A</td>
               {% endif %}
