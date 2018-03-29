@@ -59,7 +59,6 @@ def submit():
 
 @app.route('/', methods=['GET','POST'])
 def index():
-  # ipdb.set_trace()
   job_id = request.args.get('lightsheetDB_id')
   config = buildConfigObject()
   if job_id == 'favicon.ico':
@@ -68,28 +67,33 @@ def index():
   pipelineSteps = {}
   formData = None
   countJobs = 0
-  stepData =  getJobStepData(job_id, client)
+  jobData =  getJobStepData(job_id, client) # get the data for all jobs
+  # match data on step name
+  matchNameIndex = {}
+  if jobData != None:
+    for i in range(len(jobData)):
+      matchNameIndex[jobData[i]['name']] = i
+
   # go through all steps and find those, which are used by the current job
   for step in config['steps']:
     currentStep = step.name
-    if stepData != None and job_id != None:
+    if jobData != None and job_id != None:
       # If loading previous run parameters for specific step, then it should be checked and editable
-      for jobStep in stepData:
-        jobStepName = trimStepName(jobStep['name'])
-        if currentStep == jobStepName:
-          editState = 'enabled'
-          checkboxState = 'checked'
-          countJobs += 1
-          forms = parseJsonData(stepData, currentStep)
-          # Pipeline steps is passed to index.html for formatting the html based
-          pipelineSteps[currentStep] = {
-            'stepName': step.name,
-            'stepDescription': step.description,
-            'inputJson': None,
-            'state': editState,
-            'checkboxState': checkboxState,
-            'forms': forms
-          }
+      if currentStep in matchNameIndex:
+        stepData = jobData[matchNameIndex[currentStep]]
+        editState = 'enabled'
+        checkboxState = 'checked'
+        countJobs += 1
+        forms = parseJsonData(stepData, currentStep)
+        # Pipeline steps is passed to index.html for formatting the html based
+        pipelineSteps[currentStep] = {
+          'stepName': step.name,
+          'stepDescription': step.description,
+          'inputJson': None,
+          'state': editState,
+          'checkboxState': checkboxState,
+          'forms': forms
+        }
 
   if request.method == 'POST':
       #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
