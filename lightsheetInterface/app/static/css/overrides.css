@@ -118,10 +118,18 @@ fieldset {
   .lightsheet-text {
     min-width: 50em;
   }
+
+  #steps {
+    min-width: 62em;
+  }
 }
 
 @media (min-width: 1900px) {
   .lightsheet-text {
     min-width: 60em;
+  }
+
+  #steps {
+    min-width: 73em;
   }
 }

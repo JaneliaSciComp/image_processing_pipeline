@@ -45,7 +45,7 @@
               {% endfor %}
             </div>
             <!-- json panel -->
-            <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}">
+            <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}" style="display: none;">
                <!-- For now, show json in sometimes panel -->
                <fieldset>
             <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}} name={{ pipelineStep.stepName }}>
