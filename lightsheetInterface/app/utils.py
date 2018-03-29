@@ -440,10 +440,13 @@ def parseJsonData(data, stepName):
             elif configParam.type == 'Text':
               data = parameterData[k]
               if type(data) is dict and '_ArrayData_' in data and data['_ArrayData_'] == None:
-                setattr(formClassList[i], k, TextField(k, default=None))
+                if data['_ArraySize_'] == [0,0]:
+                  setattr(formClassList[i], k, FieldList(FloatField('')))
+                  saveArrays.append((i,k))
+                else:
+                  setattr(formClassList[i], k, TextField(k, default=None))
               else:
                 setattr(formClassList[i], k, TextField(k, default=parameterData[k]))
-
 
       # create instances for each form
       formInstances = []
@@ -468,6 +471,9 @@ def parseJsonData(data, stepName):
         if type(arrayData) is list:
           for l in arrayData:
             formInstances[i][j].append_entry(l)
+        if type(arrayData) is dict:
+          formInstances[i][j].append_entry()
+          formInstances[i][j].append_entry()
 
       # build the result form object with forms for each frequency
       forms = {}
