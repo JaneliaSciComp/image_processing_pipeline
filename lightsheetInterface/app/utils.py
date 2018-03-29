@@ -377,8 +377,8 @@ def parseJsonData(data, stepName):
     pass
 
   keys = None
-  if type(data) is list and len(data) > 0 and data[0]['parameters'] != None:
-    parameterData = data[0]['parameters']
+  if 'parameters' in data:
+    parameterData = data['parameters']
     keys = parameterData.keys()
     if keys != None:
       pFrequent = {}
