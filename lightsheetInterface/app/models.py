@@ -1,7 +1,7 @@
 from flask_mongoengine.wtf import model_form
 from wtforms.widgets import TextArea
 from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
-                         connect, DecimalField, StringField, IntField, FloatField, ListField, Document, ReferenceField, NULLIFY)
+                         connect, DecimalField, StringField, IntField, FloatField, ListField, BooleanField, Document, ReferenceField, NULLIFY)
 
 from flask_admin.contrib.mongoengine import ModelView
 from app import admin
@@ -34,6 +34,7 @@ class Step(Document):
     description = StringField(max_length=500)
     order = IntField()
     parameter = ListField(ReferenceField(Parameter))
+    submit = BooleanField(default=True)
     def __unicode__(self):
       return self.name
 
