@@ -189,41 +189,42 @@ def getConfigurationsFromDB(_id, client, stepName=None):
 def updateDBStatesAndTimes(lightsheetDB):
   allJobInfoFromDB = list(lightsheetDB.jobs.find())
   for parentJobInfoFromDB in allJobInfoFromDB:
-    if parentJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
-      parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
-                                                  params={'service-id':  parentJobInfoFromDB["jacs_id"]},
-                                                  headers=getHeaders(True)).json()
-      if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
-        parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
-        lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
-                                     {"$set": {"state":parentJobInfoFromJACS["state"] }})
-        allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
-                                            params={'parent-id': parentJobInfoFromDB["jacs_id"]},
-                                            headers=getHeaders(True)).json()
-        allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
-        if allChildJobInfoFromJACS:
-          for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-            if currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
-              currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
-              if currentChildJobInfoFromJACS:
-                creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
-                outputPath = "N/A"
-                if "outputPath" in currentChildJobInfoFromJACS:
-                  outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
+    if 'jacs_id' in parentJobInfoFromDB: # TODO handle case, when jacs_id is missing
+      if parentJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+        parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
+                                                    params={'service-id':  parentJobInfoFromDB["jacs_id"]},
+                                                    headers=getHeaders(True)).json()
+        if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
+          parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
+          lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
+                                       {"$set": {"state":parentJobInfoFromJACS["state"] }})
+          allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
+                                              params={'parent-id': parentJobInfoFromDB["jacs_id"]},
+                                              headers=getHeaders(True)).json()
+          allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
+          if allChildJobInfoFromJACS:
+            for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
+              if currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+                currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
+                if currentChildJobInfoFromJACS:
+                  creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
+                  outputPath = "N/A"
+                  if "outputPath" in currentChildJobInfoFromJACS:
+                    outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
 
-                lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
-                                             {"$set": {"steps.$.state":currentChildJobInfoFromJACS["state"],
-                                                       "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
-                                                       "steps.$.elapsedTime":str(datetime.now(eastern)-creationTime),
-                                                       "steps.$.logAndErrorPath":outputPath
-                                                     }})
-              
-                if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
-                  endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
                   lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
-                                               {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
-                                                         "steps.$.elapsedTime": str(endTime-creationTime)
+                                               {"$set": {"steps.$.state":currentChildJobInfoFromJACS["state"],
+                                                         "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                         "steps.$.elapsedTime":str(datetime.now(eastern)-creationTime),
+                                                         "steps.$.logAndErrorPath":outputPath
                                                        }})
+
+                  if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+                    endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
+                    lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
+                                                 {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                           "steps.$.elapsedTime": str(endTime-creationTime)
+                                                         }})
   
 def convertJACStime(t):
    t=datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
