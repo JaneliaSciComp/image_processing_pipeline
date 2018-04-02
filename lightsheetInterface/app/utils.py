@@ -332,13 +332,8 @@ def getPipelineStepNames():
     names.append(step.name)
   return names
 
-def loadParameters(fileName):
-  with open(fileName) as data_file:
-    data = json.load(data_file)
-    parseJsonData(data)
 
-def parseJsonData(data, stepName):
-  config = buildConfigObject()
+def parseJsonData(data, stepName, config):
   class F(Form):
     pass
 

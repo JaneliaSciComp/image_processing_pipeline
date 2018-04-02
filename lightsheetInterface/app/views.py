@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from app.utils import *
 
 settings = Settings()
+
 # Prefix for all default pipeline step json file names
 defaultFileBase = None
 if hasattr(settings, 'defaultFileBase'):
@@ -84,7 +85,7 @@ def index():
         editState = 'enabled'
         checkboxState = 'checked'
         countJobs += 1
-        forms = parseJsonData(stepData, currentStep)
+        forms = parseJsonData(stepData, currentStep, config)
         # Pipeline steps is passed to index.html for formatting the html based
         pipelineSteps[currentStep] = {
           'stepName': step.name,
