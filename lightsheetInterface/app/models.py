@@ -39,6 +39,11 @@ class Step(Document):
     def __unicode__(self):
       return self.name
 
+class Dependency(Document):
+    globalParameter = ReferenceField(Parameter)
+    dependent1 = ReferenceField(Parameter)
+    pattern = StringField(max_length=200)
+
 # Customized admin views
 class ConfigView(ModelView):
     column_filters = ['name']
@@ -49,6 +54,13 @@ class StepView(ModelView):
 class ParameterView(ModelView):
     column_filters = ['name', 'description', 'frequency', 'formatting']
 
+class DependecyView(ModelView):
+    column_filters = ['globalParameter', 'dependent1', 'pattern']
+    column_labels = dict(globalParameter='Global Parameter',
+                        dependent1='1. Dependent',
+                        pattern='Pattern')
+
 admin.add_view(ConfigView(AppConfig))
 admin.add_view(StepView(Step))
 admin.add_view(ParameterView(Parameter))
+admin.add_view(DependecyView(Dependency))

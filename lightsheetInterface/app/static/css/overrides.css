@@ -109,7 +109,16 @@ fieldset {
 }
 
 .paginate_button {
-    margin-right: 8px;
+  margin-right: 8px;
+}
+
+.step-heading {
+  font-size: 1.3em;
+}
+
+.apply-button {
+  float: right;
+  margin-bottom: 1em;
 }
 
 .apply-button {
