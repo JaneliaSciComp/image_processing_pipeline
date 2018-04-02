@@ -32,34 +32,6 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
   else:
     return list(lightsheetDB.jobs.find({},{"steps":0}))
 
-# Calculate properties of parameter based on its values (e.g. if number or text field has been filled in or which frequency / which range is selected)
-def getType(parameter):
-  frequent = []
-  sometimes = []
-  rare = []
-  for param in parameter:
-    if param.number1 != None:
-      param.type = 'Number'
-      if param.number2 == None:
-        param.count = '1'
-      elif param.number3 == None:
-        param.count = '2'
-      else:
-        param.count = '3'
-    else:
-      param.type = 'Text'
-      param.count = '1'
-
-    if param.frequency == 'F':
-      frequent.append(param)
-    elif param.frequency == 'S':
-      sometimes.append(param)
-    elif param.frequency == 'R':
-      rare.append(param)
-
-  result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
-  return result
-
 def getParameters(parameter):
   frequent = {}
   sometimes = {}
@@ -85,15 +57,14 @@ def getParameters(parameter):
       rare[param.name] = param
 
   result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
-  return result  
+  return result
 
 def buildConfigObject():
   try:
     steps = Step.objects.all().order_by('order')
     p = Parameter.objects.all()
-    parameters = getType(p)
     paramDict = getParameters(p)
-    config = {'steps': steps, 'parameter': parameters, 'parameterDictionary': paramDict}
+    config = {'steps': steps, 'parameterDictionary': paramDict}
   except ServerSelectionTimeoutError:
     return 404
   return config
