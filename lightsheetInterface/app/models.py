@@ -26,6 +26,7 @@ class Parameter(Document):
     description = StringField(max_length=500)
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
+    order = IntField()
     def __unicode__(self):
       return self.name
 
