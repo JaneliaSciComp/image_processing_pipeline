@@ -28,6 +28,7 @@ plan.target('production', {
 });
 
 plan.local('version', function(local) {
+  local.log('create new version number and add as a git commit')
   var versionType = plan.runtime.options.argv.remain[1];
   var command = local.exec('npm version ' + versionType);
   var command = local.exec('cat package.json | grep version');
