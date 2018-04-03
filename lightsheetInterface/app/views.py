@@ -60,6 +60,7 @@ def submit():
 
 @app.route('/', methods=['GET','POST'])
 def index():
+  submissionStatus = None
   job_id = request.args.get('lightsheetDB_id')
   config = buildConfigObject()
   if job_id == 'favicon.ico':
@@ -95,7 +96,6 @@ def index():
           'checkboxState': checkboxState,
           'forms': forms
         }
-
   if request.method == 'POST':
       #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
       #lightsheetDB is the database containing lightsheet job information and parameters
@@ -130,7 +130,7 @@ def index():
           allSelectedStepNames=postedData["args"][1]
           allSelectedTimePoints=postedData["args"][3]
           stepParameters=postedData["args"][5]
-
+      
       if stepParameters: #make sure post is not empty
           if not userDefinedJobName:
               #userDefinedJobName = requestOutputJsonified["_id"]
@@ -143,7 +143,7 @@ def index():
                             "selectedTimePoints": allSelectedTimePoints,
                             "steps": stepParameters
                            }
-          newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+         # newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
           configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
           postBody = { "processingLocation": "LSF_JAVA",
                        "args": ["-configAddress",configAddress,
@@ -151,18 +151,22 @@ def index():
                                 "-allSelectedTimePoints",allSelectedTimePoints],
                        "resources": {"gridAccountId": "lightsheet"}
                    }
-          requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
-                                        headers=getHeaders(),
-                                        data=json.dumps(postBody))
-          requestOutputJsonified = requestOutput.json()
-          creationDate = newId.generation_time
-          creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-          lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+          try:
+            requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
+                                          headers=getHeaders(),
+                                          data=json.dumps(postBody))
+            requestOutputJsonified = requestOutput.json()
+            creationDate = newId.generation_time
+            creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
+            #lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
             
-          #JACS service states
-          # if any are not Canceled, timeout, error, or successful then
-          #updateLightsheetDatabaseStatus
-          updateDBStatesAndTimes(lightsheetDB)
+            #JACS service states
+            # if any are not Canceled, timeout, error, or successful then
+            #updateLightsheetDatabaseStatus
+            updateDBStatesAndTimes(lightsheetDB)
+            submissionStatus = "success"
+          except requests.exceptions.RequestException as e:
+            submissionStatus = e
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   #Return index.html with pipelineSteps and serviceData
@@ -173,7 +177,8 @@ def index():
                          logged_in=True,
                          config = config,
                          version = getAppVersion(app.root_path),
-                         lightsheetDB_id = job_id)
+                         lightsheetDB_id = job_id,
+                         submissionStatus = submissionStatus)
 
 
 @app.route('/job_status', methods=['GET'])
