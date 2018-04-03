@@ -13,11 +13,6 @@ app.cache = Cache(app)
 
 # db settings
 admin=Admin(app)
-app.config['MONGODB_SETTINGS'] = {
-    'db': 'lightsheet-config',
-    'host': '10.40.3.155',
-    'port': 27017
-}
 
 db = MongoEngine(app)
 toolbar = DebugToolbarExtension(app)

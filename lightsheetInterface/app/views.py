@@ -22,7 +22,8 @@ if hasattr(settings, 'outputDirectoryBase'):
 global_error = None
 
 # Mongo client
-client = MongoClient(settings.mongo)
+mongosettings = 'mongodb://' + app.config['MONGODB_SETTINGS']['host'] + ':' + str(app.config['MONGODB_SETTINGS']['port']) + '/'
+client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
 
@@ -185,9 +186,6 @@ def index():
 @app.route('/job_status', methods=['GET'])
 def job_status():
     before=datetime.now()
-    client = MongoClient(settings.mongo)
-    #lightsheetDB is the database containing lightsheet job information and parameters
-    lightsheetDB = client.lightsheet
 
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     #Mongo client
