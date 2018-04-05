@@ -157,7 +157,7 @@ def index():
                             "selectedTimePoints": allSelectedTimePoints,
                             "steps": stepParameters
                            }
-        #  newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+          newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
           configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
           postBody = { "processingLocation": "LSF_JAVA",
                        "args": ["-configAddress",configAddress,
@@ -172,7 +172,7 @@ def index():
             requestOutputJsonified = requestOutput.json()
             creationDate = newId.generation_time
             creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-         #   lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
             
             #JACS service states
             # if any are not Canceled, timeout, error, or successful then
