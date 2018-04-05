@@ -7,6 +7,7 @@ lightsheetInterface/app/models.pyc
 lightsheetInterface/app/settings.pyc
 lightsheetInterface/app/utils.pyc
 lightsheetInterface/app/settings.py
+lightsheetInterface/app/lightsheet-config.cfg
 lightsheetInterface/node_modules
 lightsheetInterface/package-lock.json
 .idea
