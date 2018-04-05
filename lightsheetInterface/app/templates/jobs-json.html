@@ -1,0 +1,10 @@
+<h3>Table</h3>
+<table id='job-table' />
+<!-- table variables -->
+<script>
+   {%  if jobsJson %}
+      var table_data = {{ jobsJson|safe }};
+   {% else %}
+      var table_data = null;
+   {% endif %}
+</script>

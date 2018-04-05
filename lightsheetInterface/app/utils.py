@@ -1,4 +1,4 @@
-import numpy, datetime, glob, scipy, re, json, requests, os, ipdb
+import numpy, datetime, glob, scipy, re, json, requests, os, pdb
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from wtforms import *
@@ -31,6 +31,24 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
         return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
   else:
     return list(lightsheetDB.jobs.find({},{"steps":0}))
+
+def mapJobsToDict(x):
+  result = {}
+  if '_id' in x:
+    result['id'] = str(x['_id'])
+  if 'jobName' in x:
+    result['jobName'] = x['jobName']
+  if 'creationDate' in x:
+    result['creationDate'] = x['creationDate']
+  if 'selectedStepNames' in x:
+    result['selectedStepNames'] = x['selectedStepNames']
+  if 'state' in x:
+    result['state'] = x['state']
+  return result;
+
+def allJobsInJSON(lightsheetDB):
+  parentJobInfo = lightsheetDB.jobs.find({}, {"steps": 0})
+  return list(map(mapJobsToDict, parentJobInfo))
 
 def getParameters(parameter):
   frequent = {}
