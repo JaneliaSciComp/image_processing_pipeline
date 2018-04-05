@@ -108,6 +108,10 @@ fieldset {
   width: 10.8em;
 }
 
+.paginate_button {
+    margin-right: 8px;
+}
+
 @media (min-width: 769px) {
   .lightsheet-text {
     min-width: 20em;

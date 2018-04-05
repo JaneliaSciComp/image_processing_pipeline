@@ -3,6 +3,7 @@
   <head>
     <!-- contrib css dependencies -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/css/bootstrap.min.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/datatables.net-bs/css/dataTables.bootstrap.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/pikaday/css/pikaday.css') }}">
 
     <!-- custom css dependencies -->
@@ -10,12 +11,14 @@
 
     <!-- contrib scripts -->
     <script src="{{url_for('static', filename='components/jquery/dist/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='components/datatables.net/js/jquery.dataTables.js')}}"></script>
     <script src="{{url_for('static', filename='components/bootstrap/js/bootstrap.min.js')}}"></script>
     <script src="{{url_for('static', filename='components/pikaday/pikaday.js')}}"></script>
 
     <!-- custom scripts -->
     <script src="{{url_for('static', filename='js/inputfields.js')}}"></script>
     <script src="{{url_for('static', filename='js/steps.js')}}"></script>
+    <script src="{{url_for('static', filename='js/table.js')}}"></script>
 
     <title>Lightsheet Pipeline</title>
   </head>

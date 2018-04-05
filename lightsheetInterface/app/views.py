@@ -1,4 +1,4 @@
-import requests, json, os, math, datetime, bson, re, subprocess, ipdb
+import requests, json, os, math, datetime, bson, re, subprocess, pdb
 from flask import render_template, request, jsonify, abort
 from pymongo import MongoClient
 from collections import OrderedDict
@@ -27,9 +27,22 @@ client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
 
-app.route('/register', methods=['GET', 'POST'])
+@app.route('/test')
+def table():
+  jobs = allJobsInJSON(lightsheetDB)
+  # pprint(jobs)
+  return render_template('jobs-json.html',
+                         title='Home',
+                         pipelineSteps=None,
+                         parentJobInfo=None,
+                         logged_in=True,
+                         config=None,
+                         version=None,
+                         lightsheetDB_id=None,
+                         submissionStatus=None,
+                         jobsJson=jobs)
 
-
+@app.route('/register', methods=['GET', 'POST'])
 def register():
   form = RegistrationForm(request.form)
   if request.method == 'POST' and form.validate():
@@ -76,7 +89,7 @@ def index():
   if jobData != None:
     for i in range(len(jobData)):
       matchNameIndex[jobData[i]['name']] = i
-
+  allJobsInJSON(lightsheetDB)
   # go through all steps and find those, which are used by the current job
   for step in config['steps']:
     currentStep = step.name
@@ -171,6 +184,7 @@ def index():
             lightsheetDB.jobs.remove({"_id":newId})
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
+  jobs = allJobsInJSON(lightsheetDB)
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                          title='Home',
@@ -180,6 +194,7 @@ def index():
                          config = config,
                          version = getAppVersion(app.root_path),
                          lightsheetDB_id = job_id,
+                         jobsJson= jobs,
                          submissionStatus = submissionStatus)
 
 
