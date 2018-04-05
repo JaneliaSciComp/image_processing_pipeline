@@ -184,6 +184,7 @@ def index():
             lightsheetDB.jobs.remove({"_id":newId})
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
+  jobs = allJobsInJSON(lightsheetDB)
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                          title='Home',
@@ -193,6 +194,7 @@ def index():
                          config = config,
                          version = getAppVersion(app.root_path),
                          lightsheetDB_id = job_id,
+                         jobsJson= jobs,
                          submissionStatus = submissionStatus)
 
 

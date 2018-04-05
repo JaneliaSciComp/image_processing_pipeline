@@ -13,6 +13,9 @@ $(document).ready(() => {
       {
         title: 'Date',
         data: 'creationDate',
+        render(data, type, row, meta) {
+          return data? data: null;
+        }
       },
       {
         title: 'Steps',
@@ -22,12 +25,12 @@ $(document).ready(() => {
         title: 'Job ID (and Configuration Link)',
         data: 'id',
         render(data, type, row, meta) {
-          return 'things';
+          return data;
         }
       },
       {
         title: 'Status',
-        data: 'status',
+        data: 'state',
       }
       ],
     });

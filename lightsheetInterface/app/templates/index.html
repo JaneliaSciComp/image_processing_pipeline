@@ -104,10 +104,17 @@
     <h4>Previous Jobs</h4>
   </div>
   <div class="row lightsheet-row">
-    <input class="form-control lightsheet-search" type="text" placeholder="Search for names.." id="search-input"
-           onkeyup="lightsheet.filterTable()">
-    {% include "jobs.html" ignore missing with context %}
+    <table class="table table-striped table-hover" id='job-table' />
   </div>
+
+  <!-- table variables -->
+  <script>
+     {%  if jobsJson %}
+        var table_data = {{ jobsJson|safe }};
+     {% else %}
+        var table_data = null;
+     {% endif %}
+  </script>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   <!-- contrib dependencies -->
   <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
