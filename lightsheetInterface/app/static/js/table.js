@@ -25,7 +25,7 @@ $(document).ready(() => {
         title: 'Job ID (and Configuration Link)',
         data: 'id',
         render(data, type, row, meta) {
-          return data;
+          return data ? "<a href=\"/config/" + data +  "\">" + data + "</a>": '';
         }
       },
       {
