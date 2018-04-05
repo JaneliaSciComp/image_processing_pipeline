@@ -4,6 +4,8 @@
   "description": "LightSheet Pipeline Configurator",
   "main": "flightplan.js",
   "dependencies": {
+    "datatables.net": "^1.10.16",
+    "datatables.net-bs": "^1.10.16",
     "flightplan": "^0.6.17",
     "npm": "^5.7.1",
     "pikaday": "^1.7.0"
