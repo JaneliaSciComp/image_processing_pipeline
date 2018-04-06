@@ -3,6 +3,36 @@
 */
 var lightsheet = lightsheet || {};
 
+lightsheet.customSubmit = function(){
+  const url = window.origin;
+  const formInput = $('form :input');
+
+  //Get the checkboxes, which are checked
+  const checked_boxes = $('form :input[id^=check-]:checked');
+  var data = {}
+  checked_boxes.each( function( index, element ){
+    const step = this.id.replace('check-','');
+    data[step] = {}
+    var inputFields = $('#collapse' + step).find('input');
+    inputFields.each( function(k,val) {
+      data[step][val.id] = val.value;
+      })
+    });
+
+  const formDataRequest = new Request(url, { method: 'POST' });
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  }).then(function(response) {
+      return response.json();
+  }).then(function(data) {
+    console.log('error in fetch');
+  });
+}
+
 lightsheet.filterTable = function() {
   var input, filter, table, tr, td, i;
   var input = document.getElementById("search-input");
