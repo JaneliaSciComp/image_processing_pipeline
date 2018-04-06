@@ -7,9 +7,17 @@ lightsheet.customSubmit = function(){
   const url = window.origin;
   const formInput = $('form :input');
 
+  // Initialize object which will contain data to be posted
+  var data = {}
+
+  const jobField = $('#jobId');
+  let job_name = null;
+  if (jobField && jobField.length > 0) {
+    data['jobName'] = $('#jobId')[0].value;
+  }
+
   //Get the checkboxes, which are checked
   const checked_boxes = $('form :input[id^=check-]:checked');
-  var data = {}
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
     data[step] = {}
