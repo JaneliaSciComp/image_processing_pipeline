@@ -27,50 +27,6 @@ client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
 
-@app.route('/test')
-def table():
-  jobs = allJobsInJSON(lightsheetDB)
-  # pprint(jobs)
-  return render_template('jobs-json.html',
-                         title='Home',
-                         pipelineSteps=None,
-                         parentJobInfo=None,
-                         logged_in=True,
-                         config=None,
-                         version=None,
-                         lightsheetDB_id=None,
-                         submissionStatus=None,
-                         jobsJson=jobs)
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-  form = RegistrationForm(request.form)
-  if request.method == 'POST' and form.validate():
-    user = User(form.username.data, form.email.data,
-                form.password.data)
-    db_session.add(user)
-    flash('Thanks for registering')
-    return redirect(url_for('login'))
-  return render_template('register.html',
-                         form=form,
-                         version=getAppVersion(app.root_path))
-
-
-@app.route('/login')
-def login():
-  return render_template('login.html',
-                         logged_in=False,
-                         version=getAppVersion(app.root_path))
-
-
-@app.route('/submit', methods=['GET', 'POST'])
-def submit():
-  if request.method == 'POST':
-    keys = request.form.keys()
-    for k in iter(keys):
-      print(k)
-  return 'form submitted'
-
 
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -216,11 +172,35 @@ def job_status():
                            childJobInfo=childJobInfo,
                            logged_in=True,
                            version = getAppVersion(app.root_path))
+
+
 @app.route('/search')
 def search():
     return render_template('search.html',
                            logged_in=True,
                            version = getAppVersion(app.root_path))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+  form = RegistrationForm(request.form)
+  if request.method == 'POST' and form.validate():
+    user = User(form.username.data, form.email.data,
+                form.password.data)
+    db_session.add(user)
+    flash('Thanks for registering')
+    return redirect(url_for('login'))
+  return render_template('register.html',
+                         form=form,
+                         version=getAppVersion(app.root_path))
+
+
+@app.route('/login')
+def login():
+  return render_template('login.html',
+                         logged_in=False,
+                         version=getAppVersion(app.root_path))
+
 
 @app.route('/config/<lightsheetDB_id>', methods=['GET'])
 def config(lightsheetDB_id):
