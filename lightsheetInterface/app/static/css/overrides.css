@@ -164,4 +164,15 @@ fieldset {
   .closebtn:hover {
      color: black;
   }
+
+  #job-table_length {
+    min-width: 2000px;
+  }
+}
+
+
+@media (max-width: 2500px) {
+  #job-table_length {
+    min-width: 2400px;
+  }
 }
