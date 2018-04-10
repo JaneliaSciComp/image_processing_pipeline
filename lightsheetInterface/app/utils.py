@@ -14,6 +14,29 @@ from app.settings import Settings
 
 settings = Settings()
 
+def reformateDataToPost(postedData):
+  steps = request.json.keys()
+    for step in steps:
+      stepData = request.json[step]
+      for parameter in stepData.keys():
+        if '_' in parameter:
+          split = parameter.split('_')
+          step = split[0]
+          param = split[1]
+          if '-' in param: #we have a list or dict parameter
+            pFirst = param.split('-')[0] # get the name of the parameter
+            # TODO find out if it's a range parameter
+            find = Parameter.objects(Q(name=pFirst) & Q(formatting='R'))
+            if step not in stepParameter:
+              stepParameter[step] = {}
+            if pFirst not in stepParameter[step]:
+              stepParameter[step][pFirst] = []
+            stepParameter[step][pFirst].append(stepData[parameter])
+          else:
+            if step not in stepParameter:
+              stepParameter[step] = {}
+            stepParameter[step][param] = stepData[key]
+
 # collect the information about existing job used by the job_status page
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
