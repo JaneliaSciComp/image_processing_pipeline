@@ -67,52 +67,31 @@ def index():
           'forms': forms
         }
   if request.method == 'POST':
-      #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-      #lightsheetDB is the database containing lightsheet job information and parameters
-      allSelectedStepNames=""
-      allSelectedTimePoints=""
-      stepParameters=[]
-      currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
-      userDefinedJobName=[]
-
-      postedData = request.get_json()
-      if not postedData:
-          #Then submission from webpage itself
-          pipelineOrder = ['clusterPT', 'clusterMF', 'localAP', 'clusterTF', 'localEC', 'clusterCS', 'clusterFR']
-          for currentStep in pipelineOrder:
-              text = request.form.get(currentStep) #will be none if checkbox is not checked
-              if text is not None:
-                  #Store step parameters and step names/times to use as arguments for the post
-                  jsonifiedText = json.loads(text, object_pairs_hook=OrderedDict)
-                  stepParameters.append({"name":currentStep, "state":"NOT YET QUEUED",
-                                         "creationTime":"N/A", "endTime":"N/A",
-                                         "elapsedTime":"N/A","logAndErrorPath": "N/A",
-                                         "parameters": jsonifiedText})
-                  allSelectedStepNames = allSelectedStepNames+currentStep+","
-                  numTimePoints = math.ceil(1+(jsonifiedText["timepoints"]["end"] - jsonifiedText["timepoints"]["start"])/jsonifiedText["timepoints"]["every"])
-                  allSelectedTimePoints = allSelectedTimePoints+str(numTimePoints)+", "
-
-          if stepParameters:
-              #Finish preparing the post body
-              allSelectedStepNames = allSelectedStepNames[0:-1]
-              allSelectedTimePoints = allSelectedTimePoints[0:-2]
-      else: #Then data posted
-          allSelectedStepNames=postedData["args"][1]
-          allSelectedTimePoints=postedData["args"][3]
-          stepParameters=postedData["args"][5]
-      
-      if stepParameters: #make sure post is not empty
-          if not userDefinedJobName:
-              #userDefinedJobName = requestOutputJsonified["_id"]
-              userDefinedJobName=""
-
-          dataToPostToDB = {"jobName": userDefinedJobName,
+    #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
+    #lightsheetDB is the database containing lightsheet job information and parameters
+    allSelectedStepNames=""
+    allSelectedTimePoints=""
+    stepParameters=[]
+    currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
+    userDefinedJobName=[]
+    if request.json != '[]' and request.json != None:
+      jobSteps = request.json.keys()
+      for step in jobSteps:
+        if step != 'jobName': # for all steps involved in the job, get the step data
+          jsonData = request.json[step]
+          processedData = reformateDataToPost(jsonData)
+          pprint(processedData)
+          return;
+          # Prepare the db data
+          dataToPostToDB = {"jobName": processedData['name'],
                             "state": "NOT YET QUEUED",
                             "lightsheetCommit":currentLightsheetCommit,
-                            "selectedStepNames": allSelectedStepNames,
+                            "selectedStepNames": processedData['steps'],
                             "selectedTimePoints": allSelectedTimePoints,
-                            "steps": stepParameters
+                            "steps": processedData['data']
                            }
+
+          # Insert the data to the db
           newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
           configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
           postBody = { "processingLocation": "LSF_JAVA",
@@ -129,7 +108,7 @@ def index():
             creationDate = newId.generation_time
             creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
             lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
-            
+
             #JACS service states
             # if any are not Canceled, timeout, error, or successful then
             #updateLightsheetDatabaseStatus
@@ -137,20 +116,24 @@ def index():
             submissionStatus = "success"
           except requests.exceptions.RequestException as e:
             submissionStatus = e
-            lightsheetDB.jobs.remove({"_id":newId})
+          lightsheetDB.jobs.remove({"_id":newId})
+    else:
+      submissionStatus = "no data submitted"
+
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
+
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
-                         title='Home',
-                         pipelineSteps=pipelineSteps,
-                         parentJobInfo = parentJobInfo,
-                         logged_in=True,
-                         config = config,
-                         version = getAppVersion(app.root_path),
-                         lightsheetDB_id = job_id,
-                         jobsJson= jobs,
-                         submissionStatus = submissionStatus)
+                       title='Home',
+                       pipelineSteps=pipelineSteps,
+                       parentJobInfo = parentJobInfo, # used by job status
+                       logged_in=True,
+                       config = config,
+                       version = getAppVersion(app.root_path),
+                       lightsheetDB_id = job_id,
+                       jobsJson= jobs, # used by the job table
+                       submissionStatus = submissionStatus)
 
 
 @app.route('/job_status', methods=['GET'])

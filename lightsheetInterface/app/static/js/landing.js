@@ -41,6 +41,36 @@ lightsheet.customSubmit = function(){
   });
 }
 
+/*
+ * For paramters which have afirst and a second value, convert them to an array (TODO: also check if they are a range parameter)
+ */
+lightsheet.buildParameterObject = function(fieldObject) {
+  // Check if the id of the fieldObject has a hyphen in there:
+  var fieldName = fieldObject.id;
+  // get just the first part, if the parameter name contains a hyphen
+  var coreName = fieldName.split('-')[0]
+  // save paramter values into one global
+
+  if (lightsheet.dictParameters !== null) {
+    console.log(lightsheet.dictParameters);
+    var fields = Object.keys(lightsheet.dictParameters);
+
+    if (fields.indexOf(fieldName) !== -1) { // field already there
+      lightsheet.dictParameters[fieldName].push(fieldObject.value);
+    }
+    else { // create the list first
+      lightsheet.dictParameters[fieldName] = [];
+      lightsheet.dictParameters[fieldName].push(fieldObject.value);
+    }
+  }
+  else {
+    lightsheet.dictParameters = {};
+    lightsheet.dictParameters[fieldName] = [];
+    lightsheet.dictParameters[fieldName].push(fieldObject.value);
+  }
+}
+
+
 lightsheet.filterTable = function() {
   var input, filter, table, tr, td, i;
   var input = document.getElementById("search-input");
@@ -67,6 +97,7 @@ lightsheet.filterTable = function() {
     }
   }
 }
+
 
 lightsheet.sortTable = function(n) {
    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
@@ -122,6 +153,7 @@ lightsheet.sortTable = function(n) {
     }
   }
 }
+
 
 lightsheet.stepsExistingJob = function(){
   var checkedBoxes = $('.step-checkbox:checked');
