@@ -14,6 +14,7 @@ from app.settings import Settings
 
 settings = Settings()
 
+# collect the information about existing job used by the job_status page
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
     _id = ObjectId(_id)
@@ -32,6 +33,7 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
   else:
     return list(lightsheetDB.jobs.find({},{"steps":0}))
 
+# build result object of existing job information
 def mapJobsToDict(x):
   result = {}
   if '_id' in x:
@@ -46,10 +48,12 @@ def mapJobsToDict(x):
     result['state'] = x['state']
   return result;
 
+# get job information used by jquery datatable
 def allJobsInJSON(lightsheetDB):
   parentJobInfo = lightsheetDB.jobs.find({}, {"steps": 0})
   return list(map(mapJobsToDict, parentJobInfo))
 
+# build object with meta information about parameters from the admin interface
 def getParameters(parameter):
   frequent = {}
   sometimes = {}
@@ -77,6 +81,7 @@ def getParameters(parameter):
   result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
   return result
 
+# build object with information about steps and parameters about admin interface
 def buildConfigObject():
   try:
     steps = Step.objects.all().order_by('order')
@@ -87,30 +92,12 @@ def buildConfigObject():
     return 404
   return config
 
-
-def writeToJSON(name, value):
-  result = None;
-  if value == None:
-    result = "\"_ArrayType_\":\"double\",\"_ArraySize_\":[0,0],\"_ArrayData_\":null"
-  elif isinstance(value, list):
-    print(result)
-  elif isinstance(value, (int, long, float, complex)):
-    result = "\"" + name + "\":" + value,
-  elif value in 'xyz':
-    print(result)
-  else:
-    print(result)
-
-  return result
-
-
 # Header for post request
 def getHeaders(forQuery=False):
   if forQuery:
     return {'content-type': 'application/json', 'USERNAME': settings.username}
   else:
     return {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'lightsheet'}
-
 
 # Timezone for timings
 eastern = timezone('US/Eastern')
@@ -134,12 +121,14 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
   else:
     return list(lightsheetDB.jobs.find({},{"steps":0}))
 
+# get step information about existing jobs from db
 def getJobStepData(_id, mongoClient):
   result = getConfigurationsFromDB(_id, mongoClient, stepName=None)
   if result != None and result != 404 and len(result) > 0 and 'steps' in result[0]:
     return result[0]['steps']
   return None
 
+# get the job parameter information from db
 def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
   result = None
   lightsheetDB = mongoClient.lightsheet
@@ -156,6 +145,7 @@ def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
         return stepDictionary["parameters"]
   return None
 
+# get the job parameter information from db
 def getConfigurationsFromDB(_id, client, stepName=None):
   lightsheetDB = client.lightsheet
   if stepName:
@@ -175,6 +165,7 @@ def getConfigurationsFromDB(_id, client, stepName=None):
   else:
     return 404
 
+# get latest status information about jobs from db
 def updateDBStatesAndTimes(lightsheetDB):
   allJobInfoFromDB = list(lightsheetDB.jobs.find())
   for parentJobInfoFromDB in allJobInfoFromDB:
@@ -241,45 +232,6 @@ def convertArrayFieldValue(stringValue):
     stringValue = "[" + stringValue + "]"
   return 
 
-def getParentServiceDataFromJACS(lightsheetDB, serviceIndex=None):
-    #Function to get information about parent jobs from JACS database marks currently selected job
-    allJACSids = list(lightsheetDB.jobs.find({},{'_id':0, 'jacs_id': 1}))
-    allJACSids = [str(dictionary['jacs_id']) if 'jacs_id' in dictionary.keys() else "" for dictionary in allJACSids]
-    requestOutputJsonified = [requests.get(settings.devOrProductionJACS+'/services/',
-                                           params={'service-id':  JACSid},
-                                           headers=getHeaders(True)).json()
-                              for JACSid in allJACSids]
-    serviceData = []
-    count=0
-    for jobInformation in requestOutputJsonified:
-      if jobInformation['resultList'] is not None and len(jobInformation['resultList']) > 0:
-        jobInformationResultListDictionary = jobInformation['resultList'][0]
-        jobInformationResultListDictionary.update((k,str(convertEpochTime(v))) for k, v in jobInformationResultListDictionary.items() if k=="creationDate")
-        jobInformationResultListDictionary["selected"]=''
-        jobInformationResultListDictionary["index"] = str(count)
-        serviceData.append(jobInformationResultListDictionary)
-        count=count+1
-
-        # serviceData = [dictionary['resultList'][0] for dictionary in requestOutputJsonified]
-    if serviceData and serviceIndex is not None:
-      serviceData[int(serviceIndex)]["selected"] = 'selected'
-
-    return serviceData
-
-def getChildServiceDataFromJACS(parentId):
-    #Function to get information from JACS service databases
-    #Gets information about currently running and already completed jobs
-    requestOutput = requests.get(settings.devOrProductionJACS+'/services/',
-                                 params={'parent-id': str(parentId)},
-                                 headers=getHeaders(True)).json()
-    serviceData=requestOutput['resultList']
-    for dictionary in serviceData: #convert date to nicer string
-         dictionary.update((k,convertEpochTime(v)) for k, v in dictionary.items() if (k=="creationDate" or k=="modificationDate") )
-    serviceData = requestOutputJsonified['resultList']
-    serviceData = sorted(serviceData, key=lambda k: k['creationDate'])
-    return serviceData
-
-
 
 def convertEpochTime(v):
   if type(v) is str:
@@ -342,15 +294,7 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
   fig.savefig(url_for('static', filename='img/test.jpg'))
   pool.close()
 
-
-def getPipelineStepNames():
-  steps = Step.objects.all().order_by('order')
-  names = []
-  for step in steps:
-    names.append(step.name)
-  return names
-
-
+# parse data for existing job and create forms
 def parseJsonData(data, stepName, config):
   class F(Form):
     pass
@@ -468,14 +412,6 @@ def parseJsonData(data, stepName, config):
       return forms
   return None
 
-def loadJobDataFromLocal(mydir):
-  files = os.listdir(mydir)
-  for filename in files:
-    file = mydir + '/' + filename
-    with open(file, 'r') as f:
-      data = json.load(f)
-      return data
-
 def getAppVersion(path):
   mpath = path.split('/')
   result = '/'.join(mpath[0:(len(mpath) - 1)]) + '/package.json'
@@ -483,7 +419,3 @@ def getAppVersion(path):
     data = json.load(package_data)
     package_data.close()
     return data['version']
-
-
-def trimStepName(name):
-  return name.split('_',1)[0]
