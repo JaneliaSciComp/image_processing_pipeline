@@ -1,4 +1,4 @@
-import numpy, datetime, glob, scipy, re, json, requests, os, pdb
+import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from wtforms import *
@@ -8,34 +8,68 @@ from scipy import misc
 from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
+from mongoengine.queryset.visitor import Q
 from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter
 from app.settings import Settings
 
 settings = Settings()
 
-def reformateDataToPost(postedData):
-  steps = request.json.keys()
-    for step in steps:
-      stepData = request.json[step]
-      for parameter in stepData.keys():
-        if '_' in parameter:
-          split = parameter.split('_')
-          step = split[0]
-          param = split[1]
-          if '-' in param: #we have a list or dict parameter
-            pFirst = param.split('-')[0] # get the name of the parameter
-            # TODO find out if it's a range parameter
-            find = Parameter.objects(Q(name=pFirst) & Q(formatting='R'))
-            if step not in stepParameter:
-              stepParameter[step] = {}
-            if pFirst not in stepParameter[step]:
-              stepParameter[step][pFirst] = []
-            stepParameter[step][pFirst].append(stepData[parameter])
-          else:
-            if step not in stepParameter:
-              stepParameter[step] = {}
-            stepParameter[step][param] = stepData[key]
+# reformat the data to resubmit the job for one step only
+def reformatDataToPost(postedData):
+  result = {}
+  if postedData and postedData != {}:
+    for step in postedData.keys():
+      result[step] = {}
+      for key in postedData[step]:
+        if '_' in key:
+          split = key.split('_')
+          resultParameter = split[0]
+          rest = split[1]
+          parameter = rest
+        else:
+          parameter = key;
+          rest = key
+        if '-' in rest: # we need to build a list or dict
+          # pass new value and existing entry
+          result[step][parameter] = convertNestedParameter(key, postedData[step], result[step])
+        else: # simple parameter
+          result[step][parameter] = postedData[step][key]
+  pprint(result)
+  return result
+
+# get a parameter with a - in it and add it to the entry for the same parameter, if it's already there
+# if not, add it to a new entry
+def convertNestedParameter(currentKey, currentStepData, stepResult):
+  print('convert existing parameter')
+  print('current key: ')
+  print(currentKey)
+  print('current step data: ')
+  pprint(currentStepData)
+  print('current step result: ')
+  print(stepResult)
+  print('----------\n')
+  result = None
+  if stepResult is None or stepResult is {}:
+    ipdb.set_trace()
+    print('new entry')
+    stepResult = []
+    firstPart = currentKey.split('-')[0].split('_')[0] # get the name of the parameter
+
+    # find out, if it's a range parameter
+    find = Parameter.objects(Q(name=firstPart) & Q(formatting='R'))
+    # TODO: build together the real project
+    ipdb.set_trace()
+    pprint("parameter: " + str(firstPart) + "  " + str(type(firstPart)))
+    stepResult.append(float(firstPart))
+  else:
+    # pprint(existingEntry)
+    if re.match("^\d+?\.\d+?$", currentKey) is None:
+      stepResult = currentKey
+    else:
+      stepResult.append(float(currentKey))
+
+  return stepResult
 
 # collect the information about existing job used by the job_status page
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):

@@ -7,4 +7,4 @@ class Settings:
    devOrProductionJACS =  '<api_url>/api/rest-v2/services/'
    mongo = <host:port of mongo instance>
    username = <lightsheet username>
-   serverInfo = {'IP': <server IP address>, 'port' : <server port number>}
+   serverInfo = {'IP': <server IP address>, 'port' : <server port number>, 'fullAddress'" <full URL of app>"}

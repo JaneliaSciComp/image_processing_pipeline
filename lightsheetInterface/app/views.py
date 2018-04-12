@@ -1,4 +1,4 @@
-import requests, json, os, math, datetime, bson, re, subprocess, pdb
+import requests, json, os, math, datetime, bson, re, subprocess, ipdb
 from flask import render_template, request, jsonify, abort
 from pymongo import MongoClient
 from collections import OrderedDict
@@ -50,7 +50,7 @@ def index():
   for step in config['steps']:
     currentStep = step.name
     if jobData != None and job_id != None:
-      # If loading previous run parameters for specific step, then it should be checked and editable
+      # If loading previous run parameters for specific step, then it should be checked sett editable
       if currentStep in matchNameIndex:
         stepData = jobData[matchNameIndex[currentStep]]
         editState = 'enabled'
@@ -75,48 +75,51 @@ def index():
     currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
     userDefinedJobName=[]
     if request.json != '[]' and request.json != None:
-      jobSteps = request.json.keys()
-      for step in jobSteps:
-        if step != 'jobName': # for all steps involved in the job, get the step data
-          jsonData = request.json[step]
-          processedData = reformateDataToPost(jsonData)
-          pprint(processedData)
-          return;
-          # Prepare the db data
-          dataToPostToDB = {"jobName": processedData['name'],
-                            "state": "NOT YET QUEUED",
-                            "lightsheetCommit":currentLightsheetCommit,
-                            "selectedStepNames": processedData['steps'],
-                            "selectedTimePoints": allSelectedTimePoints,
-                            "steps": processedData['data']
-                           }
+      # get the name of the job first
+      jobName = request.json['jobName']
+      del(request.json['jobName'])
 
-          # Insert the data to the db
-          newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
-          configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
-          postBody = { "processingLocation": "LSF_JAVA",
-                       "args": ["-configAddress",configAddress,
-                                "-allSelectedStepNames",allSelectedStepNames,
-                                "-allSelectedTimePoints",allSelectedTimePoints],
-                       "resources": {"gridAccountId": "lightsheet"}
-                   }
-          try:
-            requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
-                                          headers=getHeaders(),
-                                          data=json.dumps(postBody))
-            requestOutputJsonified = requestOutput.json()
-            creationDate = newId.generation_time
-            creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+      # delete the jobName entry from the dictionary so that the other entries are all steps
+      jobSteps = list(request.json.keys())
 
-            #JACS service states
-            # if any are not Canceled, timeout, error, or successful then
-            #updateLightsheetDatabaseStatus
-            updateDBStatesAndTimes(lightsheetDB)
-            submissionStatus = "success"
-          except requests.exceptions.RequestException as e:
-            submissionStatus = e
-          lightsheetDB.jobs.remove({"_id":newId})
+      # go through the data and prepare it for posting it to db
+      processedData = reformatDataToPost(request.json)
+
+      # Prepare the db data
+      dataToPostToDB = {"jobName": jobName,
+                        "state": "NOT YET QUEUED",
+                        "lightsheetCommit":currentLightsheetCommit,
+                        "selectedStepNames": jobSteps,
+                        "selectedTimePoints": allSelectedTimePoints,
+                        "steps": processedData
+                       }
+
+      # Insert the data to the db
+      newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+      configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
+      postBody = { "processingLocation": "LSF_JAVA",
+                   "args": ["-configAddress",configAddress,
+                            "-allSelectedStepNames",allSelectedStepNames,
+                            "-allSelectedTimePoints",allSelectedTimePoints],
+                   "resources": {"gridAccountId": "lightsheet"}
+               }
+      try:
+        requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
+                                      headers=getHeaders(),
+                                      data=json.dumps(postBody))
+        requestOutputJsonified = requestOutput.json()
+        creationDate = newId.generation_time
+        creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
+        lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+
+        #JACS service states
+        # if any are not Canceled, timeout, error, or successful then
+        #updateLightsheetDatabaseStatus
+        updateDBStatesAndTimes(lightsheetDB)
+        submissionStatus = "success"
+      except requests.exceptions.RequestException as e:
+        submissionStatus = e
+      lightsheetDB.jobs.remove({"_id":newId})
     else:
       submissionStatus = "no data submitted"
 
