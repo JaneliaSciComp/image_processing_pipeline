@@ -21,55 +21,27 @@ def reformatDataToPost(postedData):
   if postedData and postedData != {}:
     for step in postedData.keys():
       result[step] = {}
-      for key in postedData[step]:
-        if '_' in key:
-          split = key.split('_')
-          resultParameter = split[0]
+      sortedParameters = sorted(postedData[step].keys())
+      for parameterKey in sortedParameters:
+        if '_' in parameterKey:
+          # TODO: check, if part after underscore is really a step name or _ part of parameter name
+          split = parameterKey.split('_')
+          parameter = split[0]
           rest = split[1]
-          parameter = rest
         else:
-          parameter = key;
-          rest = key
-        if '-' in rest: # we need to build a list or dict
-          # pass new value and existing entry
-          result[step][parameter] = convertNestedParameter(key, postedData[step], result[step])
-        else: # simple parameter
-          result[step][parameter] = postedData[step][key]
+          parameter = parameterKey;
+          rest = parameterKey
+
+        if parameter in result[step]:
+          paramValueSet = result[step][parameter]
+        else:
+          paramValueSet = []
+        if not paramValueSet:
+          paramValueSet = []
+          result[step][parameter] = paramValueSet
+        paramValueSet.append(postedData[step][parameterKey])
   pprint(result)
   return result
-
-# get a parameter with a - in it and add it to the entry for the same parameter, if it's already there
-# if not, add it to a new entry
-def convertNestedParameter(currentKey, currentStepData, stepResult):
-  print('convert existing parameter')
-  print('current key: ')
-  print(currentKey)
-  print('current step data: ')
-  pprint(currentStepData)
-  print('current step result: ')
-  print(stepResult)
-  print('----------\n')
-  result = None
-  if stepResult is None or stepResult is {}:
-    ipdb.set_trace()
-    print('new entry')
-    stepResult = []
-    firstPart = currentKey.split('-')[0].split('_')[0] # get the name of the parameter
-
-    # find out, if it's a range parameter
-    find = Parameter.objects(Q(name=firstPart) & Q(formatting='R'))
-    # TODO: build together the real project
-    ipdb.set_trace()
-    pprint("parameter: " + str(firstPart) + "  " + str(type(firstPart)))
-    stepResult.append(float(firstPart))
-  else:
-    # pprint(existingEntry)
-    if re.match("^\d+?\.\d+?$", currentKey) is None:
-      stepResult = currentKey
-    else:
-      stepResult.append(float(currentKey))
-
-  return stepResult
 
 # collect the information about existing job used by the job_status page
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
