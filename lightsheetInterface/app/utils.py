@@ -20,6 +20,7 @@ def reformatDataToPost(postedData):
   result = {}
   if postedData and postedData != {}:
     for step in postedData.keys():
+      # first part: get the parameter values into lists
       result[step] = {}
       sortedParameters = sorted(postedData[step].keys())
       for parameterKey in sortedParameters:
@@ -40,7 +41,10 @@ def reformatDataToPost(postedData):
           paramValueSet = []
           result[step][parameter] = paramValueSet
         paramValueSet.append(postedData[step][parameterKey])
-  pprint(result)
+      # second part: for lists with just one element, get the element
+      for param in result[step]:
+        if len(result[step][param]) == 1:
+          result[step][param] = result[step][param][0]
   return result
 
 # collect the information about existing job used by the job_status page
