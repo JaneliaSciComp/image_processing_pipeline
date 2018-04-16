@@ -40,7 +40,16 @@ def reformatDataToPost(postedData):
         if not paramValueSet:
           paramValueSet = []
           result[step][parameter] = paramValueSet
-        paramValueSet.append(postedData[step][parameterKey])
+
+        currentValue = postedData[step][parameterKey]
+        # check if float or not:
+        if re.match("^[-]\d+?\.\d+?$", currentValue) is None:
+          # it's a real string, just append this value
+          paramValueSet.append(currentValue)
+        else:
+          # it's actual a float value -> get the value
+          paramValueSet.append(float(currentValue))
+
       # second part: for lists with just one element, get the element
       for param in result[step]:
         if len(result[step][param]) == 1:
