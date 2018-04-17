@@ -90,6 +90,21 @@ Finally, deploy the application with
 $ fly deploy:production
 ```
 
+## Access the database
+
+We use MongoDB to store the data. To open a Mongo cmd, type
+
+```bash
+mongo --host [your mongodb host]:[mongodb port]
+```
+
+Some other helpful commands:
+```bash
+> use lightsheet
+> db.jobs.help()
+> db.jobs.findOne()
+> db.jobs.drop()
+```
 --------
 
 Stop and start lightsheet services:

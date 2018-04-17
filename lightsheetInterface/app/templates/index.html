@@ -86,16 +86,18 @@
   <!-- contrib dependencies -->
   <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
   <script>
-    $(document).ready(function () {
-      var picker = new Pikaday({field: document.getElementById('datepicker')});
-      var myJobIndex = null;
-      {% if lightsheetDB_id is defined and jobIndex is not none %}
-        myJobIndex = "{{ lightsheetDB_id|safe }}";
-      {% endif %}
-      if (myJobIndex !== null) {
-        lightsheet.stepsExistingJob();
-      }
-    })
+    $(document).ready(
+      function () {
+        var picker = new Pikaday({field: document.getElementById('datepicker')});
+        var myJobIndex = null;
+        {% if lightsheetDB_id is defined and jobIndex is not none %}
+          myJobIndex = "{{ lightsheetDB_id|safe }}";
+        {% endif %}
+        if (myJobIndex !== null) {
+          lightsheet.stepsExistingJob();
+        }
+        document.getElementById("jobId").defaultValue = "Job " + new Date().toISOString();
+      })
   </script>
   <script>
     var close = document.getElementsByClassName("closebtn");

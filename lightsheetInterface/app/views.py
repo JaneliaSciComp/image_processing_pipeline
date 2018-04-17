@@ -82,9 +82,9 @@ def index():
       # delete the jobName entry from the dictionary so that the other entries are all steps
       jobSteps = list(request.json.keys())
 
+
       # go through the data and prepare it for posting it to db
       processedData = reformatDataToPost(request.json)
-
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "state": "NOT YET QUEUED",
@@ -96,15 +96,19 @@ def index():
 
       # Insert the data to the db
       newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
-      configAddress = settings.serverInfo['fullAddress'] + "config/" + str(newId)
+      configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(newId)
       postBody = { "processingLocation": "LSF_JAVA",
                    "args": ["-configAddress",configAddress,
                             "-allSelectedStepNames",allSelectedStepNames,
                             "-allSelectedTimePoints",allSelectedTimePoints],
                    "resources": {"gridAccountId": "lightsheet"}
                }
+      pprint(postBody)
       try:
-        requestOutput = requests.post(settings.devOrProductionJACS + '/async-services/lightsheetProcessing',
+        postUrl = settings.devOrProductionJACS + '/async-services/lightsheetProcessing'
+        pprint(postUrl)
+        ipdb.set_trace()
+        requestOutput = requests.post(postUrl,
                                       headers=getHeaders(),
                                       data=json.dumps(postBody))
         requestOutputJsonified = requestOutput.json()
@@ -125,7 +129,6 @@ def index():
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
-
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                        title='Home',
