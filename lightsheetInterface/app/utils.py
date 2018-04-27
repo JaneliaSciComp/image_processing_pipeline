@@ -37,15 +37,15 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
 def mapJobsToDict(x):
   result = {}
   if '_id' in x:
-    result['id'] = str(x['_id'])
+    result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
   if 'jobName' in x:
-    result['jobName'] = x['jobName']
+    result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
   if 'creationDate' in x:
-    result['creationDate'] = x['creationDate']
+    result['creationDate'] = x['creationDate'] if x['creationDate'] is not None else ''
   if 'selectedStepNames' in x:
-    result['selectedStepNames'] = x['selectedStepNames']
+    result['selectedStepNames'] = x['selectedStepNames'] if x['selectedStepNames'] is not None else ''
   if 'state' in x:
-    result['state'] = x['state']
+    result['state'] = x['state'] if x['state'] is not None else ''
   return result;
 
 # get job information used by jquery datatable
