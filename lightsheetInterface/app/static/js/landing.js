@@ -3,6 +3,23 @@
 */
 var lightsheet = lightsheet || {};
 
+lightsheet.test = function(){
+  const checked_boxes = $('form :input[id^=check-]:checked');
+  if (checked_boxes.length > 0) {
+    $('#submit-button')[0].disabled = false;
+  }
+  else {
+    $('#submit-button')[0].disabled = true;
+  }
+}
+
+lightsheet.testCheckboxes = (function(){
+  lightsheet.test()
+})();
+
+/*
+ * Grab data and submit it when pressing the button
+ */
 lightsheet.customSubmit = function(){
   const url = window.origin;
   const formInput = $('form :input');
@@ -40,6 +57,7 @@ lightsheet.customSubmit = function(){
     console.log('error in fetch');
   });
 }
+
 
 /*
  * For paramters which have afirst and a second value, convert them to an array (TODO: also check if they are a range parameter)

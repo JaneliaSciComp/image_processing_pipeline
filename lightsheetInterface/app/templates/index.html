@@ -48,7 +48,7 @@
   -->
   <form action="" method="post">
     <!-- button to submit the forms -->
-    <input type="submit" name="postJob" class="btn btn-info" value="Submit Job" onclick="lightsheet.customSubmit()" /></p>
+    <input type="submit" name="postJob" id="submit-button" class="btn btn-info" value="Submit Job" disabled onclick="lightsheet.customSubmit()" /></p>
     <div class="row lightsheet-row">
       <div id="steps">
         {% for step in config['steps'] %}
@@ -62,8 +62,7 @@
       </div>
     </div>
   </form>
-  <!-- button to submit the forms -->
-  <input type="submit" name="postJob" class="btn btn-info" value="Submit Job" onclick="lightsheet.customSubmit()" /></p>
+
   <!--
       Rows to select an existing job
   -->
