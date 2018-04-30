@@ -89,3 +89,19 @@ Finally, deploy the application with
 ```bash
 $ fly deploy:production
 ```
+
+--------
+
+Stop and start lightsheet services:
+
+```bash
+$ sudo systemctl stop lightsheet
+$ sudo systemctl stop lightsheet
+```
+
+Set owner and permissions socket file:
+
+```bash
+$ sudo chown kazimiersa:nginx lightsheet.sock
+$ sudo sudo chmod g+w lightsheet.sock
+```
