@@ -4,12 +4,14 @@ var config = {
   srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the remote server
   projectDir: '/opt/projects/lightsheet',  // location on the remote server
   pythonPath: '/usr/local/bin/python3.6',
-  keepReleases: 3
+  keepReleases: 3,
+  username: 'kazimiersa',
+  root: 'root'
 };
 
 plan.target('local', {
   host: 'localhost',
-  username: 'kazimiersa',
+  username: config.username,
   agent: process.env.SSH_AUTH_SOCK
 },
 {
@@ -19,7 +21,7 @@ plan.target('local', {
 
 plan.target('production', {
   host: 'lightsheet',
-  username: 'kazimiersa',
+  username: config.username,
   agent: process.env.SSH_AUTH_SOCK
 },
 {
@@ -96,8 +98,9 @@ plan.remote('deploy', function(remote) {
 });
 
 plan.remote('deploy', function(remote) {
-  remote.log('Activate virtualenv');
-  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -r requirements.txt');
+  remote.log('Install the requirements');
+  // use pip9 due to bug reported here: https://stackoverflow.com/questions/49854465/pythonpip-install-bson-error
+  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -U "pip>=9,<10"; pip install -r requirements.txt');
 });
 
 plan.remote('deploy', function(remote) {
@@ -111,12 +114,20 @@ plan.remote('deploy', function(remote) {
 });
 
 plan.remote('deploy', function(remote) {
-  remote.log('Restart services...');
+  remote.log('Copy over lightsheet.sock');
+  remote.exec('cp ' + config.projectDir + '/lightsheet.sock ' + config.projectDir + '/current/');
 });
 
+// plan.remote('deploy', function(remote)
+//   remote.log('Set owners and permissions');
+//   remote.sudo('chmod g+w /opt/projects/lightsheet/current', {user: config.root});
+//   remote.sudo('chown kazimiersa:nginx /opt/projects/lightsheet/current', {user: config.root});
+// });
+
 // plan.remote('deploy', function(remote) {
-//   remote.log('Start application');
-//   remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; python deploy.py');
+//   remote.log('Restart services...');
+//   remote.sudo('systemctl stop lightsheet');
+//   remote.sudo('systemctl start lightsheet');
 // });
 
 plan.remote('rollback', function(remote) {
@@ -130,7 +141,7 @@ plan.remote('rollback', function(remote) {
       + config.projectDir + '/current');
 
     remote.log('Removing ' + oldCurrent);
-    remote.exec('rm -rf ' + config.projectDir + '/releases/' + oldCurrent);
+    remote.sudo('rm -rf ' + config.projectDir + '/releases/' + oldCurrent, {user: config.root});
   }
 
 });
