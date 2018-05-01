@@ -25,7 +25,7 @@
       <!-- Name field -->
       <div class="form-group form-inline">
         <label class="lightsheet-label">Name: </label>
-        <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId">
+        <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId" value="Job {{ date_now | safe | strftime_short }}">
       </div>
     </div>
     <div class="col-lg-6 col-md-6 col-sm-6">
@@ -92,7 +92,7 @@
   <script>
     $(document).ready(
       function () {
-        var picker = new Pikaday({field: document.getElementById('datepicker')});
+        // Show jobdata if job is selected
         var myJobIndex = null;
         {% if lightsheetDB_id is defined and jobIndex is not none %}
           myJobIndex = "{{ lightsheetDB_id|safe }}";
@@ -100,7 +100,6 @@
         if (myJobIndex !== null) {
           lightsheet.stepsExistingJob();
         }
-        document.getElementById("jobId").defaultValue = "Job " + new Date().toISOString();
       })
   </script>
 {% endblock %}

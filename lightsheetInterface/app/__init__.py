@@ -26,6 +26,14 @@ def _jinja2_filter_datetime(date, fmt=None):
     format= "%Y-%m-%d at %H:%M:%S"
     return native.strftime(format)
 
+@app.template_filter('strftime_short')
+def _jinja2_filter_datetime(date, fmt=None):
+    date = dateutil.parser.parse(date)
+    native = date.replace(tzinfo=None)
+
+    format= "%Y-%m-%d_%H:%M:%S"
+    return native.strftime(format)
+
 @app.template_filter('trimend')
 def trimstepname(paramName):
     return paramName.split('_',1)[0]

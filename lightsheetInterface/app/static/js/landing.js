@@ -178,7 +178,7 @@ lightsheet.sortTable = function(n) {
   }
 }
 
-
+// Expand tabs for checkbox checked
 lightsheet.stepsExistingJob = function(){
   var checkedBoxes = $('.step-checkbox:checked');
   $.each(checkedBoxes, function(obj) {
