@@ -90,6 +90,29 @@ Finally, deploy the application with
 $ fly deploy:production
 ```
 
+--------
+
+Locate lightsheet service file:
+
+```bash
+$ locate systemd | grep lightsheet
+/etc/systemd/system/lightsheet.service
+```
+
+Restart lightsheet services:
+
+```bash
+$ sudo systemctl stop lightsheet
+$ sudo systemctl start lightsheet
+```
+
+Set owner and permissions:
+
+```bash
+$ sudo chown -R kazimiersa:nginx ./current
+$ sudo chmod g+w -R ./current
+```
+
 ## Access the database
 
 We use MongoDB to store the data. To open a Mongo cmd, type
@@ -104,19 +127,4 @@ Some other helpful commands:
 > db.jobs.help()
 > db.jobs.findOne()
 > db.jobs.drop()
-```
---------
-
-Stop and start lightsheet services:
-
-```bash
-$ sudo systemctl stop lightsheet
-$ sudo systemctl stop lightsheet
-```
-
-Set owner and permissions socket file:
-
-```bash
-$ sudo chown kazimiersa:nginx lightsheet.sock
-$ sudo sudo chmod g+w lightsheet.sock
 ```

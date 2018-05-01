@@ -11,3 +11,4 @@ Flask-Cache==0.13.1
 Flask-DebugToolbar==0.10.1
 Flask-DebugToolbar-Mongo==0.1
 uwsgi
+ipdb
