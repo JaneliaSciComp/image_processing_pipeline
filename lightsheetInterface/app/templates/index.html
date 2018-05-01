@@ -13,6 +13,7 @@
       </div>
     {% endif %}
   {% endif %}
+
   <!--
       Rows to configure a new job
   -->
@@ -21,12 +22,14 @@
   </div>
   <div class="row">
     <div class="col-lg-3 col-md-3 col-sm-3">
+      <!-- Name field -->
       <div class="form-group form-inline">
         <label class="lightsheet-label">Name: </label>
         <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId">
       </div>
     </div>
     <div class="col-lg-6 col-md-6 col-sm-6">
+      <!-- Select existing job -->
       <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
           {% if parentJobInfo is not none %}
@@ -43,6 +46,7 @@
       </select>
     </div>
   </div>
+
   <!--
     Accordeon control which contains the steps
   -->
@@ -84,6 +88,7 @@
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   <!-- contrib dependencies -->
   <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
+  <!-- script to set default job name -->
   <script>
     $(document).ready(
       function () {
@@ -97,16 +102,5 @@
         }
         document.getElementById("jobId").defaultValue = "Job " + new Date().toISOString();
       })
-  </script>
-  <script>
-    var close = document.getElementsByClassName("closebtn");
-    var i;
-    for (i = 0; i < close.length; i++) {
-      close[i].onclick = function(){
-       var div = this.parentElement;
-       div.style.opacity = "0";
-       setTimeout(function(){ div.style.display = "none"; }, 600);
-      }
-    }
   </script>
 {% endblock %}

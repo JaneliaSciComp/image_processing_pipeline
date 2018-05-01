@@ -1,9 +1,16 @@
+/**
+* Custom table behavior
+*/
 var ls_table = ls_table || {};
 ls_table.loadRow = function(){
   var job_id = $(this).find('.job-id').text();
   window.location = '?lightsheetDB_id=' + job_id;
 },
 
+
+/**
+* Generate jQuery datatables table
+*/
 $(document).ready(() => {
   let table = null;
   if (table_data) {

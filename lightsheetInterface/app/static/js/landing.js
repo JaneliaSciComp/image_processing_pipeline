@@ -3,7 +3,10 @@
 */
 var lightsheet = lightsheet || {};
 
-lightsheet.test = function(){
+/*
+ * Check, if there is a step checkbox checked, if not, disable submit button
+*/
+lightsheet.testAllCheckboxes = function(){
   const checked_boxes = $('form :input[id^=check-]:checked');
   if (checked_boxes.length > 0) {
     $('#submit-button')[0].disabled = false;
@@ -13,8 +16,11 @@ lightsheet.test = function(){
   }
 }
 
+/*
+ * Do checkbox test once when loading the page
+*/
 lightsheet.testCheckboxes = (function(){
-  lightsheet.test()
+  lightsheet.testAllCheckboxes()
 })();
 
 /*

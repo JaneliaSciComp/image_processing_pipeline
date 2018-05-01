@@ -13,7 +13,7 @@
                     aria-expanded={{ pipelineStep.checkboxState }}
                             aria-controls="collapse{{ pipelineStep.stepName }}"
                     value={{ pipelineStep.stepName }}+"_checkbox"
-                    onclick= {{"document.getElementById('"+ pipelineStep.stepName +"_text').disabled=!this.checked;"}}
+                    onclick="lightsheet.testAllCheckboxes()"
                     {{ pipelineStep.checkboxState }}>
             {{ pipelineStep.stepDescription }}
          </label>
