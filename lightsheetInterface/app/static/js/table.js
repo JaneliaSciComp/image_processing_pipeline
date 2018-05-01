@@ -42,5 +42,5 @@ $(document).ready(() => {
       ],
     });
   }
-  $('#job-table tr').click(ls_table.loadRow);
+  $('#job-table tbody tr').click(ls_table.loadRow);
 });

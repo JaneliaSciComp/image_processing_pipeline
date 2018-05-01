@@ -45,13 +45,12 @@ def index():
   if jobData != None:
     for i in range(len(jobData)):
       matchNameIndex[jobData[i]['name']] = i
-  allJobsInJSON(lightsheetDB)
   # go through all steps and find those, which are used by the current job
-  for step in config['steps']:
-    currentStep = step.name
-    if jobData != None and job_id != None:
+  if jobData != None and job_id != None:
+    for step in config['steps']:
+      currentStep = step.name
       # If loading previous run parameters for specific step, then it should be checked sett editable
-      if currentStep in matchNameIndex:
+      if currentStep in matchNameIndex.keys():
         stepData = jobData[matchNameIndex[currentStep]]
         editState = 'enabled'
         checkboxState = 'checked'
@@ -98,16 +97,13 @@ def index():
       newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
       configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(newId)
       postBody = { "processingLocation": "LSF_JAVA",
-                   "args": ["-configAddress",configAddress,
-                            "-allSelectedStepNames",allSelectedStepNames,
-                            "-allSelectedTimePoints",allSelectedTimePoints],
+                   "args": ["-configAddress", configAddress,
+                            "-allSelectedStepNames", allSelectedStepNames,
+                            "-allSelectedTimePoints", allSelectedTimePoints],
                    "resources": {"gridAccountId": "lightsheet"}
                }
-      pprint(postBody)
       try:
         postUrl = settings.devOrProductionJACS + '/async-services/lightsheetProcessing'
-        pprint(postUrl)
-        ipdb.set_trace()
         requestOutput = requests.post(postUrl,
                                       headers=getHeaders(),
                                       data=json.dumps(postBody))
@@ -125,7 +121,7 @@ def index():
         submissionStatus = e
       lightsheetDB.jobs.remove({"_id":newId})
     else:
-      submissionStatus = "no data submitted"
+      pprint('POST request with empty json -- not possible')
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
