@@ -118,10 +118,9 @@ def index():
         updateDBStatesAndTimes(lightsheetDB)
         submissionStatus = "success"
       except requests.exceptions.RequestException as e:
+        pprint('Exception occured')
         submissionStatus = e
-      lightsheetDB.jobs.remove({"_id":newId})
-    else:
-      pprint('POST request with empty json -- not possible')
+        lightsheetDB.jobs.remove({"_id":newId})
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
