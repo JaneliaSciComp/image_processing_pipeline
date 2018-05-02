@@ -42,29 +42,33 @@ def index():
   jobData =  getJobStepData(job_id, client) # get the data for all jobs
   # match data on step name
   matchNameIndex = {}
-  if jobData != None:
-    for i in range(len(jobData)):
-      matchNameIndex[jobData[i]['name']] = i
-  # go through all steps and find those, which are used by the current job
-  if jobData != None and job_id != None:
-    for step in config['steps']:
-      currentStep = step.name
-      # If loading previous run parameters for specific step, then it should be checked sett editable
-      if currentStep in matchNameIndex.keys():
-        stepData = jobData[matchNameIndex[currentStep]]
-        editState = 'enabled'
-        checkboxState = 'checked'
-        countJobs += 1
-        forms = parseJsonData(stepData, currentStep, config)
-        # Pipeline steps is passed to index.html for formatting the html based
-        pipelineSteps[currentStep] = {
-          'stepName': step.name,
-          'stepDescription': step.description,
-          'inputJson': None,
-          'state': editState,
-          'checkboxState': checkboxState,
-          'forms': forms
-        }
+  if type(jobData) is list:
+    if job_id != None:
+      # ipdb.set_trace()
+      for i in range(len(jobData)):
+        if 'name' in jobData[i]:
+          matchNameIndex[jobData[i]['name']] = i
+      # go through all steps and find those, which are used by the current job
+      for step in config['steps']:
+        currentStep = step.name
+        # If loading previous run parameters for specific step, then it should be checked sett editable
+        if currentStep in matchNameIndex.keys():
+          stepData = jobData[matchNameIndex[currentStep]]
+          editState = 'enabled'
+          checkboxState = 'checked'
+          countJobs += 1
+          forms = parseJsonData(stepData, currentStep, config)
+          # Pipeline steps is passed to index.html for formatting the html based
+          pipelineSteps[currentStep] = {
+            'stepName': step.name,
+            'stepDescription': step.description,
+            'inputJson': None,
+            'state': editState,
+            'checkboxState': checkboxState,
+            'forms': forms
+          }
+  elif type(jobData) is dict:
+    submissionStatus = 'Job cannot be loaded.'
   if request.method == 'POST':
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
