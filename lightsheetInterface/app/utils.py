@@ -88,6 +88,8 @@ def mapJobsToDict(x):
     result['selectedStepNames'] = x['selectedStepNames'] if x['selectedStepNames'] is not None else ''
   if 'state' in x:
     result['state'] = x['state'] if x['state'] is not None else ''
+  if 'jacs_id' in x:
+    result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
   return result;
 
 # get job information used by jquery datatable

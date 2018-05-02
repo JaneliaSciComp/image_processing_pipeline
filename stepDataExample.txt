@@ -1,0 +1,418 @@
+[
+  {
+    "steps": [
+      {
+        "creationTime": "2018-04-02 16:24:30", 
+        "elapsedTime": "0:00:06", 
+        "endTime": "2018-04-02 16:24:36", 
+        "logAndErrorPath": "/groups/jacs/jacsDev/servers/jacs-dev/temp/workingDir/lightsheet/lightsheetPipeline/835/473/2520666377010835473", 
+        "name": "clusterPT", 
+        "parameters": {
+          "cameras": [
+            "0", 
+            "1"
+          ], 
+          "channels": [
+            "0", 
+            "1"
+          ], 
+          "correctTIFF": "0", 
+          "dependents": [
+            "", 
+            ""
+          ], 
+          "depths": [
+            "", 
+            ""
+          ], 
+          "dimensions": [
+            "", 
+            ""
+          ], 
+          "flipHFlag": "0", 
+          "flipVFlag": "0", 
+          "heights": [
+            "1978", 
+            "1978"
+          ], 
+          "inputFolder": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039", 
+          "inputType": "0", 
+          "kernelSigma": "2", 
+          "kernelSize": "5", 
+          "loggingFlag": "0", 
+          "medianRange": [
+            "3", 
+            "3"
+          ], 
+          "outputLabel": "", 
+          "outputType": "0", 
+          "percentile": [
+            "1", 
+            "5", 
+            "100"
+          ], 
+          "references": "[[0], [1]]", 
+          "rotationFlag": "0", 
+          "scaling": "4.999384615", 
+          "segmentFlag": "1", 
+          "specimen": "0", 
+          "splitting": "10", 
+          "startsFront": [
+            "0", 
+            "0"
+          ], 
+          "startsLeft": [
+            "50", 
+            "50"
+          ], 
+          "startsTop": [
+            "68", 
+            "55"
+          ], 
+          "thresholds": [
+            "0.4", 
+            "0.4"
+          ], 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ], 
+          "verbose": "1", 
+          "widths": [
+            "1978", 
+            "1978"
+          ]
+        }, 
+        "state": "ERROR"
+      }, 
+      {
+        "creationTime": "N/A", 
+        "elapsedTime": "N/A", 
+        "endTime": "N/A", 
+        "logAndErrorPath": "N/A", 
+        "name": "clusterMF", 
+        "parameters": {
+          "blending": [
+            "20", 
+            "4"
+          ], 
+          "cameras": [
+            "0", 
+            "1"
+          ], 
+          "channels": [
+            "0", 
+            "1"
+          ], 
+          "correction": [
+            "1", 
+            "1", 
+            "0", 
+            "0"
+          ], 
+          "cropping": "[[[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]]", 
+          "dataType": "1", 
+          "enforceFlag": "[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]", 
+          "flipHFlag": "1", 
+          "flipVFlag": "0", 
+          "fraction": "0", 
+          "frontFlag": "1", 
+          "fusionType": "0", 
+          "gaussFilter": [
+            "3", 
+            "1"
+          ], 
+          "inputString": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected", 
+          "inputType": "0", 
+          "intSizes": [
+            "10", 
+            "5"
+          ], 
+          "kernelSigma": "2", 
+          "kernelSize": "5", 
+          "leftFlags": [
+            "2", 
+            "1"
+          ], 
+          "maskFactor": "1", 
+          "maskFusion": "1", 
+          "maskMinimum": [
+            "1", 
+            "100"
+          ], 
+          "medianFilter": "100", 
+          "optimizer": "3", 
+          "outputID": "_blending", 
+          "outputString": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.MultiFused/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039", 
+          "outputType": "0", 
+          "padding": [
+            "0", 
+            "50"
+          ], 
+          "percentile": "5", 
+          "preciseGauss": "1", 
+          "reducedIO": "1", 
+          "scaling": "4.999384615", 
+          "slabSizes": [
+            "5", 
+            "3"
+          ], 
+          "specimen": "0", 
+          "splitting": "10", 
+          "subSampling": [
+            "1", 
+            "100"
+          ], 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ], 
+          "transitions": [
+            "0", 
+            "0"
+          ], 
+          "verbose": "0", 
+          "xOffsets": [
+            "-50", 
+            "50", 
+            "10"
+          ], 
+          "yOffsets": [
+            "-50", 
+            "50", 
+            "10"
+          ]
+        }, 
+        "state": "NOT YET QUEUED"
+      }, 
+      {
+        "creationTime": "N/A", 
+        "elapsedTime": "N/A", 
+        "endTime": "N/A", 
+        "logAndErrorPath": "N/A", 
+        "name": "localAP", 
+        "parameters": {
+          "angleRange": "10", 
+          "averaging": "0", 
+          "cameras": [
+            "0", 
+            "1"
+          ], 
+          "channels": [
+            "0", 
+            "1"
+          ], 
+          "configRoot": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Configurations_Mmu/", 
+          "dataType": "1", 
+          "fullInterval": [
+            "0", 
+            "50", 
+            "1"
+          ], 
+          "intRange": "5", 
+          "offsetRange": "10", 
+          "outputID": "_blending", 
+          "outputString": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.MultiFused/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039", 
+          "readFactors": "1", 
+          "smoothing": [
+            "1", 
+            "20"
+          ], 
+          "specimen": "0", 
+          "staticFlag": "0", 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ]
+        }, 
+        "state": "NOT YET QUEUED"
+      }, 
+      {
+        "creationTime": "N/A", 
+        "elapsedTime": "N/A", 
+        "endTime": "N/A", 
+        "logAndErrorPath": "N/A", 
+        "name": "clusterTF", 
+        "parameters": {
+          "blending": [
+            "20", 
+            "4"
+          ], 
+          "cameras": [
+            "0", 
+            "1"
+          ], 
+          "correction": [
+            "3", 
+            "3", 
+            "0", 
+            "0"
+          ], 
+          "cropping": "[[[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]]", 
+          "dataType": "1", 
+          "enforceFlag": "[1, 1, 1, 1, 1, 1, 1, 1, 1]", 
+          "flipHFlag": "1", 
+          "flipVFlag": "0", 
+          "frontFlag": "1", 
+          "fusionType": "0", 
+          "globalMask": [
+            "0", 
+            "0"
+          ], 
+          "inputID": "_blending", 
+          "inputString": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected", 
+          "inputType": "0", 
+          "intSizes": [
+            "10", 
+            "5"
+          ], 
+          "leftFlags": [
+            "2", 
+            "1"
+          ], 
+          "lookUpTable": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Configurations_Mmu/SPM00_CM00_CM01_CHN00_CHN01_analyzeParameters/lookUpTable.mat", 
+          "outputID": "_blending", 
+          "outputString": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.TimeFused/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039", 
+          "outputType": "0", 
+          "percentile": "5", 
+          "reducedIO": "1", 
+          "references": [
+            "0", 
+            "50", 
+            "1"
+          ], 
+          "sChannels": [
+            "0", 
+            "1"
+          ], 
+          "scaling": "4.999384615", 
+          "sourceString": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.MultiFused/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039", 
+          "specimen": "0", 
+          "splitting": "10", 
+          "subSampling": "100", 
+          "tChannels": [
+            "0", 
+            "1"
+          ], 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ], 
+          "verbose": "0"
+        }, 
+        "state": "NOT YET QUEUED"
+      }, 
+      {
+        "creationTime": "N/A", 
+        "elapsedTime": "N/A", 
+        "endTime": "N/A", 
+        "logAndErrorPath": "N/A", 
+        "name": "localEC", 
+        "parameters": {
+          "inputType": "0", 
+          "outputType": "0", 
+          "percentile": "5", 
+          "scaling": "4.999384615", 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ]
+        }, 
+        "state": "NOT YET QUEUED"
+      }, 
+      {
+        "creationTime": "N/A", 
+        "elapsedTime": "N/A", 
+        "endTime": "N/A", 
+        "logAndErrorPath": "N/A", 
+        "name": "clusterCS", 
+        "parameters": {
+          "configRoot": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Configurations_Mmu/SPM00_CM00_CM01_CHN00_CHN01_stackCorrection", 
+          "correctDrift": "1", 
+          "correctIntensity": "1", 
+          "dataType": "1", 
+          "filePattern": "SPM00_TM??????_CM00_CM01_CHN00_CHN01.fusedStack", 
+          "headerPattern": "Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.TM??????_timeFused_blending/", 
+          "inputRoot": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.TimeFused/", 
+          "inputType": "0", 
+          "maxStampDigits": "6", 
+          "outputRoot": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.CorrectStack/", 
+          "outputType": "0", 
+          "percentile": [
+            "1", 
+            "10"
+          ], 
+          "referenceROI": [
+            "", 
+            ""
+          ], 
+          "referenceTime": "25", 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ]
+        }, 
+        "state": "NOT YET QUEUED"
+      }, 
+      {
+        "creationTime": "N/A", 
+        "elapsedTime": "N/A", 
+        "endTime": "N/A", 
+        "logAndErrorPath": "N/A", 
+        "name": "clusterFR", 
+        "parameters": {
+          "cameras": [
+            "0", 
+            "1"
+          ], 
+          "channels": [
+            "0", 
+            "1"
+          ], 
+          "filterMode": "2", 
+          "footer": "_timeFused_blending", 
+          "header": "Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039", 
+          "inputDir": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.CorrectStack/", 
+          "inputType": "0", 
+          "outputDir": "/groups/lightsheet/lightsheet/home/ackermand/Lightsheet_Data/from_kellerp/Example Data/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected.Filtered/", 
+          "outputType": "0", 
+          "postMedian": [
+            "0", 
+            "3"
+          ], 
+          "preMedian": [
+            "0", 
+            "3"
+          ], 
+          "rangeArray": [
+            "100", 
+            "200"
+          ], 
+          "removeDirt": [
+            "0", 
+            "10"
+          ], 
+          "saveRawMax": "1", 
+          "saveStacks": "1", 
+          "scaling": "4.999384615", 
+          "specimen": "0", 
+          "splitting": "15", 
+          "stackLabel": ".corrected", 
+          "subProject": "1", 
+          "timepoints": [
+            "0", 
+            "50", 
+            "1"
+          ]
+        }, 
+        "state": "NOT YET QUEUED"
+      }
+    ]
+  }
+]

@@ -19,7 +19,7 @@ $(document).ready(() => {
       responsive: true,
       autoWidth: false,
       data: table_data,
-      pageLength: 10,
+      pageLength: 25,
       columns: [{
         title: 'Name',
         data: 'jobName',
@@ -44,8 +44,15 @@ $(document).ready(() => {
         }
       },
       {
-        title: 'Status',
+        title: 'State',
         data: 'state',
+      },
+      {
+        title: 'Jacs ID',
+        data: 'jacs_id',
+        render(data, type, row, meta) {
+          return data ? data : '';
+        }
       }
       ],
     });
