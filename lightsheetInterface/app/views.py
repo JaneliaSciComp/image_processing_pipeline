@@ -68,7 +68,6 @@ def index():
   if request.method == 'POST':
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
-    allSelectedStepNames=""
     allSelectedTimePoints=""
     stepParameters=[]
     currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
@@ -80,15 +79,14 @@ def index():
 
       # delete the jobName entry from the dictionary so that the other entries are all steps
       jobSteps = list(request.json.keys())
-
-
+      stepsString = ', '.join(str(y) for y in jobSteps)
       # go through the data and prepare it for posting it to db
       processedData = reformatDataToPost(request.json)
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "state": "NOT YET QUEUED",
                         "lightsheetCommit":currentLightsheetCommit,
-                        "selectedStepNames": jobSteps,
+                        "selectedStepNames": stepsString,
                         "selectedTimePoints": allSelectedTimePoints,
                         "steps": processedData
                        }
@@ -98,7 +96,7 @@ def index():
       configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(newId)
       postBody = { "processingLocation": "LSF_JAVA",
                    "args": ["-configAddress", configAddress,
-                            "-allSelectedStepNames", allSelectedStepNames,
+                            "-allSelectedStepNames", stepsString,
                             "-allSelectedTimePoints", allSelectedTimePoints],
                    "resources": {"gridAccountId": "lightsheet"}
                }
@@ -197,4 +195,4 @@ def config(lightsheetDB_id):
 
 @app.context_processor
 def add_global_variables():
-    return dict(date_now=datetime.now())
+  return dict(date_now=datetime.now())
