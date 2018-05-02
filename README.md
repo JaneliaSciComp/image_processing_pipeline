@@ -113,6 +113,20 @@ $ sudo chown -R kazimiersa:nginx ./current
 $ sudo chmod g+w -R ./current
 ```
 
+```bash
+$ sudo systemctl restart nginx
+```
+
+See, what's listening to port 80
+```bash
+ netstat -an | grep ":80"
+```
+
+Kill process listening to port 80:
+```bash
+ sudo fuser -k 80/tcp
+```
+
 ## Access the database
 
 We use MongoDB to store the data. To open a Mongo cmd, type
