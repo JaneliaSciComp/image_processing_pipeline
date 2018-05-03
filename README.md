@@ -106,25 +106,8 @@ $ sudo systemctl stop lightsheet
 $ sudo systemctl start lightsheet
 ```
 
-Set owner and permissions:
-
-```bash
-$ sudo chown -R kazimiersa:nginx ./current
-$ sudo chmod g+w -R ./current
-```
-
 ```bash
 $ sudo systemctl restart nginx
-```
-
-See, what's listening to port 80
-```bash
- netstat -an | grep ":80"
-```
-
-Kill process listening to port 80:
-```bash
- sudo fuser -k 80/tcp
 ```
 
 ## Access the database
@@ -141,4 +124,5 @@ Some other helpful commands:
 > db.jobs.help()
 > db.jobs.findOne()
 > db.jobs.drop()
+> db.jobs.remove({ state: { $eq: 'ERROR'} })
 ```
