@@ -233,7 +233,8 @@ def updateDBStatesAndTimes(lightsheetDB):
           allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
           if allChildJobInfoFromJACS:
             for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-              if currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+              pprint(currentChildJobInfoFromDB)
+              if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
                 currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
                 if currentChildJobInfoFromJACS:
                   creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])

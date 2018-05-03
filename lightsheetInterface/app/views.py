@@ -124,6 +124,7 @@ def index():
         submissionStatus = e
         lightsheetDB.jobs.remove({"_id":newId})
 
+  updateDBStatesAndTimes(lightsheetDB)
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
   #Return index.html with pipelineSteps and serviceData
