@@ -17,11 +17,14 @@ settings = Settings()
 
 # reformat the data to resubmit the job for one step only
 def reformatDataToPost(postedData):
-  result = {}
+  result = []
   if postedData and postedData != {}:
     for step in postedData.keys():
       # first part: get the parameter values into lists
-      result[step] = {}
+      stepResult = {}
+      stepResult['name'] = step
+      stepResult['state'] = 'NOT YET QUEUED'
+      stepParamResult = {}
       sortedParameters = sorted(postedData[step].keys())
       for parameterKey in sortedParameters:
         if '_' in parameterKey:
@@ -33,13 +36,13 @@ def reformatDataToPost(postedData):
           parameter = parameterKey;
           rest = parameterKey
 
-        if parameter in result[step]:
-          paramValueSet = result[step][parameter]
+        if parameter in stepParamResult:
+          paramValueSet = stepParamResult[parameter]
         else:
           paramValueSet = []
         if not paramValueSet:
           paramValueSet = []
-          result[step][parameter] = paramValueSet
+          stepParamResult[parameter] = paramValueSet
 
         currentValue = postedData[step][parameterKey]
         # check if float or not:
@@ -50,10 +53,12 @@ def reformatDataToPost(postedData):
           # it's actual a float value -> get the value
           paramValueSet.append(float(currentValue))
 
-      # second part: for lists with just one element, get the element
-      for param in result[step]:
-        if len(result[step][param]) == 1:
-          result[step][param] = result[step][param][0]
+      # cleanup step / second part: for lists with just one element, get the element
+      for param in stepParamResult:
+        if len(stepParamResult[param]) == 1:
+          stepParamResult[param] = stepParamResult[param][0]
+    stepResult['parameters'] = stepParamResult
+    result.append(stepResult)
   return result
 
 # collect the information about existing job used by the job_status page
