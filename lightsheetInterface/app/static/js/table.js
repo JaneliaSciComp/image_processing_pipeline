@@ -51,7 +51,7 @@ $(document).ready(() => {
         title: 'Jacs ID',
         data: 'jacs_id',
         render(data, type, row, meta) {
-          return data ? data : '';
+          return "<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data +  "\">" + data + "</a>";
         }
       }
       ],
