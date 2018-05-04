@@ -72,9 +72,14 @@ def index():
   if request.method == 'POST':
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
-    allSelectedTimePoints="3"
+    allSelectedTimePoints=""
     stepParameters=[]
-    currentLightsheetCommit = subprocess.check_output(['git', '--git-dir', settings.pipelineGit, 'rev-parse', 'HEAD']).strip().decode("utf-8")
+    file = open(settings.gitVersionIdPath,'r')
+    currentLightsheetCommit = file.readline()
+    file.close()
+    # trim ending \n
+    if currentLightsheetCommit.endswith('\n'):
+      currentLightsheetCommit = currentLightsheetCommit[:-1]
     userDefinedJobName=[]
     if request.json != '[]' and request.json != None:
       # get the name of the job first
