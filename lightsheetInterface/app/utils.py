@@ -57,8 +57,9 @@ def reformatDataToPost(postedData):
       for param in stepParamResult:
         if len(stepParamResult[param]) == 1:
           stepParamResult[param] = stepParamResult[param][0]
-    stepResult['parameters'] = stepParamResult
-    result.append(stepResult)
+      stepResult['parameters'] = stepParamResult
+      result.append(stepResult)
+
   return result
 
 # collect the information about existing job used by the job_status page
