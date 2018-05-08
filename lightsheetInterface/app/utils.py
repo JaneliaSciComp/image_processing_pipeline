@@ -35,7 +35,24 @@ def reformatDataToPost(postedData):
         else:
           parameter = parameterKey;
           rest = parameterKey
-
+        if '-' in parameter: # check, whether this is a range parameter
+          splitRest = parameter.split('-')
+          if 'timepoints' in parameter:
+            ipdb.set_trace()
+          q = Parameter.objects.filter(Q(formatting='R') and (Q(name=parameterKey.split('-')[0]) or Q(name= parameterKey.split('-')[0] + '_' + step )))
+          if (len(q) != 0): # this parameter is a range parameter
+            pprint('range + additional split')
+            if splitRest[1] == '1':
+              paramValueSet = {}
+              paramValueSet['start'] = postedData[step][parameterKey]
+            elif  splitRest[1] == '2':
+              paramValueSet['end'] = postedData[step][parameterKey]
+            elif  splitRest[1] == '3':
+              paramValueSet['every'] = postedData[step][parameterKey]
+          else: # this parameter is a range parameter
+            pprint('no range, but split: ' + parameter)
+            parameter = splitRest[0]
+            # ipdb.set_trace()
         if parameter in stepParamResult:
           paramValueSet = stepParamResult[parameter]
         else:
@@ -233,7 +250,6 @@ def updateDBStatesAndTimes(lightsheetDB):
           allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
           if allChildJobInfoFromJACS:
             for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-              pprint(currentChildJobInfoFromDB)
               if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
                 currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
                 if currentChildJobInfoFromJACS:
