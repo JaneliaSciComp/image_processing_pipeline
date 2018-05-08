@@ -27,6 +27,7 @@ def reformatDataToPost(postedData):
       stepParamResult = {}
       sortedParameters = sorted(postedData[step].keys())
       for parameterKey in sortedParameters:
+        range = False
         if '_' in parameterKey:
           # TODO: check, if part after underscore is really a step name or _ part of parameter name
           split = parameterKey.split('_')
@@ -37,45 +38,53 @@ def reformatDataToPost(postedData):
           rest = parameterKey
         if '-' in parameter: # check, whether this is a range parameter
           splitRest = parameter.split('-')
-          if 'timepoints' in parameter:
-            ipdb.set_trace()
-          q = Parameter.objects.filter(Q(formatting='R') and (Q(name=parameterKey.split('-')[0]) or Q(name= parameterKey.split('-')[0] + '_' + step )))
+          q = Parameter.objects.filter(Q(formatting='R') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
           if (len(q) != 0): # this parameter is a range parameter
             pprint('range + additional split')
-            if splitRest[1] == '1':
-              paramValueSet = {}
-              paramValueSet['start'] = postedData[step][parameterKey]
-            elif  splitRest[1] == '2':
-              paramValueSet['end'] = postedData[step][parameterKey]
-            elif  splitRest[1] == '3':
-              paramValueSet['every'] = postedData[step][parameterKey]
+            parameter = splitRest[0]
+            pprint(parameter)
+            range = True
           else: # this parameter is a range parameter
-            pprint('no range, but split: ' + parameter)
             parameter = splitRest[0]
             # ipdb.set_trace()
-        if parameter in stepParamResult:
-          paramValueSet = stepParamResult[parameter]
-        else:
-          paramValueSet = []
-        if not paramValueSet:
-          paramValueSet = []
+        if range:
+          if parameter in stepParamResult:
+            paramValueSet = stepParamResult[parameter]
+          else:
+            paramValueSet = {}
+          if splitRest[1] == '0':
+            paramValueSet['start'] = postedData[step][parameterKey]
+          elif splitRest[1] == '1':
+            paramValueSet['end'] = postedData[step][parameterKey]
+          elif splitRest[1] == '2':
+            paramValueSet['every'] = postedData[step][parameterKey]
           stepParamResult[parameter] = paramValueSet
-
-        currentValue = postedData[step][parameterKey]
-        # check if float or not:
-        if re.match("^[-]\d+?\.\d+?$", currentValue) is None:
-          # it's a real string, just append this value
-          paramValueSet.append(currentValue)
         else:
-          # it's actual a float value -> get the value
-          paramValueSet.append(float(currentValue))
+          if parameter in stepParamResult:
+            paramValueSet = stepParamResult[parameter]
+          else:
+            paramValueSet = []
+          if not paramValueSet:
+            paramValueSet = []
+            stepParamResult[parameter] = paramValueSet
+
+          currentValue = postedData[step][parameterKey]
+          # check if float or not:
+          if re.match("^[-]\d+?\.\d+?$", currentValue) is None:
+            # it's a real string, just append this value
+            paramValueSet.append(currentValue)
+          else:
+            # it's actual a float value -> get the value
+            paramValueSet.append(float(currentValue))
 
       # cleanup step / second part: for lists with just one element, get the element
-      for param in stepParamResult:
-        if len(stepParamResult[param]) == 1:
-          stepParamResult[param] = stepParamResult[param][0]
+      if not range:
+        for param in stepParamResult:
+          if len(stepParamResult[param]) == 1 and type(stepParamResult[param]) is list:
+            stepParamResult[param] = stepParamResult[param][0]
       stepResult['parameters'] = stepParamResult
       result.append(stepResult)
+
   return result
 
 # collect the information about existing job used by the job_status page
