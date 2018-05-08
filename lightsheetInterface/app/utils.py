@@ -1,6 +1,6 @@
 import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+# import matplotlib.pyplot as plt
+# import matplotlib.gridspec as gridspec
 from wtforms import *
 from multiprocessing import Pool
 from pprint import pprint
@@ -59,7 +59,6 @@ def reformatDataToPost(postedData):
           stepParamResult[param] = stepParamResult[param][0]
       stepResult['parameters'] = stepParamResult
       result.append(stepResult)
-
   return result
 
 # collect the information about existing job used by the job_status page
