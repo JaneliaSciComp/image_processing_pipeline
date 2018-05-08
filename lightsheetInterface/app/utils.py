@@ -40,9 +40,7 @@ def reformatDataToPost(postedData):
           splitRest = parameter.split('-')
           q = Parameter.objects.filter(Q(formatting='R') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
           if (len(q) != 0): # this parameter is a range parameter
-            pprint('range + additional split')
             parameter = splitRest[0]
-            pprint(parameter)
             range = True
           else: # this parameter is a range parameter
             parameter = splitRest[0]
@@ -53,11 +51,11 @@ def reformatDataToPost(postedData):
           else:
             paramValueSet = {}
           if splitRest[1] == '0':
-            paramValueSet['start'] = postedData[step][parameterKey]
+            paramValueSet['start'] = float(postedData[step][parameterKey])
           elif splitRest[1] == '1':
-            paramValueSet['end'] = postedData[step][parameterKey]
+            paramValueSet['end'] = float(postedData[step][parameterKey])
           elif splitRest[1] == '2':
-            paramValueSet['every'] = postedData[step][parameterKey]
+            paramValueSet['every'] = float(postedData[step][parameterKey])
           stepParamResult[parameter] = paramValueSet
         else:
           if parameter in stepParamResult:
@@ -69,9 +67,7 @@ def reformatDataToPost(postedData):
             stepParamResult[parameter] = paramValueSet
 
           currentValue = postedData[step][parameterKey]
-          # check if float or not:
-          if re.match("^[-]\d+?\.\d+?$", currentValue) is None:
-            # it's a real string, just append this value
+          if re.match("[-+]?[0-9]*\.?[0-9]*.$", currentValue) is None:
             paramValueSet.append(currentValue)
           else:
             # it's actual a float value -> get the value
