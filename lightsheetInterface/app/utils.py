@@ -50,11 +50,11 @@ def reformatDataToPost(postedData):
           else:
             paramValueSet = {}
           if splitRest[1] == '0':
-            paramValueSet['start'] = float(postedData[step][parameterKey])
+            paramValueSet['start'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
           elif splitRest[1] == '1':
-            paramValueSet['end'] = float(postedData[step][parameterKey])
+            paramValueSet['end'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
           elif splitRest[1] == '2':
-            paramValueSet['every'] = float(postedData[step][parameterKey])
+            paramValueSet['every'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
           stepParamResult[parameter] = paramValueSet
         else:
           if parameter in stepParamResult:
