@@ -44,7 +44,6 @@ def reformatDataToPost(postedData):
             range = True
           else: # this parameter is a range parameter
             parameter = splitRest[0]
-            # ipdb.set_trace()
         if range:
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter]
@@ -364,6 +363,54 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
 
   fig.savefig(url_for('static', filename='img/test.jpg'))
   pool.close()
+
+def parseJsonDataNoForms(data, stepName, config):
+  #ipdb.set_trace()
+  # Check structure of incoming data
+  if 'parameters' in data:
+    parameterData = data['parameters']
+  else:
+    parameterData = data
+
+  keys = parameterData.keys()
+  if keys != None:
+    pFrequent = {}
+    pSometimes = {}
+    pRare = {}
+    # For each key, look up the parameter type and add parameter to the right type of form based on that:
+    for key in keys:
+      param = Parameter.objects.filter(name=key).first()
+      if param == None:
+        extendedKey = key + "_" + stepName
+        param = Parameter.objects.filter(name=extendedKey).first()
+      if param != None:
+        if param.frequency == 'F':
+          pFrequent[key] =  {}
+          if key in config['parameterDictionary']['frequent'].keys():
+            pFrequent[key]['config'] = config['parameterDictionary']['frequent'][key]
+          else:
+            pFrequent[key]['config'] = config['parameterDictionary']['frequent'][key + '_' + stepName]
+          pFrequent[key]['data'] = parameterData[key]
+        elif param.frequency == 'S':
+          pSometimes[key] = {}
+          if key in config['parameterDictionary']['sometimes'].keys():
+            pSometimes[key]['config'] = config['parameterDictionary']['sometimes'][key]
+          else:
+            pSometimes[key]['config'] = config['parameterDictionary']['sometimes'][key + '_' + stepName]
+          pSometimes[key]['data'] = parameterData[key]
+        elif param.frequency == 'R':
+          pRare[key] = {}
+          if key in config['parameterDictionary']['rare'].keys():
+            pRare[key]['config'] = config['parameterDictionary']['rare'][key]
+          else:
+            pRare[key]['config'] = config['parameterDictionary']['rare'][key + '_' + stepName]
+          pRare[key]['data'] = parameterData[key]
+
+  result = {}
+  result['frequent'] = pFrequent
+  result['sometimes'] = pSometimes
+  result['rare'] = pRare
+  return result
 
 # parse data for existing job and create forms
 def parseJsonData(data, stepName, config):

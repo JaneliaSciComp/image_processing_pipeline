@@ -44,7 +44,6 @@ def index():
   matchNameIndex = {}
   if type(jobData) is list:
     if job_id != None:
-      # ipdb.set_trace()
       for i in range(len(jobData)):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
@@ -57,7 +56,8 @@ def index():
           editState = 'enabled'
           checkboxState = 'checked'
           countJobs += 1
-          forms = parseJsonData(stepData, currentStep, config)
+          forms = None
+          jobs = parseJsonDataNoForms(stepData, currentStep, config)
           # Pipeline steps is passed to index.html for formatting the html based
           pipelineSteps[currentStep] = {
             'stepName': step.name,
@@ -65,7 +65,8 @@ def index():
             'inputJson': None,
             'state': editState,
             'checkboxState': checkboxState,
-            'forms': forms
+            'forms': forms,
+            'jobs': jobs
           }
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
@@ -133,6 +134,8 @@ def index():
   updateDBStatesAndTimes(lightsheetDB)
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
+  # if len(pipelineSteps) > 0:
+  #   ipdb.set_trace()
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                        title='Home',

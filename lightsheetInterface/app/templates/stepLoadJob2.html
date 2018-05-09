@@ -1,0 +1,56 @@
+{% from "_formhelpers.html" import render_field %}
+<!-- This file contains the template code for each and every pipeline step and includes a separate template to render each parameter -->
+<div class="card" id="{{ pipelineStep.stepName }}-card">
+   <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+         <label>
+            <input
+                    id="check-{{pipelineStep.stepName}}"
+                    type="checkbox"
+                    class="btn btn-link step-name step-checkbox"
+                    data-toggle="collapse"
+                    data-target="#collapse{{ pipelineStep.stepName }}"
+                    aria-expanded={{ pipelineStep.checkboxState }}
+                            aria-controls="collapse{{ pipelineStep.stepName }}"
+                    value={{ pipelineStep.stepName }}+"_checkbox"
+                    onclick="lightsheet.testAllCheckboxes()"
+                    {{ pipelineStep.checkboxState }}>
+            {{ pipelineStep.stepDescription }}
+         </label>
+      </h5>
+   </div>
+   <div id="collapse{{ pipelineStep.stepName }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+      <div class="card-body">
+         {% include "tabnav.html" %}
+         <!-- Tab panes -->
+         <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ pipelineStep.stepName }}">
+              {% for parameterKey, parameterValue in pipelineStep['jobs']['frequent'].items() %}
+                {% include "parameter2.html" ignore missing with context %}
+              {% endfor %}
+            </div>
+            <!-- sometimes panel -->
+            <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ pipelineStep.stepName }}">
+              {% for parameterKey, parameterValue in pipelineStep['jobs']['sometimes'].items() %}
+                {% include "parameter2.html" ignore missing with context %}
+              {% endfor %}
+            </div>
+            <!-- rare panel -->
+            <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ pipelineStep.stepName }}">
+              {% for parameterKey, parameterValue in pipelineStep['jobs']['rare'].items() %}
+                {% include "parameter2.html" ignore missing with context %}
+              {% endfor %}
+            </div>
+            <!-- json panel -->
+            <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}" style="display: none;">
+               <!-- For now, show json in sometimes panel -->
+               <fieldset>
+            <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}} name={{ pipelineStep.stepName }}>
+              {{ pipelineStep.inputJson }}
+            </textarea>
+               </fieldset>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
