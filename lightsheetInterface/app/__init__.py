@@ -1,10 +1,11 @@
-import dateutil
+import dateutil, ipdb
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_cache import Cache
 from flask_mongoengine import MongoEngine
 from mongoengine import connect
 from flask_admin import Admin
+from pprint import pprint
 
 app = Flask(__name__) #app variable, an object of class FLask
 
@@ -44,3 +45,11 @@ def show_all_attrs(value):
     for k in dir(value):
         res.append('%r %r<br/>' % (k, getattr(value, k)))
     return '\n'.join(res)
+
+@app.template_filter('show_type')
+def show_all_attrs(value):
+    if type(value) is str:
+        return 'string'
+    elif type(value) is list:
+        return 'list'
+    return 'type'
