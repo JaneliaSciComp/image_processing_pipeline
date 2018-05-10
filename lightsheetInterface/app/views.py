@@ -1,3 +1,4 @@
+# Contains routes and functions to pass content to the template layer
 import requests, json, os, math, datetime, bson, re, subprocess, ipdb
 from flask import render_template, request, jsonify, abort
 from pymongo import MongoClient
@@ -7,6 +8,7 @@ from app import app
 from app.settings import Settings
 from bson.objectid import ObjectId
 from app.utils import *
+from app.jobs_io import *
 
 settings = Settings()
 
