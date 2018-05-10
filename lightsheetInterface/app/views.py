@@ -208,7 +208,3 @@ def config(lightsheetDB_id):
         abort(404)
     else:
         return jsonify(output)
-
-@app.context_processor
-def add_global_variables():
-  return dict(date_now=datetime.now())

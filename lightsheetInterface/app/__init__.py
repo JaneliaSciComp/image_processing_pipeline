@@ -19,6 +19,10 @@ db = MongoEngine(app)
 toolbar = DebugToolbarExtension(app)
 from app import views, models #app package from which views will be imported
 
+@app.context_processor
+def add_global_variables():
+  return dict(date_now=datetime.now())
+
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):
     date = dateutil.parser.parse(date)
