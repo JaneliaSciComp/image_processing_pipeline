@@ -1,5 +1,5 @@
 # Contains functons to load jobs and submit jobs
-import re, ipdb
+import re, ipdb, json
 from mongoengine.queryset.visitor import Q
 from app.models import AppConfig, Step, Parameter
 from pprint import pprint
@@ -58,11 +58,14 @@ def reformatDataToPost(postedData):
 
           # check if current value is a float within a string and needs to be converted
           currentValue = postedData[step][parameterKey]
-          if re.match("[-+]?[0-9]*\.?[0-9]*.$", currentValue) is None:
-            paramValueSet.append(currentValue)
-          else:
-            # it's actual a float value -> get the value
-            paramValueSet.append(float(currentValue))
+          if re.match("[-+]?[0-9]*\.?[0-9]*.$", currentValue) is None: # no float
+            try:
+              tmp = json.loads(currentValue)
+              paramValueSet.append(tmp)
+            except ValueError:
+              paramValueSet.append(currentValue)
+          else: # it's actual a float value -> get the value
+              paramValueSet.append(float(currentValue))
 
       # cleanup step / second part: for lists with just one element, get the element
       for param in stepParamResult:
