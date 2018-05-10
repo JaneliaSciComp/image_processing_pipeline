@@ -1,4 +1,4 @@
-import dateutil, ipdb
+import dateutil, ipdb, socket
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_cache import Cache
@@ -6,6 +6,7 @@ from flask_mongoengine import MongoEngine
 from mongoengine import connect
 from flask_admin import Admin
 from pprint import pprint
+from datetime import datetime
 
 app = Flask(__name__) #app variable, an object of class FLask
 
@@ -22,6 +23,10 @@ from app import views, models #app package from which views will be imported
 @app.context_processor
 def add_global_variables():
   return dict(date_now=datetime.now())
+
+@app.context_processor
+def add_global_variables():
+  return dict(machine_name=socket.gethostname())
 
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):

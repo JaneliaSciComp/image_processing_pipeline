@@ -1,5 +1,5 @@
 # Contains routes and functions to pass content to the template layer
-import requests, json, os, math, datetime, bson, re, subprocess, ipdb
+import requests, json, os, math, bson, re, subprocess, ipdb
 from flask import render_template, request, jsonify, abort
 from pymongo import MongoClient
 from collections import OrderedDict
