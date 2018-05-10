@@ -1,4 +1,5 @@
 # Contains functons to load jobs and submit jobs
+import re, ipdb
 from mongoengine.queryset.visitor import Q
 from app.models import AppConfig, Step, Parameter
 from pprint import pprint
@@ -34,25 +35,28 @@ def reformatDataToPost(postedData):
             parameter = splitRest[0]
         if range:
           if parameter in stepParamResult:
-            paramValueSet = stepParamResult[parameter]
+            paramValueSet = stepParamResult[parameter] # get the existing object
           else:
-            paramValueSet = {}
+            paramValueSet = {} # create a new object
+          # move the parts of the range parameter to the right key of the object
           if splitRest[1] == '0':
             paramValueSet['start'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
           elif splitRest[1] == '1':
             paramValueSet['end'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
           elif splitRest[1] == '2':
             paramValueSet['every'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
+          # update the object
           stepParamResult[parameter] = paramValueSet
-        else:
+        else: # no range
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter]
           else:
             paramValueSet = []
           if not paramValueSet:
             paramValueSet = []
-            stepParamResult[parameter] = paramValueSet
+          stepParamResult[parameter] = paramValueSet
 
+          # check if current value is a float within a string and needs to be converted
           currentValue = postedData[step][parameterKey]
           if re.match("[-+]?[0-9]*\.?[0-9]*.$", currentValue) is None:
             paramValueSet.append(currentValue)
@@ -61,11 +65,9 @@ def reformatDataToPost(postedData):
             paramValueSet.append(float(currentValue))
 
       # cleanup step / second part: for lists with just one element, get the element
-      if not range:
-        for param in stepParamResult:
-          if len(stepParamResult[param]) == 1 and type(stepParamResult[param]) is list:
-            pprint(param)
-            stepParamResult[param] = stepParamResult[param][0]
+      for param in stepParamResult:
+        if type(stepParamResult[param]) is list and len(stepParamResult[param]) == 1:
+          stepParamResult[param] = stepParamResult[param][0]
       stepResult['parameters'] = stepParamResult
       result.append(stepResult)
   return result
@@ -118,7 +120,6 @@ def parseJsonDataNoForms(data, stepName, config):
   result['frequent'] = pFrequent
   result['sometimes'] = pSometimes
   result['rare'] = pRare
-  pprint(result)
   return result
 
 # parse data for existing job and create forms
