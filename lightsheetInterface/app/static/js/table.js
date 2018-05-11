@@ -15,7 +15,7 @@ $(document).ready(() => {
   let table = null;
   if (table_data) {
       table = $('#job-table').DataTable({
-      order: [[ 0, "desc" ]],
+      order: [[ 1, "desc" ]],
       responsive: true,
       autoWidth: false,
       data: table_data,

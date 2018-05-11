@@ -25,7 +25,7 @@
       <!-- Name field -->
       <div class="form-group form-inline">
         <label class="lightsheet-label">Name: </label>
-        <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId" value="Job_{{ version }}_{{ machine_name }}_{{ date_now | safe | strftime_short }}">
+        <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
       </div>
     </div>
     <div class="col-lg-6 col-md-6 col-sm-6">
