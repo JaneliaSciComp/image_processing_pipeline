@@ -29,21 +29,19 @@ def reformatDataToPost(postedData):
           splitRest = parameter.split('-')
           q = Parameter.objects.filter(Q(formatting='R') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
           if (len(q) != 0): # this parameter is a range parameter
-            parameter = splitRest[0]
             range = True
-          else: # this parameter is a range parameter
-            parameter = splitRest[0]
+          parameter = splitRest[0]
         if range:
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter] # get the existing object
           else:
             paramValueSet = {} # create a new object
           # move the parts of the range parameter to the right key of the object
-          if splitRest[1] == '0':
+          if splitRest[1] == 'start':
             paramValueSet['start'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
-          elif splitRest[1] == '1':
+          elif splitRest[1] == 'end':
             paramValueSet['end'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
-          elif splitRest[1] == '2':
+          elif splitRest[1] == 'every':
             paramValueSet['every'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
           # update the object
           stepParamResult[parameter] = paramValueSet
