@@ -19,7 +19,6 @@
         <input type="number" class="form-control lightsheet-number" value="{{ parameterValue.data[1] }}" id="{{ parameterKey }}-1">
       {% elif parameterValue.config.count == '3' %}
         {% if parameterValue.config.formatting == 'R' %}
-          {{ parameterKey }}
           <div class="form-group form-inline">
             <label class="lightsheet-label" for="{{ parameterKey }}-number1">From: </label>
             <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}-0" value="{{ parameterValue.data[0] }}">
