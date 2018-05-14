@@ -17,20 +17,23 @@ def reformatDataToPost(postedData):
       sortedParameters = sorted(postedData[step].keys())
       for parameterKey in sortedParameters:
         range = False
+        # First test if it's a nested parameter
+        if '-' in parameterKey: # check, whether this is a range parameter
+          splitRest = parameterKey.split('-')
+          q = Parameter.objects.filter(Q(formatting='R') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
+          if (len(q) != 0): # this parameter is a range parameter
+            range = True
+
+        # Then check if stepname is part of parameter name
         if '_' in parameterKey:
           # TODO: check, if part after underscore is really a step name or _ part of parameter name
           split = parameterKey.split('_')
           parameter = split[0]
-          rest = split[1]
+ #          rest = split[1]
         else:
           parameter = parameterKey;
-          rest = parameterKey
-        if '-' in parameter: # check, whether this is a range parameter
-          splitRest = parameter.split('-')
-          q = Parameter.objects.filter(Q(formatting='R') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
-          if (len(q) != 0): # this parameter is a range parameter
-            range = True
-          parameter = splitRest[0]
+ #         rest = parameterKey
+
         if range:
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter] # get the existing object
