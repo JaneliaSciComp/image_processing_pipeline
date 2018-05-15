@@ -31,9 +31,8 @@ def reformatDataToPost(postedData):
           parameter = split[0]
         else:
           parameter = parameterKey;
-
+        parameter = parameter.split('-')[0]
         if range:
-          parameter = parameter.split('-')[0]
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter] # get the existing object
           else:
