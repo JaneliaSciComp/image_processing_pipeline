@@ -93,9 +93,9 @@ def index():
               tmpKey = "timepoints_" + step
               if tmpKey + "-start" in request.json[step].keys():
                 timepointObj = {}
-                timepointObj['start'] = request.json[step][key + "-start"]
-                timepointObj['end'] = request.json[step][key + "-end"]
-                timepointObj['every'] = request.json[step][key + "-every"]
+                timepointObj['start'] = request.json[step][tmpKey + "-start"]
+                timepointObj['end'] = request.json[step][tmpKey + "-end"]
+                timepointObj['every'] = request.json[step][tmpKey + "-every"]
           if timepointObj != None:
             timePointList.append(str(math.ceil(1+(float(timepointObj["end"]) - float(timepointObj["start"]))/float(timepointObj["every"]))))
           else:
