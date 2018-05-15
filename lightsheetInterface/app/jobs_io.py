@@ -29,12 +29,11 @@ def reformatDataToPost(postedData):
           # TODO: check, if part after underscore is really a step name or _ part of parameter name
           split = parameterKey.split('_')
           parameter = split[0]
- #          rest = split[1]
         else:
           parameter = parameterKey;
- #         rest = parameterKey
 
         if range:
+          parameter = parameter.split('-')[0]
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter] # get the existing object
           else:
@@ -78,13 +77,11 @@ def reformatDataToPost(postedData):
 
 # new parse data, don't create any flask forms
 def parseJsonDataNoForms(data, stepName, config):
-  #ipdb.set_trace()
   # Check structure of incoming data
   if 'parameters' in data:
     parameterData = data['parameters']
   else:
     parameterData = data
-
   keys = parameterData.keys()
   if keys != None:
     pFrequent = {}
