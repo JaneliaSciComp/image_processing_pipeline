@@ -188,3 +188,7 @@ lightsheet.stepsExistingJob = function(){
     }
   });
 }
+
+lightsheet.applyGlobalParameter = function(){
+  alert('hello!');
+}

@@ -48,9 +48,11 @@
             {% endfor %}
           {% endfor %}
         </div>
-        <!-- json panel -->
-        <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ step.name }}" style="display: none;">
-        </div>
+        {% if step.name == 'globalParameters' %}
+          <div class="col-md-12">
+            <input class="btn btn-info apply-button" type="button" value="Apply" title="Apply global parameters to other steps in the pipeline" onclick="lightsheet.applyGlobalParameter()" />
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>

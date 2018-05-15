@@ -112,6 +112,11 @@ fieldset {
     margin-right: 8px;
 }
 
+.apply-button {
+  float: right;
+  margin-bottom: 12px;
+}
+
 @media (min-width: 769px) {
   .lightsheet-text {
     min-width: 20em;
