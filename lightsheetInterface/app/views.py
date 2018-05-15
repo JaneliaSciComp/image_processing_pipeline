@@ -75,16 +75,40 @@ def index():
   if request.method == 'POST':
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
-    timePointsDefault = "11"
-    stepParameters=[]
-    file = open(settings.gitVersionIdPath,'r')
-    currentLightsheetCommit = file.readline()
-    file.close()
-    # trim ending \n
-    if currentLightsheetCommit.endswith('\n'):
-      currentLightsheetCommit = currentLightsheetCommit[:-1]
-    userDefinedJobName=[]
+
     if request.json != '[]' and request.json != None:
+      # Loop through all steps and calculate timePointsValue
+      timepointObj = None
+      timePointList = []
+      for step in request.json.keys():
+        if step != 'jobName':
+          if type(request.json[step]) is dict:
+            key = 'timepoints'
+            if key + "-start" in request.json[step].keys():
+              timepointObj = {}
+              timepointObj['start'] = request.json[step][key + "-start"]
+              timepointObj['end'] = request.json[step][key + "-end"]
+              timepointObj['every'] = request.json[step][key + "-every"]
+            else:
+              tmpKey = "timepoints_" + step
+              if tmpKey + "-start" in request.json[step].keys():
+                timepointObj = {}
+                timepointObj['start'] = request.json[step][key + "-start"]
+                timepointObj['end'] = request.json[step][key + "-end"]
+                timepointObj['every'] = request.json[step][key + "-every"]
+          if timepointObj != None:
+            timePointList.append(str(math.ceil(1+(float(timepointObj["end"]) - float(timepointObj["start"]))/float(timepointObj["every"]))))
+          else:
+            timePointList.append('')
+      stepParameters=[]
+      file = open(settings.gitVersionIdPath,'r')
+      currentLightsheetCommit = file.readline()
+      file.close()
+      # trim ending \n
+      if currentLightsheetCommit.endswith('\n'):
+        currentLightsheetCommit = currentLightsheetCommit[:-1]
+      userDefinedJobName=[]
+
       # get the name of the job first
       jobName = request.json['jobName']
       del(request.json['jobName'])
@@ -92,7 +116,7 @@ def index():
       # delete the jobName entry from the dictionary so that the other entries are all steps
       jobSteps = list(request.json.keys())
       stepsString = ','.join(str(y) for y in jobSteps)
-      allSelectedTimePoints= ', '.join(timePointsDefault for y in jobSteps)
+      allSelectedTimePoints= ', '.join(timePointList)
       # go through the data and prepare it for posting it to db
       processedData = reformatDataToPost(request.json)
       # Prepare the db data
