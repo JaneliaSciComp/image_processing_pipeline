@@ -42,6 +42,7 @@ class Step(Document):
 class Dependency(Document):
     inputField = ReferenceField(Parameter)
     outputField = ReferenceField(Parameter)
+    outputStep = ReferenceField(Step)
     pattern = StringField(max_length=200)
 
 # Customized admin views
@@ -58,6 +59,7 @@ class DependecyView(ModelView):
     column_filters = ['inputField', 'outputField', 'pattern']
     column_labels = dict(inputField='Input',
                         outputField='Output',
+                        outputStep='Step',
                         pattern='Pattern')
 
 admin.add_view(ConfigView(AppConfig))
