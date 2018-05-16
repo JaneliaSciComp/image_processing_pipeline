@@ -243,7 +243,5 @@ def add_depencency_object():
     obj['output'] =  d.outputField.name if d.outputField.name is not None else ''
     obj['pattern'] = d.pattern if d.pattern is not None else ''
     obj['step'] = d.outputStep.name if d.outputStep is not None else ''
-    pprint(obj)
     result.append(obj)
-  pprint('result object: ' + str(result));
   return dict(dependency=result)

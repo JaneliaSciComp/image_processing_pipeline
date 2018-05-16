@@ -193,8 +193,8 @@ lightsheet.stepsExistingJob = function(){
 lightsheet.applyGlobalParameter = function(){
   if (templateObj) {
     for (var t = 0; t < templateObj.length; t++) {
-      var output = Mustache.render("input {{ input }}, who is {{ output }} years old", templateObj[0]);
-      console.log(output);
+      var override_id = Mustache.render("{{step}}-{{output}}", templateObj[t]);
+      var elem = document.getElementById(override_id).querySelectorAll('*');
     }
   }
 }
