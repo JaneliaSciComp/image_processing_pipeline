@@ -189,6 +189,12 @@ lightsheet.stepsExistingJob = function(){
   });
 }
 
+// use template entries from model to apply global parameters
 lightsheet.applyGlobalParameter = function(){
-  alert('hello!');
+  if (templateObj) {
+    for (var t = 0; t < templateObj.length; t++) {
+      var output = Mustache.render("input {{ input }}, who is {{ output }} years old", templateObj[0]);
+      console.log(output);
+    }
+  }
 }

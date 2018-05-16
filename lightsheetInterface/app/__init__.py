@@ -25,7 +25,7 @@ def add_global_variables():
   return dict(date_now=datetime.now())
 
 @app.context_processor
-def add_global_variables():
+def add_machine_name():
   return dict(machine_name=socket.gethostname())
 
 @app.template_filter('strftime')

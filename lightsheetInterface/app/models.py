@@ -40,8 +40,8 @@ class Step(Document):
       return self.name
 
 class Dependency(Document):
-    globalParameter = ReferenceField(Parameter)
-    dependent1 = ReferenceField(Parameter)
+    inputField = ReferenceField(Parameter)
+    outputField = ReferenceField(Parameter)
     pattern = StringField(max_length=200)
 
 # Customized admin views
@@ -55,9 +55,9 @@ class ParameterView(ModelView):
     column_filters = ['name', 'description', 'frequency', 'formatting']
 
 class DependecyView(ModelView):
-    column_filters = ['globalParameter', 'dependent1', 'pattern']
-    column_labels = dict(globalParameter='Global Parameter',
-                        dependent1='1. Dependent',
+    column_filters = ['inputField', 'outputField', 'pattern']
+    column_labels = dict(inputField='Input',
+                        outputField='Output',
                         pattern='Pattern')
 
 admin.add_view(ConfigView(AppConfig))

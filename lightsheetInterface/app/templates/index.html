@@ -77,12 +77,17 @@
     <table class="table table-striped table-hover" id='job-table' />
   </div>
 
-  <!-- table variables -->
+  <!-- template variables to be processed in JavaScript -->
   <script>
      {%  if jobsJson %}
         var table_data = {{ jobsJson|safe }};
      {% else %}
         var table_data = null;
+     {% endif %}
+     {% if dependency is defined %}
+        var templateObj = {{ dependency|safe }};
+     {% else %}
+        var templateObj = null;
      {% endif %}
   </script>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

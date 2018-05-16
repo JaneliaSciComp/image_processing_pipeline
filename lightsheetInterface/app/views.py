@@ -8,7 +8,8 @@ from app import app
 from app.settings import Settings
 from bson.objectid import ObjectId
 from app.utils import *
-from app.jobs_io import *
+from app.jobs_io import reformatDataToPost, parseJsonDataNoForms
+from app.models import Dependency
 
 settings = Settings()
 
@@ -28,7 +29,6 @@ mongosettings = 'mongodb://' + app.config['MONGODB_SETTINGS']['host'] + ':' + st
 client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
-
 
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -232,3 +232,17 @@ def config(lightsheetDB_id):
         abort(404)
     else:
         return jsonify(output)
+
+@app.context_processor
+def add_depencency_object():
+  dep = Dependency.objects.all();
+  result = []
+  for d in dep:
+    obj = {}
+    obj['input'] = d.inputField.name
+    obj['output'] =  d.outputField.name
+    obj['pattern'] = d.pattern
+    pprint(obj)
+    result.append(obj)
+  pprint('result object: ' + str(result));
+  return dict(dependency=result)

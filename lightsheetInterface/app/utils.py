@@ -15,7 +15,6 @@ from app.settings import Settings
 
 settings = Settings()
 
-
 # collect the information about existing job used by the job_status page
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
