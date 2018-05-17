@@ -192,29 +192,80 @@ lightsheet.stepsExistingJob = function(){
 // use template entries from model to apply global parameters
 lightsheet.applyGlobalParameter = function(){
   if (templateObj) {
+    console.log(templateObj);
     for (var t = 0; t < templateObj.length; t++) {
-      // Get the referenced field for the global parameter
-      var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
-      var globalElem = document.getElementById(globalId);
-      var globalInput = null;
-      if (globalElem) {
-        globalInput = globalElem.getElementsByTagName('input');
-      }
-
-      // Get the referenced field for the parameter to be overwritten
-      var stepInput = null;
-      var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
-      var stepElem = document.getElementById(stepId);
-      if (stepElem){
-        stepInput = stepElem.getElementsByTagName('input')
-      }
-
-      // Overwrite step value if both is given
-      if (stepInput && globalInput) {
-        stepInput[0].value = globalInput[0].value;
+      if (templateObj.pattern) {
+        // Do something with the given pattern
       }
       else {
-        console.log('not found: globalId: ' + globalId + "  stepId: " + stepId);
+        if (templateObj[t].formatting == 'R') {
+          // We're dealing with array or range parameters
+          var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
+          var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
+          var globalElem = document.getElementById(globalId);
+          var stepElem = document.getElementById(stepId);
+          if (globalElem && stepElem) {
+            var globalInputs = globalElem.getElementsByTagName('input');
+            var stepInputs = globalElem.getElementsByTagName('input');
+            var gObj = {};
+            var sObj = {};
+            for (var i = 0; i < globalInputs.length; i++) {
+              switch(globalInputs[i].getAttribute('id')) {
+                case Mustache.render("{{input}}-start", templateObj[t]):
+                  gObj['start'] = globalInputs[i].value;
+                  break;
+                case Mustache.render("{{input}}-end", templateObj[t]):
+                  gObj['end'] = globalInputs[i].value;
+                  break;
+                case Mustache.render("{{input}}-every", templateObj[t]):
+                  gObj['every'] = globalInputs[i].value;
+                  break;
+              }
+            }
+            for (var i = 0; i < stepInputs.length; i++) {
+              switch(stepInputs[i].getAttribute('id')) {
+                case Mustache.render("{{input}}-start", templateObj[t]):
+                  sObj['start'] = stepInputs[i];
+                  break;
+                case Mustache.render("{{input}}-end", templateObj[t]):
+                  sObj['end'] = stepInputs[i];
+                  break;
+                case Mustache.render("{{input}}-every", templateObj[t]):
+                  sObj['every'] = stepInputs[i];
+                  break;
+              }
+            }
+            // Write result
+            sObj['start'].value = gObj['start'];
+            sObj['end'].value = gObj['end'];
+            sObj['every'].value = gObj['every'];
+          }
+        }
+        else {
+          // Get the referenced field for the global parameter
+          var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
+          var globalElem = document.getElementById(globalId);
+          var globalInput = null;
+          if (globalElem) {
+            globalInput = globalElem.getElementsByTagName('input');
+          }
+
+          // Get the referenced field for the parameter to be overwritten
+          var stepInput = null;
+          var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
+          var stepElem = document.getElementById(stepId);
+          if (stepElem){
+            stepInput = stepElem.getElementsByTagName('input')
+          }
+
+          // Overwrite step value if both is given
+          if (stepInput && globalInput) {
+            stepInput[0].value = globalInput[0].value;
+          }
+          else {
+            console.log('not found: globalId: ' + globalId + "  stepId: " + stepId);
+          }
+        }
       }
     }
   }
