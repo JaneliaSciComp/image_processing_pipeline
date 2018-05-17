@@ -193,8 +193,29 @@ lightsheet.stepsExistingJob = function(){
 lightsheet.applyGlobalParameter = function(){
   if (templateObj) {
     for (var t = 0; t < templateObj.length; t++) {
-      var override_id = Mustache.render("{{step}}-{{output}}", templateObj[t]);
-      var elem = document.getElementById(override_id).querySelectorAll('*');
+      // Get the referenced field for the global parameter
+      var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
+      var globalElem = document.getElementById(globalId);
+      var globalInput = null;
+      if (globalElem) {
+        globalInput = globalElem.getElementsByTagName('input');
+      }
+
+      // Get the referenced field for the parameter to be overwritten
+      var stepInput = null;
+      var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
+      var stepElem = document.getElementById(stepId);
+      if (stepElem){
+        stepInput = stepElem.getElementsByTagName('input')
+      }
+
+      // Overwrite step value if both is given
+      if (stepInput && globalInput) {
+        stepInput[0].value = globalInput[0].value;
+      }
+      else {
+        console.log('not found: globalId: ' + globalId + "  stepId: " + stepId);
+      }
     }
   }
 }

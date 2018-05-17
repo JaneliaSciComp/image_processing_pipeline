@@ -239,8 +239,8 @@ def add_depencency_object():
   result = []
   for d in dep:
     obj = {}
-    obj['input'] = d.inputField.name if d.inputField.name is not None else ''
-    obj['output'] =  d.outputField.name if d.outputField.name is not None else ''
+    obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
+    obj['output'] =  d.outputField.name if d.outputField and d.outputField.name is not None else ''
     obj['pattern'] = d.pattern if d.pattern is not None else ''
     obj['step'] = d.outputStep.name if d.outputStep is not None else ''
     result.append(obj)
