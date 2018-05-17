@@ -7,7 +7,7 @@
   {% else %}
     <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
   {% endif %}
-    <div class="input-group-prepend">
+  <div class="input-group-prepend">
     <span class="input-group-text lightsheet-input">
       {{ param.name | trimend }}
     </span>
@@ -41,5 +41,8 @@
       {% endif %}
     {% endif %}
     </div>
+    {% if value.empty == True %}
+      <label> <input class="form-control" type="checkbox" /> Empty?</label>
+    {% endif %}
   </div>
 {% endif %}
