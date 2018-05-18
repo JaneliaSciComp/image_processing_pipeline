@@ -1,5 +1,7 @@
 # Contains helper functons used in views.py for the most part
 import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from wtforms import *
