@@ -219,3 +219,24 @@ lightsheet.applyGlobalParameter = function(){
     }
   }
 }
+
+// Disable input fields, when checkbox is checked, that those fields should be ignored
+lightsheet.passEmptyField = function(obj){
+  var fields = obj.parentNode.parentNode.getElementsByClassName('lightsheet-fields');
+  if (fields && fields.length > 0) {
+    if (obj.checked) {
+      var inputs = fields[0].getElementsByTagName('input');
+      for (var i = 0; i < inputs.length; i++) {
+        inputs[i].disabled = true;
+        obj.value = true;
+      }
+    }
+    else {
+      var inputs = fields[0].getElementsByTagName('input');
+      for (var i = 0; i < inputs.length; i++) {
+        inputs[i].disabled = false;
+        obj.value = false;
+      }
+    }
+  }
+}
