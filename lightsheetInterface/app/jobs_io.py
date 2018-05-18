@@ -72,7 +72,6 @@ def reformatDataToPost(postedData):
 
       checkboxesClean = []
       for param in checkboxes:
-        pprint(postedData[step][param])
         if postedData[step][param] == 'true':
           checkboxesClean.append(param.split('-')[1].split('_')[0])
 
