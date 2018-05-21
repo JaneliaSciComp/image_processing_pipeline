@@ -75,6 +75,9 @@ def reformatDataToPost(postedData):
         if postedData[step][param] == 'true':
           checkboxesClean.append(param.split('-')[1].split('_')[0])
 
+      if 'emptycheckbox' in stepParamResult.keys():
+        stepParamResult.pop('emptycheckbox')
+
       # cleanup step / second part: for lists with just one element, get the element
       for param in stepParamResult:
         if param in checkboxesClean:
