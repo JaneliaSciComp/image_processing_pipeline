@@ -76,7 +76,6 @@ lightsheet.buildParameterObject = function(fieldObject) {
   // save paramter values into one global
 
   if (lightsheet.dictParameters !== null) {
-    console.log(lightsheet.dictParameters);
     var fields = Object.keys(lightsheet.dictParameters);
 
     if (fields.indexOf(fieldName) !== -1) { // field already there
@@ -192,83 +191,68 @@ lightsheet.stepsExistingJob = function(){
 // use template entries from model to apply global parameters
 lightsheet.applyGlobalParameter = function(){
   if (templateObj) {
-    console.log(templateObj);
     for (var t = 0; t < templateObj.length; t++) {
       if (templateObj.pattern) {
         // Do something with the given pattern
       }
       else {
-        if (templateObj[t].formatting == 'R') {
-          // We're dealing with array or range parameters
-          var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
-          var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
-          var globalElem = document.getElementById(globalId);
-          var stepElem = document.getElementById(stepId);
-          if (globalElem && stepElem) {
-            var globalInputs = globalElem.getElementsByTagName('input');
-            var stepInputs = globalElem.getElementsByTagName('input');
-            var gObj = {};
-            var sObj = {};
+        // We're dealing with array or range parameters
+        var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
+        var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
+        var globalElem = document.getElementById(globalId);
+        var stepElem = document.getElementById(stepId);
+        if (globalElem && stepElem) {
+          var globalInputs = globalElem.getElementsByTagName('input');
+          var stepInputs = stepElem.getElementsByTagName('input');
+          var gObj = {};
+          var sObj = {};
+          if (templateObj[t].formatting == 'R') {
+            var tGlobalStart = Mustache.render("{{input}}-start", templateObj[t]);
+            var tGlobalEnd = Mustache.render("{{input}}-end", templateObj[t]);
+            var tGlobalEvery = Mustache.render("{{input}}-every", templateObj[t]);
             for (var i = 0; i < globalInputs.length; i++) {
               switch(globalInputs[i].getAttribute('id')) {
-                case Mustache.render("{{input}}-start", templateObj[t]):
+                case tGlobalStart:
                   gObj['start'] = globalInputs[i].value;
                   break;
-                case Mustache.render("{{input}}-end", templateObj[t]):
+                case tGlobalEnd:
                   gObj['end'] = globalInputs[i].value;
                   break;
-                case Mustache.render("{{input}}-every", templateObj[t]):
+                case tGlobalEvery:
                   gObj['every'] = globalInputs[i].value;
                   break;
               }
             }
+            var tStepStart = Mustache.render("{{output}}-start", templateObj[t]);
+            var tStepEnd = Mustache.render("{{output}}-end", templateObj[t]);
+            var tStepEvery = Mustache.render("{{output}}-every", templateObj[t]);
+
             for (var i = 0; i < stepInputs.length; i++) {
               switch(stepInputs[i].getAttribute('id')) {
-                case Mustache.render("{{input}}-start", templateObj[t]):
+                // console.log(Mustache.render("{{input}}-start", templateObj[t]));
+                case tStepStart:
                   sObj['start'] = stepInputs[i];
                   break;
-                case Mustache.render("{{input}}-end", templateObj[t]):
+                case tStepEnd:
                   sObj['end'] = stepInputs[i];
                   break;
-                case Mustache.render("{{input}}-every", templateObj[t]):
+                case tStepEvery:
                   sObj['every'] = stepInputs[i];
                   break;
               }
             }
-            // Write result
-            sObj['start'].value = gObj['start'];
-            sObj['end'].value = gObj['end'];
-            sObj['every'].value = gObj['every'];
-          }
+          // Write result
+          sObj['start'].value = gObj['start'];
+          sObj['end'].value = gObj['end'];
+          sObj['every'].value = gObj['every'];
         }
         else {
-          // Get the referenced field for the global parameter
-          var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
-          var globalElem = document.getElementById(globalId);
-          var globalInput = null;
-          if (globalElem) {
-            globalInput = globalElem.getElementsByTagName('input');
-          }
-
-          // Get the referenced field for the parameter to be overwritten
-          var stepInput = null;
-          var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
-          var stepElem = document.getElementById(stepId);
-          if (stepElem){
-            stepInput = stepElem.getElementsByTagName('input')
-          }
-
-          // Overwrite step value if both is given
-          if (stepInput && globalInput) {
-            stepInput[0].value = globalInput[0].value;
-          }
-          else {
-            console.log('not found: globalId: ' + globalId + "  stepId: " + stepId);
-          }
+          stepInputs[0].value = globalInputs[0].value;
         }
       }
     }
   }
+}
 }
 
 // Disable input fields, when checkbox is checked, that those fields should be ignored
