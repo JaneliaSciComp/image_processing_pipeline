@@ -246,5 +246,4 @@ def add_depencency_object():
     obj['step'] = d.outputStep.name if d.outputStep is not None else ''
     obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
     result.append(obj)
-  pprint(result)
   return dict(dependency=result)

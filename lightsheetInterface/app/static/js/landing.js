@@ -43,12 +43,14 @@ lightsheet.customSubmit = function(){
   const checked_boxes = $('form :input[id^=check-]:checked');
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
-    data[step] = {}
-    var inputFields = $('#collapse' + step).find('input');
-    inputFields.each( function(k,val) {
-      data[step][val.id] = val.value;
+    if (step !== 'globalParameters') {
+      data[step] = {};
+      var inputFields = $('#collapse' + step).find('input');
+      inputFields.each( function(k,val) {
+        data[step][val.id] = val.value;
       })
-    });
+    }
+  });
 
   const formDataRequest = new Request(url, { method: 'POST' });
   fetch(url, {
