@@ -1,14 +1,19 @@
-<select class="selectpicker lightsheet-field" multiple>
-  {% if param.number1 is not none %}
-    <option>{{ param.number1 }}</option>
-  {% endif %}
-  {% if param.number2 is not none %}
-    <option>{{ param.number2 }}</option>
-  {% endif %}
-  {% if param.number3 is not none %}
-    <option>{{ param.number3 }}</option>
-  {% endif %}
-  {% if param.number4 is not none %}
-    <option>{{ param.number4 }}</option>
-  {% endif %}
-</select>
+<div class="custom-multi-checkbox">
+    <select class="selectpicker lightsheet-field" multiple onchange="dependency.addParameter(this)" id="select_{{ param.name }}">
+      {% if param.number1 is not none %}
+        <option>{{ param.number1 }}</option>
+      {% endif %}
+      {% if param.number2 is not none %}
+        <option>{{ param.number2 }}</option>
+      {% endif %}
+      {% if param.number3 is not none %}
+        <option>{{ param.number3 }}</option>
+      {% endif %}
+      {% if param.number4 is not none %}
+        <option>{{ param.number4 }}</option>
+      {% endif %}
+    </select>
+    <div id="hidden_{{ param.name }}">
+      <input type="hidden" value='' id="{{ param.name }}" />
+    </div>
+</div>

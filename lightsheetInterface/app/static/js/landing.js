@@ -27,6 +27,7 @@ lightsheet.testCheckboxes = (function(){
  * Grab data and submit it when pressing the button
  */
 lightsheet.customSubmit = function(){
+
   const url = window.origin;
   const formInput = $('form :input');
 
@@ -41,6 +42,25 @@ lightsheet.customSubmit = function(){
 
   //Get the checkboxes, which are checked
   const checked_boxes = $('form :input[id^=check-]:checked');
+
+  // Store values of multi-select checkboxes in corresponding input fields
+  var innerFieldClass = 'filter-option-inner-inner';
+  var multiCheckboxClass = 'custom-multi-checkbox';
+  var checkBoxInnerFields = document.getElementsByClassName(multiCheckboxClass);
+
+  for (var i = 0; i < checkBoxInnerFields.length; i++) {
+    var selectedElements = checkBoxInnerFields[i].getElementsByClassName(innerFieldClass)[0].innerHTML;
+    var outputField = checkBoxInnerFields[i].getElementsByTagName('input')[0];
+
+    var result = "[" + selectedElements + "]";
+    if (selectedElements == "Nothing selected") {
+      outputField = []
+    }
+    else {
+      outputField.value = result;
+    }
+  }
+
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
     if (step !== 'globalParameters') {
