@@ -12,7 +12,9 @@
           {{ param.name | trimend }}
         </span>
         <div class="input-group-prepend lightsheet-fields">
-          {% if value.type == 'Text' %}
+          {% if value.formatting == 'C' %}
+            {% include "multiselect-parameter.html" ignore missing with context %}
+          {% elif value.type == 'Text' %}
             <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}" id="{{ param.name }}">
           {% elif value.type == 'Number' %}
             {% if value.count == '1' %}

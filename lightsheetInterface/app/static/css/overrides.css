@@ -38,6 +38,10 @@ fieldset {
   max-width: 6em;
 }
 
+.lightsheet-field {
+  margin-left: 20px !important;
+}
+
 .lightsheet-text {
   margin-left: 1em;
 }
@@ -120,9 +124,8 @@ fieldset {
   font-size: 1.3em;
 }
 
-.apply-button {
-  float: right;
-  margin-bottom: 1em;
+.submit-button {
+  margin-top: 1em;
 }
 
 .apply-button {
