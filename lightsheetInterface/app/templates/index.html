@@ -58,7 +58,7 @@
         {% for step in config['steps'] %}
           {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
             {% set pipelineStep = pipelineSteps[step.name] %}
-            {% include "stepLoadJob2.html" ignore missing with context %}
+            {% include "stepLoadJob.html" ignore missing with context %}
           {% else %}
             {% include "stepDefault.html" ignore missing with context %}
           {% endif %}
