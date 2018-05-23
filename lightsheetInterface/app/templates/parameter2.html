@@ -9,7 +9,9 @@
     <span class="input-group-text lightsheet-input">
       {{ parameterValue.config.name | trimend }}
     </span>
-    {% if parameterValue.config.type == 'Text' %}
+    {% if parameterValue.config.formatting == 'C' %}
+        {% include "multiselect-parameter_load.html" ignore missing with context %}
+    {% elif parameterValue.config.type == 'Text' %}
       <input type="text" class="form-control lightsheet-text" value="{{ parameterValue.data }}" id="{{ parameterKey }}">
     {% elif parameterValue.config.type == 'Number' %}
       {% if parameterValue.config.count == '1' %}

@@ -1,0 +1,10 @@
+<div class="custom-multi-checkbox">
+    <select class="selectpicker lightsheet-field" multiple onchange="dependency.addParameter(this)" id="select_{{ parameterValue.config.name }}">
+      {% for d in parameterValue.data %}
+        <option>{{ d }}</option>
+      {% endfor %}
+    </select>
+    <div id="hidden_{{ parameterValue.config.name }}">
+      <input type="hidden" value='' id="{{ parameterValue.config.name }}" />
+    </div>
+</div>
