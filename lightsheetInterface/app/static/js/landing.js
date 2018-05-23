@@ -9,10 +9,14 @@ var lightsheet = lightsheet || {};
 lightsheet.testAllCheckboxes = function(){
   const checked_boxes = $('form :input[id^=check-]:checked');
   if (checked_boxes.length > 0) {
-    $('#submit-button')[0].disabled = false;
+    $('.submit-button').each(function(){
+      this.disabled = false;
+    });
   }
   else {
-    $('#submit-button')[0].disabled = true;
+    $('.submit-button').each(function(){
+      this.disabled = true;
+    });
   }
 }
 
