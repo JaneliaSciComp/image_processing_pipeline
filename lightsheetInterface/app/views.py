@@ -172,7 +172,7 @@ def index():
                        version = getAppVersion(app.root_path),
                        lightsheetDB_id = job_id,
                        jobsJson= jobs, # used by the job table
-                       submissionStatus = submissionStatus)
+                       submissionStatus = None)
 
 
 @app.route('/job_status', methods=['GET'])
@@ -233,11 +233,9 @@ def config(lightsheetDB_id):
     else:
         return jsonify(output)
 
-@app.context_processor
-def add_depencency_object():
-  dep = Dependency.objects.all();
+def createDependencyResults(dependencies):
   result = []
-  for d in dep:
+  for d in dependencies:
     # need to check here, if simple value transfer (for string or float values) or if it's a nested field
     obj = {}
     obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
@@ -246,4 +244,24 @@ def add_depencency_object():
     obj['step'] = d.outputStep.name if d.outputStep is not None else ''
     obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
     result.append(obj)
-  return dict(dependency=result)
+  return result
+
+@app.context_processor
+def add_value_dependency_object():
+  dep = Dependency.objects.filter(dependency_type='V');
+  result = []
+  if dep is not None:
+    pprint('value dependency')
+    pprint(len(dep))
+    result = createDependencyResults(dep)
+  dict(value_dependency=result)
+
+@app.context_processor
+def add_dimension_dependency_object():
+  dep = Dependency.objects.filter(dependency_type='D');
+  result = []
+  if dep is not None:
+    pprint('dimension dependency')
+    pprint(len(dep))
+    result = createDependencyResults(dep)
+  dict(dimension_dependency=result)
