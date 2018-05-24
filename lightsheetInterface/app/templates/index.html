@@ -151,12 +151,12 @@
                 var stepPanel = $('#' + dep.step + '-card');
                 var outputObj = stepPanel.find('#' + dep.step + "-" +dep.output);
                 var inputFields = $(outputObj).find("input");
-                if (this.checked) { // enable fields
+                if (this.checked) { // disable fields
                   inputFields.each(function(){
                     this.disabled = true;
                   })
                 }
-                else { // disable fields
+                else { // enable fields
                   inputFields.each(function(){
                     this.disabled = false;
                   })

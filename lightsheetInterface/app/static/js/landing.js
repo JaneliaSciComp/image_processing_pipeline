@@ -71,7 +71,12 @@ lightsheet.customSubmit = function(){
       data[step] = {};
       var inputFields = $('#collapse' + step).find('input');
       inputFields.each( function(k,val) {
-        data[step][val.id] = val.value;
+        if (this.disabled) {
+          data[step][val.id] = "[]";
+        }
+        else {
+          data[step][val.id] = val.value;
+        }
       })
     }
   });
