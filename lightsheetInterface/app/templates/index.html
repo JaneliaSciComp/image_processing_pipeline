@@ -93,6 +93,11 @@
      {% else %}
         var value_dependencies = null;
      {% endif %}
+     {% if dimension_dependency is defined %}
+        var dimension_dependencies = {{ dimension_dependency|safe }};
+     {% else %}
+        var dimension_dependencies = null;
+     {% endif %}
   </script>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
@@ -110,7 +115,31 @@
         if (myJobIndex !== null) {
           lightsheet.stepsExistingJob();
         }
-        dependency.addLoadButton();
+
+        $('body').on('change', "select[id^='select_']", function(event){
+          var inputField = this.id.replace("select_","");
+          var tmp = this.parentElement.getElementsByClassName('dropdown-menu')[0];
+          var selectedItems = $(tmp).find("a[aria-selected=true]");
+          var nrItems = selectedItems ? selectedItems.length : 0;
+          if (dimension_dependencies){
+            for (var d = 0; d < dimension_dependencies.length; d++){
+              var tmp = dimension_dependencies[d];
+              if (tmp.input == inputField) {
+                var stepPanel = $('#' + tmp.step + '-card');
+                var outputObj = stepPanel.find('#' + tmp.step + "-" +tmp.output);
+                var inputFields = outputObj.find(".lightsheet-nested-input");
+                for (var k = 0; k < inputFields.length; k++) {
+                  if (k < nrItems) {
+                    $(inputFields[k]).prop('disabled', false);
+                  }
+                  else {
+                    $(inputFields[k]).prop('disabled', true);
+                  }
+                }
+              }
+            }
+          }
+        });
       }
     )
   </script>

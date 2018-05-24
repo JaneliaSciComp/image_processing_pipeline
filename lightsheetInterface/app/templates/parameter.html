@@ -20,8 +20,8 @@
             {% if value.count == '1' %}
               <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}" id="{{ param.name }}">
             {% elif value.count == '2' %}
-              <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}" id="{{ param.name }}-0">
-              <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}" id="{{ param.name }}-1">
+              <input type="number" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number1 }}" id="{{ param.name }}-0">
+              <input type="number" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number2 }}" id="{{ param.name }}-1">
             {% elif value.count == '3' %}
               {% if value.formatting == 'R' %}
                 <div class="form-group form-inline">
@@ -37,9 +37,9 @@
                   <input type="number" class="form-control lightsheet-number" id="{{ param.name }}-every" value="{{ param.number3 }}">
                 </div>
               {% else %}
-                <input type="number" class="form-control lightsheet-number" value="{{ param.number1 }}" id="{{ param.name }}-0">
-                <input type="number" class="form-control lightsheet-number" value="{{ param.number2 }}" id="{{ param.name }}-1">
-                <input type="number" class="form-control lightsheet-number" value="{{ param.number3 }}" id="{{ param.name }}-2">
+                <input type="number" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number1 }}" id="{{ param.name }}-0">
+                <input type="number" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number2 }}" id="{{ param.name }}-1">
+                <input type="number" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number3 }}" id="{{ param.name }}-2">
               {% endif %}
             {% endif %}
           {% endif %}

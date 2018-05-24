@@ -70,14 +70,6 @@ dependency.applyGlobalParameter = function(){
   }
 }
 
-
-dependency.addLoadButton = function(element=null){
-  if (element) {
-    var button = window.document.createElement('input');
-    console.log(button);
-  }
-}
-
 dependency.addParameter = function(element){
   var selectedElements = element.parentElement.getElementsByTagName('button')[0].getElementsByClassName('filter-option-inner-inner')[0].innerHTML;
   var elemId = element.id.replace('select_','');
