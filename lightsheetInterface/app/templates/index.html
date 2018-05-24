@@ -140,6 +140,31 @@
             }
           }
         });
+
+        $('body').on('change', "input[id^='emptycheckbox_']", function(event){
+          var inputField = this.id.replace("emptycheckbox_","");
+          if (dimension_dependencies){
+            for (var d = 0; d < dimension_dependencies.length; d++){
+              var dep = dimension_dependencies[d];
+              var fullFieldName = dep.step + "-" + dep.input;
+              if (fullFieldName == inputField) {
+                var stepPanel = $('#' + dep.step + '-card');
+                var outputObj = stepPanel.find('#' + dep.step + "-" +dep.output);
+                var inputFields = $(outputObj).find("input");
+                if (this.checked) { // enable fields
+                  inputFields.each(function(){
+                    this.disabled = true;
+                  })
+                }
+                else { // disable fields
+                  inputFields.each(function(){
+                    this.disabled = false;
+                  })
+                }
+              }
+            }
+          }
+        });
       }
     )
   </script>
