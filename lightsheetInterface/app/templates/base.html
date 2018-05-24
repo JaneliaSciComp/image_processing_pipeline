@@ -23,11 +23,29 @@
 
     <title>Lightsheet Pipeline</title>
   </head>
-  <body>
+  <body onchange="globalFunctions.bubbleUpEvents();">
     <div class="lightsheet-container container-fluid">
      {% block branding %}{% endblock %}
      {% block navbar %}{% endblock %}
      {% block content %}{% endblock %}
     </div>
   </body>
+  <script>
+    var globalFunctions = globalFunctions || {};
+
+    globalFunctions.bubbleUpEvents = function(){
+      $("select[id^='select_'").each(
+        function(){
+          var tmp = this.parentElement.getElementsByClassName('dropdown-menu')[0];
+          var selectedItems = $(tmp).find("a[aria-selected=true]");
+          if (selectedItems && selectedItems.length > 0){
+            console.log(this.id);
+            console.log(selectedItems.length);
+            // check dependencies and enable / disable fields accordingly
+
+          }
+        }
+      )
+    }
+  </script>
 </html>
