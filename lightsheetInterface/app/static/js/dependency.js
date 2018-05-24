@@ -5,15 +5,15 @@ var dependency = dependency || {};
 
 // use template entries from model to apply global parameters
 dependency.applyGlobalParameter = function(){
-  if (templateObj) {
-    for (var t = 0; t < templateObj.length; t++) {
-      if (templateObj.pattern) {
+  if (value_dependencies) {
+    for (var t = 0; t < value_dependencies.length; t++) {
+      if (value_dependencies.pattern) {
         // Do something with the given pattern
       }
       else {
         // We're dealing with array or range parameters
-        var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
-        var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
+        var globalId = Mustache.render("globalParameters-{{input}}", value_dependencies[t]);
+        var stepId = Mustache.render("{{step}}-{{output}}", value_dependencies[t]);
         var globalElem = document.getElementById(globalId);
         var stepElem = document.getElementById(stepId);
         if (globalElem && stepElem) {
@@ -21,10 +21,10 @@ dependency.applyGlobalParameter = function(){
           var stepInputs = stepElem.getElementsByTagName('input');
           var gObj = {};
           var sObj = {};
-          if (templateObj[t].formatting == 'R') {
-            var tGlobalStart = Mustache.render("{{input}}-start", templateObj[t]);
-            var tGlobalEnd = Mustache.render("{{input}}-end", templateObj[t]);
-            var tGlobalEvery = Mustache.render("{{input}}-every", templateObj[t]);
+          if (value_dependencies[t].formatting == 'R') {
+            var tGlobalStart = Mustache.render("{{input}}-start", value_dependencies[t]);
+            var tGlobalEnd = Mustache.render("{{input}}-end", value_dependencies[t]);
+            var tGlobalEvery = Mustache.render("{{input}}-every", value_dependencies[t]);
             for (var i = 0; i < globalInputs.length; i++) {
               switch(globalInputs[i].getAttribute('id')) {
                 case tGlobalStart:
@@ -38,13 +38,13 @@ dependency.applyGlobalParameter = function(){
                   break;
               }
             }
-            var tStepStart = Mustache.render("{{output}}-start", templateObj[t]);
-            var tStepEnd = Mustache.render("{{output}}-end", templateObj[t]);
-            var tStepEvery = Mustache.render("{{output}}-every", templateObj[t]);
+            var tStepStart = Mustache.render("{{output}}-start", value_dependencies[t]);
+            var tStepEnd = Mustache.render("{{output}}-end", value_dependencies[t]);
+            var tStepEvery = Mustache.render("{{output}}-every", value_dependencies[t]);
 
             for (var i = 0; i < stepInputs.length; i++) {
               switch(stepInputs[i].getAttribute('id')) {
-                // console.log(Mustache.render("{{input}}-start", templateObj[t]));
+                // console.log(Mustache.render("{{input}}-start", value_dependencies[t]));
                 case tStepStart:
                   sObj['start'] = stepInputs[i];
                   break;

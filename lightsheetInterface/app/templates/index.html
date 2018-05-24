@@ -1,6 +1,6 @@
 {% extends "branding.html" %}
 {% block content %}
-  {% if submissionStatus is not none %}
+  {% if submissionStatus is defined and submissionStatus is not none %}
     {% if submissionStatus == "success" %}
       <div class="alert success">
         <span class="closebtn">&times;</span> 
@@ -80,15 +80,18 @@
 
   <!-- template variables to be processed in JavaScript -->
   <script>
+     /*
+     * Custom behavior for the lightsheet landing page
+     */
      {%  if jobsJson %}
         var table_data = {{ jobsJson|safe }};
      {% else %}
         var table_data = null;
      {% endif %}
-     {% if dependency is defined %}
-        var templateObj = {{ dependency|safe }};
+     {% if value_dependency is defined %}
+        var value_dependencies = {{ value_dependency|safe }};
      {% else %}
-        var templateObj = null;
+        var value_dependencies = null;
      {% endif %}
   </script>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

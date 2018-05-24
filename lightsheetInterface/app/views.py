@@ -251,17 +251,13 @@ def add_value_dependency_object():
   dep = Dependency.objects.filter(dependency_type='V');
   result = []
   if dep is not None:
-    pprint('value dependency')
-    pprint(len(dep))
     result = createDependencyResults(dep)
-  dict(value_dependency=result)
+  return dict(value_dependency=result)
 
 @app.context_processor
 def add_dimension_dependency_object():
   dep = Dependency.objects.filter(dependency_type='D');
   result = []
   if dep is not None:
-    pprint('dimension dependency')
-    pprint(len(dep))
     result = createDependencyResults(dep)
-  dict(dimension_dependency=result)
+  return dict(dimension_dependency=result)
