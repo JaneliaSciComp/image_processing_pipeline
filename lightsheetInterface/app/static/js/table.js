@@ -23,17 +23,23 @@ $(document).ready(() => {
       columns: [{
         title: 'Name',
         data: 'jobName',
+        render(data, type, row, meta) {
+          return data ? data : null;
+        }
       },
       {
         title: 'Date',
         data: 'creationDate',
         render(data, type, row, meta) {
-          return data? data: null;
+          return data ? data : null;
         }
       },
       {
         title: 'Steps',
         data: 'selectedStepNames',
+        render(data, type, row, meta) {
+          return data ? data : null;
+        }
       },
       {
         title: 'Job ID (and Configuration Link)',
@@ -46,6 +52,9 @@ $(document).ready(() => {
       {
         title: 'State',
         data: 'state',
+        render(data, type, row, meta) {
+          return data ? data : null;
+        }
       },
       {
         title: 'Jacs ID',
