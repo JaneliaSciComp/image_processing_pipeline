@@ -18,7 +18,7 @@
       Rows to configure a new job
   -->
   <div class="row lightsheet-row">
-    <h4>Configure Job</h4>
+    <h4 id ="job-heading">Configure Job</h4>
   </div>
   <div class="row">
     <div class="col-lg-3 col-md-3 col-sm-3">
@@ -30,7 +30,7 @@
     </div>
     <div class="col-lg-6 col-md-6 col-sm-6">
       <!-- Select existing job -->
-      <select class="form-control select-job" onchange="location = this.options[this.selectedIndex].value;">
+      <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
           {% if parentJobInfo is not none %}
             {% for currentJobInfo in parentJobInfo %}
@@ -112,8 +112,10 @@
         {% if lightsheetDB_id is defined and jobIndex is not none %}
           myJobIndex = "{{ lightsheetDB_id|safe }}";
         {% endif %}
-        if (myJobIndex !== null) {
+        if (myJobIndex && myJobIndex !== "None") {
           lightsheet.stepsExistingJob();
+          var name = $('#existing-job-selector').find(":selected").text();
+          $('#job-heading').text('Configure ' + name);
         }
 
         $('body').on('change', "select[id^='select_']", function(event){
