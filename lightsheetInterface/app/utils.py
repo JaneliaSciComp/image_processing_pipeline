@@ -1,5 +1,5 @@
 # Contains helper functons used in views.py for the most part
-import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re
+import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re, math
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from wtforms import *
@@ -152,18 +152,37 @@ def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
 def getConfigurationsFromDB(_id, client, stepName=None):
   lightsheetDB = client.lightsheet
   if stepName:
-    if _id=="templateConfigurations":
-        output = list(lightsheetDB.templateConfigurations.find({'steps.name':stepName}, {'_id':0,"steps.$.parameters":1}))
+    if stepName=='getArgumentsToRunJob':
+      output = getArgumentsToRunJob(lightsheetDB, _id)
     else:
-        output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
-    if output:
+      output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
+      if output:
         output=output[0]["steps"][0]["parameters"]
   else:
-    if _id=="templateConfigurations":
-        output = list(lightsheetDB.templateConfigurations.find({}, {'_id':0,'steps':1}))
-    else:
-        output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+      output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
   if output:
+    print(output)
+    return output
+  else:
+    return 404
+
+# get the job parameter information from db
+def getArgumentsToRunJob(lightsheetDB, _id):
+  currentJobSteps = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.timepoints':1})
+  output={"currentJACSJobStepNames":'', "currentJACSJobTimePoints":'','configOutputPath':''}
+  for step in currentJobSteps[0]["steps"]:
+    output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
+    timepoints = step["parameters"]["timepoints"];
+    timepointStart = timepoints["start"]
+    timepointEvery = timepoints["every"]
+    timepointEnd = timepoints["end"]
+    output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+',' 
+  if output["currentJACSJobStepNames"] and output["currentJACSJobTimePoints"]:
+    output["currentJACSJobStepNames"]=output["currentJACSJobStepNames"][:-1]
+    output["currentJACSJobTimePoints"]= output["currentJACSJobTimePoints"][:-1]
+    configOutputPath = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'configOutputPath':1})
+    if configOutputPath[0]:
+      output["configOutputPath"]=configOutputPath[0];
     return output
   else:
     return 404

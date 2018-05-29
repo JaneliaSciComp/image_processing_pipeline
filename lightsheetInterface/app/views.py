@@ -10,6 +10,7 @@ from bson.objectid import ObjectId
 from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms
 from app.models import Dependency
+from bson.objectid import ObjectId
 
 settings = Settings()
 
@@ -37,7 +38,6 @@ def index():
   config = buildConfigObject()
   if job_id == 'favicon.ico':
     job_id = None
-
   pipelineSteps = {}
   formData = None
   countJobs = 0
@@ -75,7 +75,6 @@ def index():
   if request.method == 'POST':
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
-
     if request.json != '[]' and request.json != None:
       # Loop through all steps and calculate timePointsValue
       timepointObj = None
@@ -129,7 +128,14 @@ def index():
                        }
 
       # Insert the data to the db
-      newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+      jobContinued=True
+      if jobContinued and (job_id is not None):
+        newId = job_id
+        print("yes")
+        print(newId)
+        lightsheetDB.jobs.update_one({"_id": job_id},{"$set": dataToPostToDB})
+      else:
+        newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
       configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(newId)
       postBody = { "processingLocation": "LSF_JAVA",
                    "args": ["-configAddress", configAddress,
@@ -145,7 +151,10 @@ def index():
         requestOutputJsonified = requestOutput.json()
         creationDate = newId.generation_time
         creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-        lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+        if jobContinued and job_id:
+            lightsheetDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"] }})
+        else:
+            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
 
         #JACS service states
         # if any are not Canceled, timeout, error, or successful then
