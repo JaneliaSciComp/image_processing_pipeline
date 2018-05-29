@@ -25,23 +25,20 @@
          <!-- Tab panes -->
          <div class="tab-content">
             <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ pipelineStep.stepName }}">
-              {% set myForm = pipelineStep['forms']['frequent'] %}
-              {% for field in myForm %}
-                 {{ render_field(field) }}
+              {% for parameterKey, parameterValue in pipelineStep['jobs']['frequent'].items() %}
+                {% include "parameter_load.html" ignore missing with context %}
               {% endfor %}
             </div>
             <!-- sometimes panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ pipelineStep.stepName }}">
-              {% set myForm = pipelineStep['forms']['sometimes'] %}
-              {% for field in myForm %}
-                 {{ render_field(field) }}
+              {% for parameterKey, parameterValue in pipelineStep['jobs']['sometimes'].items() %}
+                {% include "parameter_load.html" ignore missing with context %}
               {% endfor %}
             </div>
             <!-- rare panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ pipelineStep.stepName }}">
-              {% set myForm = pipelineStep['forms']['rare'] %}
-              {% for field in myForm %}
-                 {{ render_field(field) }}
+              {% for parameterKey, parameterValue in pipelineStep['jobs']['rare'].items() %}
+                {% include "parameter_load.html" ignore missing with context %}
               {% endfor %}
             </div>
             <!-- json panel -->

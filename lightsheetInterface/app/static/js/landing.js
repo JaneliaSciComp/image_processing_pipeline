@@ -9,10 +9,14 @@ var lightsheet = lightsheet || {};
 lightsheet.testAllCheckboxes = function(){
   const checked_boxes = $('form :input[id^=check-]:checked');
   if (checked_boxes.length > 0) {
-    $('#submit-button')[0].disabled = false;
+    $('.submit-button').each(function(){
+      this.disabled = false;
+    });
   }
   else {
-    $('#submit-button')[0].disabled = true;
+    $('.submit-button').each(function(){
+      this.disabled = true;
+    });
   }
 }
 
@@ -27,6 +31,7 @@ lightsheet.testCheckboxes = (function(){
  * Grab data and submit it when pressing the button
  */
 lightsheet.customSubmit = function(){
+
   const url = window.origin;
   const formInput = $('form :input');
 
@@ -41,14 +46,40 @@ lightsheet.customSubmit = function(){
 
   //Get the checkboxes, which are checked
   const checked_boxes = $('form :input[id^=check-]:checked');
+
+  // Store values of multi-select checkboxes in corresponding input fields
+  var innerFieldClass = 'filter-option-inner-inner';
+  var multiCheckboxClass = 'custom-multi-checkbox';
+  var checkBoxInnerFields = document.getElementsByClassName(multiCheckboxClass);
+
+  for (var i = 0; i < checkBoxInnerFields.length; i++) {
+    var selectedElements = checkBoxInnerFields[i].getElementsByClassName(innerFieldClass)[0].innerHTML;
+    var outputField = checkBoxInnerFields[i].getElementsByTagName('input')[0];
+
+    var result = "[" + selectedElements + "]";
+    if (selectedElements == "Nothing selected") {
+      outputField = []
+    }
+    else {
+      outputField.value = result;
+    }
+  }
+
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
-    data[step] = {}
-    var inputFields = $('#collapse' + step).find('input');
-    inputFields.each( function(k,val) {
-      data[step][val.id] = val.value;
+    if (step !== 'globalParameters') {
+      data[step] = {};
+      var inputFields = $('#collapse' + step).find('input');
+      inputFields.each( function(k,val) {
+        if (this.disabled) {
+          data[step][val.id] = "[]";
+        }
+        else {
+          data[step][val.id] = val.value;
+        }
       })
-    });
+    }
+  });
 
   const formDataRequest = new Request(url, { method: 'POST' });
   fetch(url, {
@@ -76,7 +107,6 @@ lightsheet.buildParameterObject = function(fieldObject) {
   // save paramter values into one global
 
   if (lightsheet.dictParameters !== null) {
-    console.log(lightsheet.dictParameters);
     var fields = Object.keys(lightsheet.dictParameters);
 
     if (fields.indexOf(fieldName) !== -1) { // field already there
@@ -189,32 +219,22 @@ lightsheet.stepsExistingJob = function(){
   });
 }
 
-// use template entries from model to apply global parameters
-lightsheet.applyGlobalParameter = function(){
-  if (templateObj) {
-    for (var t = 0; t < templateObj.length; t++) {
-      // Get the referenced field for the global parameter
-      var globalId = Mustache.render("globalParameters-{{input}}", templateObj[t]);
-      var globalElem = document.getElementById(globalId);
-      var globalInput = null;
-      if (globalElem) {
-        globalInput = globalElem.getElementsByTagName('input');
+// Disable input fields, when checkbox is checked, that those fields should be ignored
+lightsheet.passEmptyField = function(obj){
+  var fields = obj.parentNode.parentNode.getElementsByClassName('lightsheet-fields');
+  if (fields && fields.length > 0) {
+    if (obj.checked) {
+      var inputs = fields[0].getElementsByTagName('input');
+      for (var i = 0; i < inputs.length; i++) {
+        inputs[i].disabled = true;
+        obj.value = true;
       }
-
-      // Get the referenced field for the parameter to be overwritten
-      var stepInput = null;
-      var stepId = Mustache.render("{{step}}-{{output}}", templateObj[t]);
-      var stepElem = document.getElementById(stepId);
-      if (stepElem){
-        stepInput = stepElem.getElementsByTagName('input')
-      }
-
-      // Overwrite step value if both is given
-      if (stepInput && globalInput) {
-        stepInput[0].value = globalInput[0].value;
-      }
-      else {
-        console.log('not found: globalId: ' + globalId + "  stepId: " + stepId);
+    }
+    else {
+      var inputs = fields[0].getElementsByTagName('input');
+      for (var i = 0; i < inputs.length; i++) {
+        inputs[i].disabled = false;
+        obj.value = false;
       }
     }
   }

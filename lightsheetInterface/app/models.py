@@ -9,6 +9,7 @@ from app import admin
 types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
 formats = (('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'))
+dependency_type = (('V', 'Value'), ('D', 'Dimension'))
 
 class AppConfig(Document):
     name = StringField(max_length=200)
@@ -45,6 +46,7 @@ class Dependency(Document):
     outputField = ReferenceField(Parameter)
     outputStep = ReferenceField(Step)
     pattern = StringField(max_length=200)
+    dependency_type = StringField(max_length=20, choices=dependency_type)
 
 # Customized admin views
 class ConfigView(ModelView):

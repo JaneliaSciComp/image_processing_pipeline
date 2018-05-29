@@ -15,7 +15,11 @@ def reformatDataToPost(postedData):
       stepResult['state'] = 'NOT YET QUEUED'
       stepParamResult = {}
       sortedParameters = sorted(postedData[step].keys())
+      checkboxes = []
       for parameterKey in sortedParameters:
+        # Find checkboxes and deal with them separately
+        if 'checkbox' in parameterKey:
+          checkboxes.append(parameterKey);
         range = False
         # First test if it's a nested parameter
         if '-' in parameterKey: # check, whether this is a range parameter
@@ -66,10 +70,21 @@ def reformatDataToPost(postedData):
           else: # it's actual a float value -> get the value
               paramValueSet.append(float(currentValue))
 
+      checkboxesClean = []
+      for param in checkboxes:
+        if postedData[step][param] == 'true':
+          checkboxesClean.append(param.split('-')[1].split('_')[0])
+
+      if 'emptycheckbox' in stepParamResult.keys():
+        stepParamResult.pop('emptycheckbox')
+
       # cleanup step / second part: for lists with just one element, get the element
       for param in stepParamResult:
-        if type(stepParamResult[param]) is list and len(stepParamResult[param]) == 1:
-          stepParamResult[param] = stepParamResult[param][0]
+        if param in checkboxesClean:
+          stepParamResult[param] = []
+        else:
+          if type(stepParamResult[param]) is list and len(stepParamResult[param]) == 1:
+            stepParamResult[param] = stepParamResult[param][0]
       stepResult['parameters'] = stepParamResult
       result.append(stepResult)
   return result

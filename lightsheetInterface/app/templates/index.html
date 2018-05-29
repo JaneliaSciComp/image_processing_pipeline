@@ -1,6 +1,6 @@
 {% extends "branding.html" %}
 {% block content %}
-  {% if submissionStatus is not none %}
+  {% if submissionStatus is defined and submissionStatus is not none %}
     {% if submissionStatus == "success" %}
       <div class="alert success">
         <span class="closebtn">&times;</span> 
@@ -52,19 +52,20 @@
   -->
   <form action="" method="post">
     <!-- button to submit the forms -->
-    <input type="submit" name="postJob" id="submit-button" class="btn btn-info" value="Submit Job" disabled onclick="lightsheet.customSubmit()" /></p>
+    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
     <div class="row lightsheet-row">
       <div id="steps">
         {% for step in config['steps'] %}
           {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
             {% set pipelineStep = pipelineSteps[step.name] %}
-            {% include "stepLoadJob2.html" ignore missing with context %}
+            {% include "stepLoadJob.html" ignore missing with context %}
           {% else %}
             {% include "stepDefault.html" ignore missing with context %}
           {% endif %}
         {% endfor %}
       </div>
     </div>
+    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
   </form>
 
   <!--
@@ -79,18 +80,27 @@
 
   <!-- template variables to be processed in JavaScript -->
   <script>
+     /*
+     * Custom behavior for the lightsheet landing page
+     */
      {%  if jobsJson %}
         var table_data = {{ jobsJson|safe }};
      {% else %}
         var table_data = null;
      {% endif %}
-     {% if dependency is defined %}
-        var templateObj = {{ dependency|safe }};
+     {% if value_dependency is defined %}
+        var value_dependencies = {{ value_dependency|safe }};
      {% else %}
-        var templateObj = null;
+        var value_dependencies = null;
+     {% endif %}
+     {% if dimension_dependency is defined %}
+        var dimension_dependencies = {{ dimension_dependency|safe }};
+     {% else %}
+        var dimension_dependencies = null;
      {% endif %}
   </script>
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
   <!-- contrib dependencies -->
   <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
   <!-- script to set default job name -->
@@ -105,6 +115,57 @@
         if (myJobIndex !== null) {
           lightsheet.stepsExistingJob();
         }
-      })
+
+        $('body').on('change', "select[id^='select_']", function(event){
+          var inputField = this.id.replace("select_","");
+          var tmp = this.parentElement.getElementsByClassName('dropdown-menu')[0];
+          var selectedItems = $(tmp).find("a[aria-selected=true]");
+          var nrItems = selectedItems ? selectedItems.length : 0;
+          if (dimension_dependencies){
+            for (var d = 0; d < dimension_dependencies.length; d++){
+              var tmp = dimension_dependencies[d];
+              if (tmp.input == inputField) {
+                var stepPanel = $('#' + tmp.step + '-card');
+                var outputObj = stepPanel.find('#' + tmp.step + "-" +tmp.output);
+                var inputFields = outputObj.find(".lightsheet-nested-input");
+                for (var k = 0; k < inputFields.length; k++) {
+                  if (k < nrItems) {
+                    $(inputFields[k]).prop('disabled', false);
+                  }
+                  else {
+                    $(inputFields[k]).prop('disabled', true);
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        $('body').on('change', "input[id^='emptycheckbox_']", function(event){
+          var inputField = this.id.replace("emptycheckbox_","");
+          if (dimension_dependencies){
+            for (var d = 0; d < dimension_dependencies.length; d++){
+              var dep = dimension_dependencies[d];
+              var fullFieldName = dep.step + "-" + dep.input;
+              if (fullFieldName == inputField) {
+                var stepPanel = $('#' + dep.step + '-card');
+                var outputObj = stepPanel.find('#' + dep.step + "-" +dep.output);
+                var inputFields = $(outputObj).find("input");
+                if (this.checked) { // disable fields
+                  inputFields.each(function(){
+                    this.disabled = true;
+                  })
+                }
+                else { // enable fields
+                  inputFields.each(function(){
+                    this.disabled = false;
+                  })
+                }
+              }
+            }
+          }
+        });
+      }
+    )
   </script>
 {% endblock %}

@@ -4,7 +4,7 @@
     <!-- contrib css dependencies -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap/css/bootstrap.min.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/datatables.net-bs4/css/dataTables.bootstrap4.css') }}">
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/pikaday/css/pikaday.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='components/bootstrap-select/dist/css/bootstrap-select.css') }}">
 
     <!-- custom css dependencies -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/overrides.css') }}">
@@ -12,12 +12,16 @@
     <!-- contrib scripts -->
     <script src="{{url_for('static', filename='components/jquery/dist/jquery.min.js')}}"></script>
     <script src="{{url_for('static', filename='components/datatables.net/js/jquery.dataTables.js')}}"></script>
+    <script src="{{url_for('static', filename='components/popper.js/dist/umd/popper.min.js')}}"></script>
     <script src="{{url_for('static', filename='components/bootstrap/js/bootstrap.min.js')}}"></script>
     <script src="{{url_for('static', filename='components/mustache/mustache.min.js')}}"></script>
+    <script src="{{url_for('static', filename='components/bootstrap-select/dist/js/bootstrap-select.min.js')}}"></script>
 
     <!-- custom scripts -->
     <script src="{{url_for('static', filename='js/inputfields.js')}}"></script>
     <script src="{{url_for('static', filename='js/table.js')}}"></script>
+    <script>
+  </script>
 
     <title>Lightsheet Pipeline</title>
   </head>

@@ -1,14 +1,14 @@
 {
   "name": "lightsheetinterface",
-  "version": "0.4.7",
+  "version": "0.5.1",
   "description": "LightSheet Pipeline Configurator",
   "main": "flightplan.js",
   "dependencies": {
+    "bootstrap-select": "^1.13.1",
     "datatables.net": "^1.10.16",
     "datatables.net-bs4": "^1.10.16",
     "flightplan": "^0.6.17",
-    "mustache": "^2.3.0",
-    "npm": "^5.8.0"
+    "mustache": "^2.3.0"
   },
   "devDependencies": {
     "jquery": "^3.3.1"
