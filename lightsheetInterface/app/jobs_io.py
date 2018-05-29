@@ -115,7 +115,9 @@ def parseJsonDataNoForms(data, stepName, config):
         param = Parameter.objects.filter(name=extendedKey).first()
       if param != None: # check if key now exists
         if type(parameterData[key]) is list and len(parameterData[key]) == 0:
-          parameterData[key] = None
+          parameterData[key] = ''
+        elif parameterData[key] == 'None':
+          parameterData[key] = ''
         if param.frequency == 'F':
           pFrequent[key] =  {}
           if key in config['parameterDictionary']['frequent'].keys():
