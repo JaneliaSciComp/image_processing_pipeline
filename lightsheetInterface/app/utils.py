@@ -20,20 +20,27 @@ settings = Settings()
 def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
     _id = ObjectId(_id)
-    if parentOrChild=="parent":
-      parentJobInfo = list(lightsheetDB.jobs.find({},{"steps":0}))
-      for currentJobInfo in parentJobInfo:
-        currentJobInfo.update({"selected":""})
+
+  if parentOrChild=="parent":
+    parentJobInfo = list(lightsheetDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "lightsheetCommit":1,"steps.name":1}))
+    for currentJobInfo in parentJobInfo:
+      selectedStepNames=''
+      for step in currentJobInfo["steps"]:
+        selectedStepNames = selectedStepNames+step["name"]+','
+      selectedStepNames = selectedStepNames[:-1]
+      currentJobInfo.update({'selectedStepNames':selectedStepNames})
+      currentJobInfo.update({"selected":""})
+      if _id:
         if currentJobInfo["_id"]==_id:
-          currentJobInfo.update({"selected":"selected"})
-      return parentJobInfo
+            currentJobInfo.update({"selected":"selected"})
+    return parentJobInfo
+  elif parentOrChild=="child" and _id:
+    if getParameters:
+      return list(lightsheetDB.jobs.find({"_id":_id}))
     else:
-      if getParameters:
-        return list(lightsheetDB.jobs.find({"_id":_id}))
-      else:
-        return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
+      return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
   else:
-    return list(lightsheetDB.jobs.find({},{"steps":0}))
+    return 404
 
 # build result object of existing job information
 def mapJobsToDict(x):
@@ -44,17 +51,19 @@ def mapJobsToDict(x):
     result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
   if 'creationDate' in x:
     result['creationDate'] = x['creationDate'] if x['creationDate'] is not None else ''
-  if 'selectedStepNames' in x:
-    result['selectedStepNames'] = x['selectedStepNames'] if x['selectedStepNames'] is not None else ''
   if 'state' in x:
     result['state'] = x['state'] if x['state'] is not None else ''
   if 'jacs_id' in x:
     result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
+  result['selectedStepNames']=''
+  for step in x["steps"]:
+    result['selectedStepNames'] = result['selectedStepNames']+step["name"]+','
+  result['selectedStepNames'] = result['selectedStepNames'][:-1]
   return result;
 
 # get job information used by jquery datatable
 def allJobsInJSON(lightsheetDB):
-  parentJobInfo = lightsheetDB.jobs.find({}, {"steps": 0})
+  parentJobInfo = lightsheetDB.jobs.find({})
   return list(map(mapJobsToDict, parentJobInfo))
 
 # build object with meta information about parameters from the admin interface
@@ -107,23 +116,6 @@ def getHeaders(forQuery=False):
 eastern = timezone('US/Eastern')
 UTC = timezone('UTC')
 
-def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
-  if _id:
-    _id = ObjectId(_id)
-    if parentOrChild=="parent":
-      parentJobInfo = list(lightsheetDB.jobs.find({},{"steps":0}))
-      for currentJobInfo in parentJobInfo:
-        currentJobInfo.update({"selected":""})
-        if currentJobInfo["_id"]==_id:
-          currentJobInfo.update({"selected":"selected"})
-      return parentJobInfo
-    else:
-      if getParameters:
-        return list(lightsheetDB.jobs.find({"_id":_id}))
-      else:
-        return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
-  else:
-    return list(lightsheetDB.jobs.find({},{"steps":0}))
 
 # get step information about existing jobs from db
 def getJobStepData(_id, mongoClient):
@@ -150,19 +142,42 @@ def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
   return None
 
 # get the job parameter information from db
-def getConfigurationsFromDB(_id, client, stepName=None):
+def getConfigurationsFromDB(lightsheetDB_id, client, globalParameter=None, stepName=None, stepParameter=None):
   lightsheetDB = client.lightsheet
-  if stepName:
-    if stepName=='getArgumentsToRunJob':
-      output = getArgumentsToRunJob(lightsheetDB, _id)
-    else:
-      output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
-      if output:
-        output=output[0]["steps"][0]["parameters"]
+  output={}
+  if globalParameter:
+    globalParameterValue = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,globalParameter:1}))
+    output=globalParameterValue[0]
+    if not output:
+      output={globalParameter:""}
   else:
-      output = list(lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps':1}))
+    if stepName:
+        if stepName=="getArgumentsToRunJob":
+          output=getArgumentsToRunJob(lightsheetDB,lightsheetDB_id)
+        elif stepName=="all":
+          if stepParameter=="name":
+            currentJACSJobStepNames = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,"steps.name":1}))
+            output={"currentJACSJobStepNames":""}
+            for step in currentJACSJobStepNames[0]["steps"]:
+              output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
+            output["currentJACSJobStepNames"]=output["currentJACSJobStepNames"][:-1]
+          elif stepParameter=="timePoints":
+            currentJACSJobTimePoints = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,"steps.parameters.timepoints":1}))
+            output={"currentJACSJobTimePoints":""}
+            for step in currentJACSJobTimePoints[0]["steps"]:
+              timepoints = step["parameters"]["timepoints"];
+              timepointStart = timepoints["start"]
+              timepointEvery = timepoints["every"]
+              timepointEnd = timepoints["end"]
+              output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+',' 
+            output["currentJACSJobTimePoints"]=output["currentJACSJobTimePoints"][:-1]
+        else:
+         output = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
+         if output:
+          output=output[0]["steps"][0]["parameters"]
+    else:
+      output = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,'steps':1}))
   if output:
-    print(output)
     return output
   else:
     return 404

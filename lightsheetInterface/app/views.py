@@ -76,30 +76,6 @@ def index():
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
     if request.json != '[]' and request.json != None:
-      # Loop through all steps and calculate timePointsValue
-      timepointObj = None
-      timePointList = []
-      for step in request.json.keys():
-        if step != 'jobName':
-          if type(request.json[step]) is dict:
-            key = 'timepoints'
-            if key + "-start" in request.json[step].keys():
-              timepointObj = {}
-              timepointObj['start'] = request.json[step][key + "-start"]
-              timepointObj['end'] = request.json[step][key + "-end"]
-              timepointObj['every'] = request.json[step][key + "-every"]
-            else:
-              tmpKey = "timepoints_" + step
-              if tmpKey + "-start" in request.json[step].keys():
-                timepointObj = {}
-                timepointObj['start'] = request.json[step][tmpKey + "-start"]
-                timepointObj['end'] = request.json[step][tmpKey + "-end"]
-                timepointObj['every'] = request.json[step][tmpKey + "-every"]
-          if timepointObj != None:
-            timePointList.append(str(math.ceil(1+(float(timepointObj["end"]) - float(timepointObj["start"]))/float(timepointObj["every"]))))
-          else:
-            timePointList.append('')
-      stepParameters=[]
       file = open(settings.gitVersionIdPath,'r')
       currentLightsheetCommit = file.readline()
       file.close()
@@ -114,21 +90,26 @@ def index():
 
       # delete the jobName entry from the dictionary so that the other entries are all steps
       jobSteps = list(request.json.keys())
-      stepsString = ','.join(str(y) for y in jobSteps)
-      allSelectedTimePoints= ', '.join(timePointList)
+#      stepsString = ','.join(str(y) for y in jobSteps)
+#      allSelectedTimePoints= ', '.join(timePointList)
       # go through the data and prepare it for posting it to db
-      processedData = reformatDataToPost(request.json)
+      processedDataTemp = reformatDataToPost(request.json)
+      processedData=[]
+      allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
+      for stepName in allStepNames:
+        currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
+        if currentStepDictionary:
+            processedData.append(currentStepDictionary)
+
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "state": "NOT YET QUEUED",
                         "lightsheetCommit":currentLightsheetCommit,
-                        "selectedStepNames": stepsString,
-                        "selectedTimePoints": allSelectedTimePoints,
                         "steps": processedData
                        }
 
       # Insert the data to the db
-      jobContinued=True
+      jobContinued=False
       if jobContinued and (job_id is not None):
         newId = job_id
         print("yes")
@@ -138,9 +119,7 @@ def index():
         newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
       configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(newId)
       postBody = { "processingLocation": "LSF_JAVA",
-                   "args": ["-configAddress", configAddress,
-                            "-allSelectedStepNames", stepsString,
-                            "-allSelectedTimePoints", allSelectedTimePoints],
+                   "args": ["-configAddress", configAddress],
                    "resources": {"gridAccountId": "lightsheet"}
                }
       try:
@@ -186,8 +165,6 @@ def index():
 
 @app.route('/job_status', methods=['GET'])
 def job_status():
-    before=datetime.now()
-
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     #Mongo client
     updateDBStatesAndTimes(lightsheetDB)
@@ -195,8 +172,7 @@ def job_status():
     childJobInfo=[]
     if lightsheetDB_id is not None:
         childJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "child")
-        childJobInfo = childJobInfo[0]["steps"] 
-
+        childJobInfo = childJobInfo[0]["steps"]
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentJobInfo=parentJobInfo,
@@ -235,8 +211,10 @@ def login():
 
 @app.route('/config/<lightsheetDB_id>', methods=['GET'])
 def config(lightsheetDB_id):
+    globalParameter = request.args.get('globalParameter')
     stepName = request.args.get('stepName')
-    output=getConfigurationsFromDB(lightsheetDB_id, client, stepName)
+    stepParameter = request.args.get('stepParameter')
+    output=getConfigurationsFromDB(lightsheetDB_id, client, globalParameter, stepName, stepParameter)
     if output==404:
         abort(404)
     else:
