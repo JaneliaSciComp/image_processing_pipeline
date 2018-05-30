@@ -83,8 +83,14 @@ def reformatDataToPost(postedData):
         if param in checkboxesClean:
           stepParamResult[param] = []
         else:
-          if type(stepParamResult[param]) is list and len(stepParamResult[param]) == 1:
-            stepParamResult[param] = stepParamResult[param][0]
+          if type(stepParamResult[param]) is list:
+            if len(stepParamResult[param]) == 1:
+              stepParamResult[param] = stepParamResult[param][0]
+            else:
+              for elem in stepParamResult[param]:
+                if elem == "" and len(set(stepParamResult[param])) == 1:
+                 stepParamResult[param] = []
+                 break;
       stepResult['parameters'] = stepParamResult
       result.append(stepResult)
   return result
@@ -108,6 +114,10 @@ def parseJsonDataNoForms(data, stepName, config):
         extendedKey = key + "_" + stepName
         param = Parameter.objects.filter(name=extendedKey).first()
       if param != None: # check if key now exists
+        if type(parameterData[key]) is list and len(parameterData[key]) == 0:
+          parameterData[key] = ''
+        elif parameterData[key] == 'None':
+          parameterData[key] = ''
         if param.frequency == 'F':
           pFrequent[key] =  {}
           if key in config['parameterDictionary']['frequent'].keys():

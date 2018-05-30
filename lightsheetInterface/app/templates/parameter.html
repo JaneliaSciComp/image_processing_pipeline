@@ -44,7 +44,6 @@
             {% endif %}
           {% endif %}
         </div>
-      </div>
       {% if value.empty == True %}
         {% if value.type == 'Text' %}
           <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty string as field value">
@@ -55,5 +54,6 @@
           <label class="form-check-label" for="emptycheckbox_{{step}}-{{param}}">Empty Field</label>
         </div>
       {% endif %}
+      </div>
     </div>
 {% endif %}
