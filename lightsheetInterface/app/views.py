@@ -149,7 +149,6 @@ def index():
   parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
   # if len(pipelineSteps) > 0:
-  #   ipdb.set_trace()
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                        title='Home',

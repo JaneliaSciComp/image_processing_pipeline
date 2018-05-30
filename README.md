@@ -72,7 +72,15 @@ $ deactivate
 
 ### Deployment
 
-If you haven't done so, in the folder where package.json is located, install the npm packages to install flightplan:
+If you haven't done so, install the node.js flightplan library and tool globally:
+
+```bash
+$ npm install -g flightplan
+```
+
+If there is no command `fly` available in your cmd, please [troubleshoot](https://stackoverflow.com/questions/14803978/npm-global-path-prefix) issues with your $PATH.
+
+In the folder where package.json is located, install the npm packages to use flightplan in your project:
 
 ```bash
 $ npm install
