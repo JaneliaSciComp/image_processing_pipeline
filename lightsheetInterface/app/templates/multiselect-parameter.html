@@ -1,7 +1,7 @@
 <div class="custom-multi-checkbox">
     <select class="selectpicker lightsheet-field" multiple onchange="dependency.addParameter(this)" id="select_{{ param.name }}">
       {% if param.number1 is not none %}
-        <option>{{ param.number1 }}</option>
+        <option selected>{{ param.number1 }}</option>
       {% endif %}
       {% if param.number2 is not none %}
         <option>{{ param.number2 }}</option>
