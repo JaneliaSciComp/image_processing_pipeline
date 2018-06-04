@@ -222,7 +222,6 @@ def config(lightsheetDB_id):
 def createDependencyResults(dependencies):
   result = []
   for i,d in enumerate(dependencies):
-    if i<46:#!!!!!!!!!!!!!!!!!!!TEMPORARY FIX!!!!!!!!!!!!!!!!!!!!!!!
         # need to check here, if simple value transfer (for string or float values) or if it's a nested field
         obj = {}
         obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
