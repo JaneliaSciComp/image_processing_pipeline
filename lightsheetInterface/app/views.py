@@ -221,15 +221,16 @@ def config(lightsheetDB_id):
 
 def createDependencyResults(dependencies):
   result = []
-  for d in dependencies:
-    # need to check here, if simple value transfer (for string or float values) or if it's a nested field
-    obj = {}
-    obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
-    obj['output'] =  d.outputField.name if d.outputField and d.outputField.name is not None else ''
-    obj['pattern'] = d.pattern if d.pattern is not None else ''
-    obj['step'] = d.outputStep.name if d.outputStep is not None else ''
-    obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
-    result.append(obj)
+  for i,d in enumerate(dependencies):
+    if i<46:#!!!!!!!!!!!!!!!!!!!TEMPORARY FIX!!!!!!!!!!!!!!!!!!!!!!!
+        # need to check here, if simple value transfer (for string or float values) or if it's a nested field
+        obj = {}
+        obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
+        obj['output'] =  d.outputField.name if d.outputField and d.outputField.name is not None else ''
+        obj['pattern'] = d.pattern if d.pattern is not None else ''
+        obj['step'] = d.outputStep.name if d.outputStep is not None else ''
+        obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
+        result.append(obj)
   return result
 
 @app.context_processor

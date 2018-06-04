@@ -53,7 +53,11 @@
               <td>{{ currentChildJob.creationTime }}</td>
               <td>{{ currentChildJob.endTime }}</td>
               <td>{{ currentChildJob.elapsedTime }}</td>
-              <td><a href= {{"http://c03u14.int.janelia.org:9881/jacsstorage/agent_api/v1/agent_storage/storage_path"+currentChildJob.logAndErrorPath +"/sge_error/" }}>Download Error Directory</a></td>
+              {% if "logAndErrorPath" in currentChildJob %}
+               <td><a href= {{"http://c03u14.int.janelia.org:9881/jacsstorage/agent_api/v1/agent_storage/storage_path"+currentChildJob.logAndErrorPath +"/sge_error/" }}>Download Error Directory</a></td>
+              {% else %}
+                <td></td>
+              {% endif %}
             </tr>
           {% endfor %}
         {% endif %}
