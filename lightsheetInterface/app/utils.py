@@ -22,7 +22,7 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
     _id = ObjectId(_id)
 
   if parentOrChild=="parent":
-    parentJobInfo = list(lightsheetDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "lightsheetCommit":1,"steps.name":1}))
+    parentJobInfo = list(lightsheetDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "lightsheetCommit":1,"steps.name":1,"steps.state":1}))
     for currentJobInfo in parentJobInfo:
       selectedStepNames=''
       for step in currentJobInfo["steps"]:
@@ -55,10 +55,23 @@ def mapJobsToDict(x):
     result['state'] = x['state'] if x['state'] is not None else ''
   if 'jacs_id' in x:
     result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
-  result['selectedStepNames']=''
-  for step in x["steps"]:
-    result['selectedStepNames'] = result['selectedStepNames']+step["name"]+','
-  result['selectedStepNames'] = result['selectedStepNames'][:-1]
+  result['selectedSteps']={'names':'','states':''};
+  for i,step in enumerate(x["steps"]):
+    result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
+    result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
+    if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
+      result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESET' + ','
+      result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
+      #result['selectedSteps']['resubmissionConfiguration']['stepNumber'] = i
+      #result['selectedSteps']['resubmissionConfiguration']['names'] = 'RESET' 
+    elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state']=="SUCCESSFUL":
+      result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESUME,RESET' + ','
+      result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
+      #result['selectedSteps']['resubmissionConfiguration']['stepNumber'] = i
+      #result['selectedSteps']['resubmissionConfiguration']['options'] = 'RESUME,RESET'
+
+  result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
+  result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
   return result;
 
 # get job information used by jquery datatable
@@ -184,15 +197,24 @@ def getConfigurationsFromDB(lightsheetDB_id, client, globalParameter=None, stepN
 
 # get the job parameter information from db
 def getArgumentsToRunJob(lightsheetDB, _id):
-  currentJobSteps = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.timepoints':1})
+  currentJobSteps = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.timepoints':1,'steps.parameters.pause':1})
+  temp = list(lightsheetDB.jobs.find({"_id":ObjectId(_id)},{'_id':0,"remainingStepNames":1}))
+  remainingStepNames=temp[0]["remainingStepNames"];
   output={"currentJACSJobStepNames":'', "currentJACSJobTimePoints":'','configOutputPath':''}
-  for step in currentJobSteps[0]["steps"]:
-    output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
-    timepoints = step["parameters"]["timepoints"];
-    timepointStart = timepoints["start"]
-    timepointEvery = timepoints["every"]
-    timepointEnd = timepoints["end"]
-    output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+',' 
+  pauseState=False
+  currentStepIndex=0
+  while pauseState==False and currentStepIndex<len(currentJobSteps[0]["steps"]):
+    if currentJobSteps[0]["steps"][currentStepIndex]["name"] in remainingStepNames:
+      step = currentJobSteps[0]["steps"][currentStepIndex]
+      output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
+      timepoints = step["parameters"]["timepoints"];
+      timepointStart = timepoints["start"]
+      timepointEvery = timepoints["every"]
+      timepointEnd = timepoints["end"]
+      output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+','
+      if ("pause" in step["parameters"]) :
+        pauseState = step["parameters"]["pause"]; 
+    currentStepIndex=currentStepIndex+1
   if output["currentJACSJobStepNames"] and output["currentJACSJobTimePoints"]:
     output["currentJACSJobStepNames"]=output["currentJACSJobStepNames"][:-1]
     output["currentJACSJobTimePoints"]= output["currentJACSJobTimePoints"][:-1]
@@ -208,41 +230,47 @@ def updateDBStatesAndTimes(lightsheetDB):
   allJobInfoFromDB = list(lightsheetDB.jobs.find())
   for parentJobInfoFromDB in allJobInfoFromDB:
     if 'jacs_id' in parentJobInfoFromDB: # TODO handle case, when jacs_id is missing
-      if parentJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
-        parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
-                                                    params={'service-id':  parentJobInfoFromDB["jacs_id"]},
-                                                    headers=getHeaders(True)).json()
-        if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
-          parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
-          lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
-                                       {"$set": {"state":parentJobInfoFromJACS["state"] }})
-          allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
-                                              params={'parent-id': parentJobInfoFromDB["jacs_id"]},
-                                              headers=getHeaders(True)).json()
-          allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
-          if allChildJobInfoFromJACS:
-            for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-              if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
-                currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
-                if currentChildJobInfoFromJACS:
-                  creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
-                  outputPath = "N/A"
-                  if "outputPath" in currentChildJobInfoFromJACS:
-                    outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
+      if parentJobInfoFromDB["state"]: # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+        if isinstance(parentJobInfoFromDB["jacs_id"],list):
+          jacs_ids=parentJobInfoFromDB["jacs_id"]
+        else:
+          jacs_ids = [parentJobInfoFromDB["jacs_id"]]
 
-                  lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
-                                               {"$set": {"steps.$.state":currentChildJobInfoFromJACS["state"],
-                                                         "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
-                                                         "steps.$.elapsedTime":str(datetime.now(eastern)-creationTime),
-                                                         "steps.$.logAndErrorPath":outputPath
-                                                       }})
+        for jacs_id in jacs_ids:
+          parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
+                                                      params={'service-id':  jacs_id},
+                                                      headers=getHeaders(True)).json()
+          if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
+            parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
+            lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
+                                         {"$set": {"state":parentJobInfoFromJACS["state"] }})
+            allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
+                                                params={'parent-id': jacs_id},
+                                                headers=getHeaders(True)).json()
+            allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
+            if allChildJobInfoFromJACS:
+              for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
+                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+                  currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
+                  if currentChildJobInfoFromJACS:
+                    creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
+                    outputPath = "N/A"
+                    if "outputPath" in currentChildJobInfoFromJACS:
+                      outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
 
-                  if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
-                    endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
                     lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
-                                                 {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
-                                                           "steps.$.elapsedTime": str(endTime-creationTime)
+                                                 {"$set": {"steps.$.state":currentChildJobInfoFromJACS["state"],
+                                                           "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                           "steps.$.elapsedTime":str(datetime.now(eastern)-creationTime),
+                                                           "steps.$.logAndErrorPath":outputPath
                                                          }})
+
+                    if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+                      endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
+                      lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
+                                                   {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                             "steps.$.elapsedTime": str(endTime-creationTime)
+                                                           }})
   
 def convertJACStime(t):
    t=datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
@@ -340,3 +368,35 @@ def getAppVersion(path):
     data = json.load(package_data)
     package_data.close()
     return data['version']
+
+def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
+  job_id=ObjectId(job_id)
+  configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(job_id)
+  postBody = { "processingLocation": "LSF_JAVA",
+               "args": ["-configAddress", configAddress],
+               "resources": {"gridAccountId": "lightsheet"}
+           }
+  try:
+    postUrl = settings.devOrProductionJACS + '/async-services/lightsheetProcessing'
+    requestOutput = requests.post(postUrl,
+                                  headers=getHeaders(),
+                                  data=json.dumps(postBody))
+    requestOutputJsonified = requestOutput.json()
+    creationDate = job_id.generation_time
+    creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
+    print(requestOutputJsonified["_id"])
+    if continueOrReparameterize:
+        lightsheetDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"], "jacs_id": requestOutputJsonified["_id"] }})
+    else:
+        lightsheetDB.jobs.update_one({"_id":job_id},{"$set": {"jacs_id":[requestOutputJsonified["_id"]], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+
+    #JACS service states
+    # if any are not Canceled, timeout, error, or successful then
+    #updateLightsheetDatabaseStatus
+    updateDBStatesAndTimes(lightsheetDB)
+    submissionStatus = "success"
+  except requests.exceptions.RequestException as e:
+    pprint('Exception occured')
+    submissionStatus = e
+    if not continueOrReparameterize:
+      lightsheetDB.jobs.remove({"_id":job_id})

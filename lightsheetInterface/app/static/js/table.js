@@ -36,9 +36,29 @@ $(document).ready(() => {
       },
       {
         title: 'Steps',
-        data: 'selectedStepNames',
+        data: 'selectedSteps',
         render(data, type, row, meta) {
-          return data ? data : null;
+          names = data["names"].split(",");
+          states = data["states"].split(",");
+          for(var i=0;i<states.length; i++){
+            if(states[i]=="RUNNING"){
+              names[i] = "<font color=\"blue\">" + names[i] +"</font>";
+            }
+            else if(states[i]=="SUCCESSFUL"){
+              names[i] = "<font color=\"green\">" + names[i] +"</font>";
+            }
+            else if(states[i]=='RESUME'){
+              names[i] = "<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>";
+            }
+            else if(states[i]=='RESET'){
+              names[i] = "<form action=\"?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>";
+            }
+            else if(states[i]!="NOT YET QUEUED"){
+              names[i] = "<font color=\"red\">" + names[i] +"</font>";
+            }
+          }
+          names=names.join(",");
+          return names ? names : null;
         }
       },
       {
@@ -60,7 +80,17 @@ $(document).ready(() => {
         title: 'Jacs ID',
         data: 'jacs_id',
         render(data, type, row, meta) {
-          return "<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data +  "\">" + data + "</a>";
+          var jacsLinks="";
+          if(data.constructor === Array){
+            for(var i=0; i<data.length; i++){
+              jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data[i] +  "\">" + data[i] + "</a>,";
+            }
+            jacsLinks=jacsLinks.slice(0,-1);
+          }
+          else{
+            jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data +  "\">" + data + "</a>";
+          }
+          return jacsLinks;
         }
       }
       ],

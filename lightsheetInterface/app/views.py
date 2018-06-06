@@ -34,18 +34,32 @@ lightsheetDB = client.lightsheet
 @app.route('/', methods=['GET','POST'])
 def index():
   submissionStatus = None
-  job_id = request.args.get('lightsheetDB_id')
+  lightsheetDB_id = request.args.get('lightsheetDB_id')
+  reparameterize = request.args.get('reparameterize');
   config = buildConfigObject()
-  if job_id == 'favicon.ico':
-    job_id = None
+  if lightsheetDB_id == 'favicon.ico':
+    lightsheetDB_id = None
   pipelineSteps = {}
   formData = None
   countJobs = 0
-  jobData =  getJobStepData(job_id, client) # get the data for all jobs
+  jobData =  getJobStepData(lightsheetDB_id, client) # get the data for all jobs
+  ableToReparameterize=True
+  if jobData:
+    if (jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
+      ableToReparameterize=False
+
+  if reparameterize=="true" and lightsheetDB_id:
+    reparameterize=True
+    remainingStepNames = lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1})
+    if not ableToReparameterize:
+      abort(404)
+  else:
+    reparameterize=False
+
   # match data on step name
   matchNameIndex = {}
   if type(jobData) is list:
-    if job_id != None:
+    if lightsheetDB_id != None:
       for i in range(len(jobData)):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
@@ -57,6 +71,9 @@ def index():
           stepData = jobData[matchNameIndex[currentStep]]
           editState = 'enabled'
           checkboxState = 'checked'
+          if reparameterize and stepName not in remainingStepNames:
+            editState = 'disabled'
+            checkboxState = 'unchecked'
           countJobs += 1
           forms = None
           jobs = parseJsonDataNoForms(stepData, currentStep, config)
@@ -95,58 +112,33 @@ def index():
       # go through the data and prepare it for posting it to db
       processedDataTemp = reformatDataToPost(request.json)
       processedData=[]
+      remainingStepNames=[];
       allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
       for stepName in allStepNames:
         currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
         if currentStepDictionary:
+            remainingStepNames.append(currentStepDictionary["name"])
             processedData.append(currentStepDictionary)
 
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "state": "NOT YET QUEUED",
                         "lightsheetCommit":currentLightsheetCommit,
+                        "remainingStepNames":remainingStepNames,
                         "steps": processedData
                        }
 
       # Insert the data to the db
-      jobContinued=False
-      if jobContinued and (job_id is not None):
-        newId = job_id
-        print("yes")
-        print(newId)
-        lightsheetDB.jobs.update_one({"_id": job_id},{"$set": dataToPostToDB})
+      if reparameterize:
+        lightsheetDB_id=ObjectId(lightsheetDB_id)
+        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": dataToPostToDB})
       else:
-        newId = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
-      configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(newId)
-      postBody = { "processingLocation": "LSF_JAVA",
-                   "args": ["-configAddress", configAddress],
-                   "resources": {"gridAccountId": "lightsheet"}
-               }
-      try:
-        postUrl = settings.devOrProductionJACS + '/async-services/lightsheetProcessing'
-        requestOutput = requests.post(postUrl,
-                                      headers=getHeaders(),
-                                      data=json.dumps(postBody))
-        requestOutputJsonified = requestOutput.json()
-        creationDate = newId.generation_time
-        creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-        if jobContinued and job_id:
-            lightsheetDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"] }})
-        else:
-            lightsheetDB.jobs.update_one({"_id":newId},{"$set": {"jacs_id":requestOutputJsonified["_id"], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
-
-        #JACS service states
-        # if any are not Canceled, timeout, error, or successful then
-        #updateLightsheetDatabaseStatus
-        updateDBStatesAndTimes(lightsheetDB)
-        submissionStatus = "success"
-      except requests.exceptions.RequestException as e:
-        pprint('Exception occured')
-        submissionStatus = e
-        lightsheetDB.jobs.remove({"_id":newId})
+        lightsheetDB_id = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+      
+      submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, reparameterize)
 
   updateDBStatesAndTimes(lightsheetDB)
-  parentJobInfo = getJobInfoFromDB(lightsheetDB, job_id,"parent")
+  parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
   jobs = allJobsInJSON(lightsheetDB)
   # if len(pipelineSteps) > 0:
   #Return index.html with pipelineSteps and serviceData
@@ -157,18 +149,33 @@ def index():
                        logged_in=True,
                        config = config,
                        version = getAppVersion(app.root_path),
-                       lightsheetDB_id = job_id,
+                       lightsheetDB_id = lightsheetDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None)
 
 
-@app.route('/job_status', methods=['GET'])
+@app.route('/job_status', methods=['GET','POST'])
 def job_status():
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     #Mongo client
     updateDBStatesAndTimes(lightsheetDB)
     parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "parent")
     childJobInfo=[]
+    if request.method == 'POST':
+      pausedJobInformation=list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)}))
+      pausedJobInformation=pausedJobInformation[0]
+      pausedStates = [step['parameters']['pause'] for step in pausedJobInformation["steps"]]
+      pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
+      pausedJobInformation["steps"][pausedStepIndex]["parameters"]["pause"] = 0
+      print(pausedJobInformation["remainingStepNames"])
+      print(pausedJobInformation["steps"][pausedStepIndex]["name"])
+      while pausedJobInformation["remainingStepNames"][0]!=pausedJobInformation["steps"][pausedStepIndex]["name"]:
+        pausedJobInformation["remainingStepNames"].pop(0)
+      pausedJobInformation["remainingStepNames"].pop(0) #Remove steps that have been completed/approved
+      print(pausedJobInformation["remainingStepNames"])
+      lightsheetDB.jobs.update_one({"_id": ObjectId(lightsheetDB_id)},{"$set": pausedJobInformation})
+      submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, True)
+      updateDBStatesAndTimes(lightsheetDB)
     if lightsheetDB_id is not None:
         childJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "child")
         childJobInfo = childJobInfo[0]["steps"]
@@ -221,15 +228,15 @@ def config(lightsheetDB_id):
 
 def createDependencyResults(dependencies):
   result = []
-  for i,d in enumerate(dependencies):
-        # need to check here, if simple value transfer (for string or float values) or if it's a nested field
-        obj = {}
-        obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
-        obj['output'] =  d.outputField.name if d.outputField and d.outputField.name is not None else ''
-        obj['pattern'] = d.pattern if d.pattern is not None else ''
-        obj['step'] = d.outputStep.name if d.outputStep is not None else ''
-        obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
-        result.append(obj)
+  for d in dependencies:
+      # need to check here, if simple value transfer (for string or float values) or if it's a nested field
+      obj = {}
+      obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
+      obj['output'] =  d.outputField.name if d.outputField and d.outputField.name is not None else ''
+      obj['pattern'] = d.pattern if d.pattern is not None else ''
+      obj['step'] = d.outputStep.name if d.outputStep is not None else ''
+      obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
+      result.append(obj)
   return result
 
 @app.context_processor
