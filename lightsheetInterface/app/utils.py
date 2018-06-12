@@ -62,13 +62,9 @@ def mapJobsToDict(x):
     if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
       result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESET' + ','
       result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
-      #result['selectedSteps']['resubmissionConfiguration']['stepNumber'] = i
-      #result['selectedSteps']['resubmissionConfiguration']['names'] = 'RESET' 
     elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state']=="SUCCESSFUL":
       result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESUME,RESET' + ','
       result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
-      #result['selectedSteps']['resubmissionConfiguration']['stepNumber'] = i
-      #result['selectedSteps']['resubmissionConfiguration']['options'] = 'RESUME,RESET'
 
   result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
   result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
@@ -250,7 +246,7 @@ def updateDBStatesAndTimes(lightsheetDB):
             allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
             if allChildJobInfoFromJACS:
               for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"] not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"]: #not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
                   currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if step["args"][1] == currentChildJobInfoFromDB["name"]),None)
                   if currentChildJobInfoFromJACS:
                     creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
