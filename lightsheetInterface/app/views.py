@@ -44,19 +44,26 @@ def index():
   countJobs = 0
   jobData =  getJobStepData(lightsheetDB_id, client) # get the data for all jobs
   ableToReparameterize=True
+  succededButLatterStepFailed=[]
+  globalParameters=None
   if jobData:
+    globalParametersAndRemainingStepNames = list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1,"globalParameters":1}))
+    if "globalParameters" in globalParametersAndRemainingStepNames[0]:
+      globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
     if (jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
       ableToReparameterize=False
-  print(reparameterize)
+    errorStepIndex = next((i for i,step in enumerate(jobData) if step["state"]=="ERROR"),None)
+    if errorStepIndex:
+      for i in range(errorStepIndex):
+        succededButLatterStepFailed.append(jobData[i]["name"])
   if reparameterize=="true" and lightsheetDB_id:
     reparameterize=True
-    temp = list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1}))
-    remainingStepNames=temp[0]["remainingStepNames"]
+    remainingStepNames=globalParametersAndRemainingStepNames[0]["remainingStepNames"]
     if not ableToReparameterize:
       abort(404)
   else:
     reparameterize=False
-  print(reparameterize)
+
   # match data on step name
   matchNameIndex = {}
   if type(jobData) is list:
@@ -68,26 +75,31 @@ def index():
       for step in config['steps']:
         currentStep = step.name
         # If loading previous run parameters for specific step, then it should be checked sett editable
-        if currentStep in matchNameIndex.keys():
-          stepData = jobData[matchNameIndex[currentStep]]
+        if currentStep in matchNameIndex.keys() or currentStep=="globalParameters":
           editState = 'enabled'
           checkboxState = 'checked'
-          if reparameterize and currentStep not in remainingStepNames:
-            editState = 'disabled'
-            checkboxState = 'unchecked'
-          countJobs += 1
-          forms = None
-          jobs = parseJsonDataNoForms(stepData, currentStep, config)
-          # Pipeline steps is passed to index.html for formatting the html based
-          pipelineSteps[currentStep] = {
-            'stepName': step.name,
-            'stepDescription': step.description,
-            'inputJson': None,
-            'state': editState,
-            'checkboxState': checkboxState,
-            'forms': forms,
-            'jobs': jobs
-          }
+          stepData=None
+          if currentStep =="globalParameters":
+            if globalParameters:
+              stepData = globalParameters
+          else:
+            stepData = jobData[matchNameIndex[currentStep]]
+            if (reparameterize and currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed):
+              editState = 'disabled'
+              checkboxState = 'unchecked'
+          if stepData:
+            forms = None
+            jobs = parseJsonDataNoForms(stepData, currentStep, config)
+            # Pipeline steps is passed to index.html for formatting the html based
+            pipelineSteps[currentStep] = {
+              'stepName': step.name,
+              'stepDescription': step.description,
+              'inputJson': None,
+              'state': editState,
+              'checkboxState': checkboxState,
+              'forms': forms,
+              'jobs': jobs
+            }
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
   if request.method == 'POST':
@@ -112,6 +124,7 @@ def index():
 #      allSelectedTimePoints= ', '.join(timePointList)
       # go through the data and prepare it for posting it to db
       processedDataTemp = reformatDataToPost(request.json)
+      globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
       processedData=[]
       remainingStepNames=[];
       allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
@@ -131,16 +144,18 @@ def index():
 
       # Insert the data to the db
       if reparameterize:
-        print(lightsheetDB_id)
         lightsheetDB_id=ObjectId(lightsheetDB_id)
-        print(lightsheetDB_id)
         subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
         lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": subDict})
         for currentStepDictionary in processedData:
           lightsheetDB.jobs.update_one({"_id": lightsheetDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
       else:
         lightsheetDB_id = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
-      
+
+      if globalParametersPosted:
+        globalParametersPosted.pop("")
+        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": {"globalParameters":globalParametersPosted}})
+
       submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, reparameterize)
 
   updateDBStatesAndTimes(lightsheetDB)
