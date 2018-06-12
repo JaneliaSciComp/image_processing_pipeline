@@ -34,7 +34,6 @@ lightsheet.customSubmit = function(){
 
   const url = window.origin;
   const formInput = $('form :input');
-
   // Initialize object which will contain data to be posted
   var data = {}
 
@@ -80,9 +79,9 @@ lightsheet.customSubmit = function(){
       })
     }
   });
-
-  const formDataRequest = new Request(url, { method: 'POST' });
-  fetch(url, {
+  
+  const formDataRequest = new Request(url + "/" + location.search, { method: 'POST' });
+  fetch(url + "/" + location.search, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

@@ -47,7 +47,7 @@ $(document).ready(() => {
             else if(states[i]=="SUCCESSFUL"){
               names[i] = "<font color=\"green\">" + names[i] +"</font>";
             }
-            else if(states[i]=='RESUME'){
+            else if(states[i]=='RESUME' && i<states.length-1){
               names[i] = "<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>";
             }
             else if(states[i]=='RESET'){

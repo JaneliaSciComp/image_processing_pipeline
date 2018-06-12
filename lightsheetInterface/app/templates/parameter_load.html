@@ -1,7 +1,7 @@
 {% if parameterValue.config.description is not none %}
-  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ parameterKey }}" title="{{ parameterValue.config.description }}">
+  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ parameterKey }}_{{ step.name }}" title="{{ parameterValue.config.description }}">
 {% else %}
-  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ parameterKey }}">
+  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ parameterKey }}_{{ step.name }}">
 {% endif %}
   <div class="input-group-prepend lightsheet-fields">
   <span class="input-group-text lightsheet-input">
@@ -21,15 +21,15 @@
       {% if parameterValue.config.formatting == 'R' %}
         <div class="form-group form-inline">
           <label class="lightsheet-label" for="{{ parameterKey }}-number1">From: </label>
-          <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}-start" value="{{ parameterValue.data['start'] }}">
+          <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}_{{ step.name }}-start" value="{{ parameterValue.data['start'] }}">
         </div>
         <div class="form-group form-inline">
           <label class="lightsheet-label" for="{{ parameterKey }}-number2">To: </label>
-          <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}-end" value="{{ parameterValue.data['end'] }}">
+          <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}_{{ step.name }}-end" value="{{ parameterValue.data['end'] }}">
         </div>
         <div class="form-group form-inline">
           <label class="lightsheet-label" for="{{ parameterKey }}-number3">Every:</label>
-          <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}-every" value="{{ parameterValue.data['every'] }}">
+          <input type="number" class="form-control lightsheet-number" id="{{ parameterKey }}_{{ step.name }}-every" value="{{ parameterValue.data['every'] }}">
         </div>
       {% else %}
         <input type="number" class="form-control lightsheet-number" value="{{ parameterValue.data[0] }}" id="{{ parameterKey }}-0">
@@ -45,8 +45,21 @@
     {% else %}
       <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field value">
     {% endif %}
-      <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}" value="false" onclick="lightsheet.passEmptyField(this)">
+      <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}" value=false onchange="lightsheet.passEmptyField(this)">
+    {% if not parameterValue.data %}
+      {% set needsToBeChecked = True %}
+    {% else %}
+      {% set needsToBeChecked = False %}
+    {% endif %}
       <label class="form-check-label" for="emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}">Empty Field</label>
       </div>
   {% endif %}
 </div>
+<script>
+$(document).ready(function(){
+  if ("{{needsToBeChecked}}"=="True"){
+    document.getElementById("emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}").checked=true;
+    document.getElementById("emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}").onchange();
+  }
+})
+</script>

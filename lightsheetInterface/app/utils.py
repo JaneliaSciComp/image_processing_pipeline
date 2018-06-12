@@ -38,7 +38,7 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
     if getParameters:
       return list(lightsheetDB.jobs.find({"_id":_id}))
     else:
-      return list(lightsheetDB.jobs.find({"_id":_id},{"steps.parameters":0}))
+      return list(lightsheetDB.jobs.find({"_id":_id},{"steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
   else:
     return 404
 
@@ -384,7 +384,6 @@ def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
     requestOutputJsonified = requestOutput.json()
     creationDate = job_id.generation_time
     creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-    print(requestOutputJsonified["_id"])
     if continueOrReparameterize:
         lightsheetDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"], "jacs_id": requestOutputJsonified["_id"] }})
     else:
