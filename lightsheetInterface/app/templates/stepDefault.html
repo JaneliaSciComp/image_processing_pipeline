@@ -27,25 +27,31 @@
       <div class="tab-content">
         <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ step.name }}">
           {% for param in step.parameter %}
-            {% for key, value in config.parameterDictionary.frequent.items() %}
+            {% set key=param.name %}
+            {% if key in config.parameterDictionary.frequent %}
+              {% set value = config.parameterDictionary.frequent[key] %}
               {% include "parameter.html" ignore missing with context %}
-            {% endfor %}
+            {% endif %}
           {% endfor %}
         </div>
         <!-- sometimes panel -->
         <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ step.name }}">
           {% for param in step.parameter %}
-            {% for key, value in config.parameterDictionary.sometimes.items() %}
+            {% set key=param.name %}
+            {% if key in config.parameterDictionary.sometimes %}
+              {% set value = config.parameterDictionary.sometimes[key] %}
               {% include "parameter.html" ignore missing with context %}
-            {% endfor %}
+            {% endif %}
           {% endfor %}
         </div>
         <!-- rare panel -->
         <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ step.name }}">
           {% for param in step.parameter %}
-            {% for key, value in config.parameterDictionary.rare.items() %}
+            {% set key=param.name %}
+            {% if key in config.parameterDictionary.rare %}
+              {% set value = config.parameterDictionary.rare[key] %}
               {% include "parameter.html" ignore missing with context %}
-            {% endfor %}
+            {% endif %}
           {% endfor %}
         </div>
         {% if step.name == 'globalParameters' %}

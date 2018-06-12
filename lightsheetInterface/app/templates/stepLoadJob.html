@@ -25,20 +25,32 @@
          <!-- Tab panes -->
          <div class="tab-content">
             <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ pipelineStep.stepName }}">
-              {% for parameterKey, parameterValue in pipelineStep['jobs']['frequent'].items() %}
-                {% include "parameter_load.html" ignore missing with context %}
+              {% for param in step.parameter %}
+                {% set parameterKey = param.name.split("_")[0] %}
+                {% if parameterKey in pipelineStep['jobs']['frequent'] %}
+                  {% set parameterValue=pipelineStep['jobs']['frequent'][parameterKey] %}
+                  {% include "parameter_load.html" ignore missing with context %}
+                {% endif %}
               {% endfor %}
             </div>
             <!-- sometimes panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ pipelineStep.stepName }}">
-              {% for parameterKey, parameterValue in pipelineStep['jobs']['sometimes'].items() %}
-                {% include "parameter_load.html" ignore missing with context %}
+              {% for param in step.parameter %}
+                {% set parameterKey = param.name.split("_")[0] %}
+                {% if parameterKey in pipelineStep['jobs']['sometimes'] %}
+                  {% set parameterValue=pipelineStep['jobs']['sometimes'][parameterKey] %}
+                  {% include "parameter_load.html" ignore missing with context %}
+                {% endif %}
               {% endfor %}
             </div>
             <!-- rare panel -->
             <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ pipelineStep.stepName }}">
-              {% for parameterKey, parameterValue in pipelineStep['jobs']['rare'].items() %}
-                {% include "parameter_load.html" ignore missing with context %}
+              {% for param in step.parameter %}
+                {% set parameterKey = param.name.split("_")[0] %}
+                {% if parameterKey in pipelineStep['jobs']['rare'] %}
+                  {% set parameterValue=pipelineStep['jobs']['rare'][parameterKey] %}
+                  {% include "parameter_load.html" ignore missing with context %}
+                {% endif %}
               {% endfor %}
             </div>
             <!-- json panel -->

@@ -47,15 +47,16 @@ def index():
   if jobData:
     if (jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
       ableToReparameterize=False
-
+  print(reparameterize)
   if reparameterize=="true" and lightsheetDB_id:
     reparameterize=True
-    remainingStepNames = lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1})
+    temp = list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1}))
+    remainingStepNames=temp[0]["remainingStepNames"]
     if not ableToReparameterize:
       abort(404)
   else:
     reparameterize=False
-
+  print(reparameterize)
   # match data on step name
   matchNameIndex = {}
   if type(jobData) is list:
@@ -71,7 +72,7 @@ def index():
           stepData = jobData[matchNameIndex[currentStep]]
           editState = 'enabled'
           checkboxState = 'checked'
-          if reparameterize and stepName not in remainingStepNames:
+          if reparameterize and currentStep not in remainingStepNames:
             editState = 'disabled'
             checkboxState = 'unchecked'
           countJobs += 1
@@ -130,8 +131,13 @@ def index():
 
       # Insert the data to the db
       if reparameterize:
+        print(lightsheetDB_id)
         lightsheetDB_id=ObjectId(lightsheetDB_id)
-        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": dataToPostToDB})
+        print(lightsheetDB_id)
+        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
+        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": subDict})
+        for currentStepDictionary in processedData:
+          lightsheetDB.jobs.update_one({"_id": lightsheetDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
       else:
         lightsheetDB_id = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
       
@@ -167,12 +173,9 @@ def job_status():
       pausedStates = [step['parameters']['pause'] for step in pausedJobInformation["steps"]]
       pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
       pausedJobInformation["steps"][pausedStepIndex]["parameters"]["pause"] = 0
-      print(pausedJobInformation["remainingStepNames"])
-      print(pausedJobInformation["steps"][pausedStepIndex]["name"])
       while pausedJobInformation["remainingStepNames"][0]!=pausedJobInformation["steps"][pausedStepIndex]["name"]:
         pausedJobInformation["remainingStepNames"].pop(0)
       pausedJobInformation["remainingStepNames"].pop(0) #Remove steps that have been completed/approved
-      print(pausedJobInformation["remainingStepNames"])
       lightsheetDB.jobs.update_one({"_id": ObjectId(lightsheetDB_id)},{"$set": pausedJobInformation})
       submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, True)
       updateDBStatesAndTimes(lightsheetDB)
@@ -181,9 +184,10 @@ def job_status():
         childJobInfo = childJobInfo[0]["steps"]
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
-                           parentJobInfo=parentJobInfo,
+                           parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
                            logged_in=True,
+                           lightsheetDB_id=lightsheetDB_id,
                            version = getAppVersion(app.root_path))
 
 

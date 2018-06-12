@@ -59,6 +59,22 @@
                 <td></td>
               {% endif %}
             </tr>
+            {% if currentChildJob.parameters.pause and currentChildJob.state=="SUCCESSFUL"%}
+              <tr>
+                <td align="center" colspan=6>
+                {% if loop.index<childJobInfo|length %}
+                  <form action={{"/job_status?lightsheetDB_id="+lightsheetDB_id }} method="post" style="display:inline;"> <button> RESUME </button> </form>
+                {% endif %}
+                <form action={{"../?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                </td>
+              </tr>
+            {% elif currentChildJob.state not in ["SUCCESSFUL","RUNNING","NOT YET QUEUED"] %}
+              <tr>
+                <td align="center" colspan=6>
+                <form action={{"../?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                </td>
+              </tr>
+            {% endif %}
           {% endfor %}
         {% endif %}
       </tbody>
