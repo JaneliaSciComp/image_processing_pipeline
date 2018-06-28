@@ -87,8 +87,10 @@ def getParameters(parameter):
         param.count = '1'
       elif param.number3 == None:
         param.count = '2'
-      else:
+      elif param.number4 == None:
         param.count = '3'
+      else:
+        param.count = '4'
     else:
       param.type = 'Text'
       param.count = '1'

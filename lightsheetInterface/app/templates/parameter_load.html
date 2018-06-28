@@ -36,6 +36,11 @@
         <input type="number" step="any" class="form-control lightsheet-number" value="{{ parameterValue.data[1] }}" id="{{ parameterKey }}-1">
         <input type="number" step="any" class="form-control lightsheet-number" value="{{ parameterValue.data[2] }}" id="{{ parameterKey }}-2">
       {% endif %}
+    {% elif parameterValue.config.count == '4' %}
+      <input type="number" step="any" class="form-control lightsheet-number" value="{{ parameterValue.data[0] }}" id="{{ parameterKey }}-0">
+      <input type="number" step="any" class="form-control lightsheet-number" value="{{ parameterValue.data[1] }}" id="{{ parameterKey }}-1">
+      <input type="number" step="any" class="form-control lightsheet-number" value="{{ parameterValue.data[2] }}" id="{{ parameterKey }}-2">
+      <input type="number" step="any" class="form-control lightsheet-number" value="{{ parameterValue.data[3] }}" id="{{ parameterKey }}-3">
     {% endif %}
   {% endif %}
   </div>

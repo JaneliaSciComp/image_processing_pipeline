@@ -41,6 +41,11 @@
                 <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number2 }}" id="{{ param.name }}-1">
                 <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number3 }}" id="{{ param.name }}-2">
               {% endif %}
+            {% elif value.count == '4' %}
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number1 }}" id="{{ param.name }}-0">
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number2 }}" id="{{ param.name }}-1">
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number3 }}" id="{{ param.name }}-2">
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number4 }}" id="{{ param.name }}-3">
             {% endif %}
           {% endif %}
         </div>
