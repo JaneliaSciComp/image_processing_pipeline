@@ -78,7 +78,7 @@ def index():
     globalParametersAndRemainingStepNames = list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1,"globalParameters":1}))
     if "globalParameters" in globalParametersAndRemainingStepNames[0]:
       globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
-    if (jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
+    if ("pause" in jobData[-1]["parameters"] and jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
       ableToReparameterize=False
     errorStepIndex = next((i for i,step in enumerate(jobData) if step["state"]=="ERROR"),None)
     if errorStepIndex:
