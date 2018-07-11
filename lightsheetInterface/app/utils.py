@@ -106,9 +106,12 @@ def getParameters(parameter):
   return result
 
 # build object with information about steps and parameters about admin interface
-def buildConfigObject():
+def buildConfigObject(template_id = None):
   try:
-    steps = Step.objects.all().order_by('order')
+    if not template_id:
+      template_id = 'L'
+
+    steps = Step.objects.filter(template=template_id).order_by('order')
     p = Parameter.objects.all()
     paramDict = getParameters(p)
     config = {'steps': steps, 'parameterDictionary': paramDict}

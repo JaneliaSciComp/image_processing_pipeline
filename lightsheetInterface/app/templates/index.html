@@ -20,15 +20,37 @@
   <div class="row lightsheet-row">
     <h4 id ="job-heading">Configure Job</h4>
   </div>
+
+  <!-- Row with elements to configure -->
   <div class="row">
-    <div class="col-lg-3 col-md-3 col-sm-3">
+    {% if templates is defined %}
+    <div class="col-lg-4 col-md-4 col-sm-4">
+      <div class="form-group form-inline">
+        <label class="lightsheet-label-configure">Template: </label>
+        <select class="form-control template-dropdown" id="template-selector">
+        {% if currentTemplate is defined %}
+          {% for tObj in templates %}
+            {% if currentTemplate[1] == tObj[1] %}
+              <option value="{{ tObj[0] }}" selected>{{ tObj[1] }}</option>
+            {% else %}
+              <option value="{{ tObj[0] }}" >{{ tObj[1] }}</option>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          {% for tObj in templates %}
+            <option value="{{ tObj[0] }}" >{{ tObj[1] }}</option>
+          {% endfor %}
+        {% endif %}
+        </select>
+      </div>
       <!-- Name field -->
       <div class="form-group form-inline">
-        <label class="lightsheet-label">Name: </label>
+        <label class="lightsheet-label-configure">Name: </label>
         <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
       </div>
     </div>
-    <div class="col-lg-6 col-md-6 col-sm-6">
+    {% endif %}
+    <div class="col-lg-8 col-md-8 col-sm-8">
       <!-- Select existing job -->
       <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
@@ -166,6 +188,12 @@
               }
             }
           }
+        });
+
+
+        $('#template-selector').on('change', function(event){
+          var template_id = $(this).find(":selected").val();
+          window.location = window.origin + '/template/' + template_id;
         });
 
         $.fn.dataTable.ext.errMode = 'throw';

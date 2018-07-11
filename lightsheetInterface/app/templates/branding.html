@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block branding %}
 <div class="lightsheet-heading">
-  <h1>LightSheet Pipeline {{ version }}</h1>
+  {% if currentTemplate is defined %}
+      <h1>{{ currentTemplate[1] }} Pipeline {{ version }}</h1>
+    {% else %}
+      <h1>Image Processing Pipeline</h1>
+    {% endif %}
 </div>
 {% endblock %}
 {% block navbar %}

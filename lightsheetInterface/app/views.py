@@ -9,7 +9,7 @@ from app.settings import Settings
 from bson.objectid import ObjectId
 from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms
-from app.models import Dependency
+from app.models import Dependency, templates
 from bson.objectid import ObjectId
 
 settings = Settings()
@@ -30,6 +30,33 @@ mongosettings = 'mongodb://' + app.config['MONGODB_SETTINGS']['host'] + ':' + st
 client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
+
+@app.route('/template/<template_id>', methods=['GET','POST'])
+def template(template_id):
+  lightsheetDB_id = request.args.get('lightsheetDB_id')
+  if lightsheetDB_id == 'favicon.ico':
+    lightsheetDB_id = None
+  parentJobInfo = None
+  jobs = None
+  config = buildConfigObject(template_id)
+  currentTemplate = None
+  for template in templates:
+    if template[0] == template_id:
+      currentTemplate =  template
+      break;
+
+  return render_template('index.html',
+                       title='Home',
+                       pipelineSteps=None,
+                       parentJobInfo = parentJobInfo, # used by job status
+                       logged_in=True,
+                       config = config,
+                       version = getAppVersion(app.root_path),
+                       lightsheetDB_id = None,
+                       jobsJson= jobs, # used by the job table
+                       submissionStatus = None,
+                       templates=templates,
+                       currentTemplate=currentTemplate)
 
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -67,7 +94,7 @@ def index():
   # match data on step name
   matchNameIndex = {}
   if type(jobData) is list:
-    if lightsheetDB_id != None:
+    if lightsheetDB_id != None: # load data for an existing job
       for i in range(len(jobData)):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
@@ -172,7 +199,8 @@ def index():
                        version = getAppVersion(app.root_path),
                        lightsheetDB_id = lightsheetDB_id,
                        jobsJson= jobs, # used by the job table
-                       submissionStatus = None)
+                       submissionStatus = None,
+                       templates=templates)
 
 
 @app.route('/job_status', methods=['GET','POST'])

@@ -22,8 +22,11 @@
     <script src="{{url_for('static', filename='js/table.js')}}"></script>
     <script>
   </script>
-
-    <title>Lightsheet Pipeline</title>
+    {% if currentTemplate is defined %}
+      <title>{{ currentTemplate[1] }} Pipeline</title>
+    {% else %}
+      <title>Image Processing Pipeline</title>
+    {% endif %}
   </head>
   <body>
     <div class="lightsheet-container container-fluid">
