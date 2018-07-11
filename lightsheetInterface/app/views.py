@@ -37,7 +37,6 @@ def template(template_id):
   if lightsheetDB_id == 'favicon.ico':
     lightsheetDB_id = None
   parentJobInfo = None
-  jobs = None
   config = buildConfigObject(template_id)
   currentTemplate = None
   for template in templates:
@@ -45,6 +44,8 @@ def template(template_id):
       currentTemplate =  template
       break;
 
+  parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
+  jobs = allJobsInJSON(lightsheetDB)
   return render_template('index.html',
                        title='Home',
                        pipelineSteps=None,
