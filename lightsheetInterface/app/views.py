@@ -201,7 +201,8 @@ def index():
                        lightsheetDB_id = lightsheetDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
-                       templates=templates)
+                       templates=templates,
+                       currentTemplate=templates[0])
 
 
 @app.route('/job_status', methods=['GET','POST'])

@@ -10,7 +10,7 @@ types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
 formats = (('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'))
 dependency_type = (('V', 'Value'), ('D', 'Dimension'))
-templates = (('L', 'Lightsheet'), ('C', 'Confocal'), ('M', 'Modal'))
+templates = ( ('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal') )
 
 class AppConfig(Document):
     name = StringField(max_length=200)
