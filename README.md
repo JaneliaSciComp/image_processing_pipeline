@@ -133,4 +133,14 @@ Some other helpful commands:
 > db.jobs.findOne()
 > db.jobs.drop()
 > db.jobs.remove({ state: { $eq: 'ERROR'} })
+> db.step.remove({ "text1": { $exists: true } })
+> db.parameter.find( { name: { $gt: 'test' } } )
+> db.parameter.find(ObjectId("5b12047ea275276dec9a2eb9"))
+```
+
+Backup and restore
+```bash
+ mongodump --host 10.40.3.155 --port 27036 --db lightsheet --out /opt/tmp/dump/
+ mongorestore --drop -d lightsheet /opt/tmp/dump/lightsheet/
+>>>>>>> Update README
 ```
