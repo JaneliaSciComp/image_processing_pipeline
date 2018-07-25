@@ -1,6 +1,6 @@
 # Contains routes and functions to pass content to the template layer
 import requests, json, os, math, bson, re, subprocess, ipdb
-from flask import render_template, request, jsonify, abort
+from flask import render_template, request, jsonify, abort, send_from_directory
 from pymongo import MongoClient
 from collections import OrderedDict
 from datetime import datetime
@@ -30,6 +30,11 @@ mongosettings = 'mongodb://' + app.config['MONGODB_SETTINGS']['host'] + ':' + st
 client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico')
 
 @app.route('/template/<template_id>', methods=['GET','POST'])
 def template(template_id):
