@@ -23,22 +23,22 @@
 
   <!-- Row with elements to configure -->
   <div class="row">
-    {% if templates is defined %}
+    {% if config.templates is defined and config.templates is not none %}
     <div class="col-lg-4 col-md-4 col-sm-4">
       <div class="form-group form-inline">
         <label class="lightsheet-label-configure">Template: </label>
         <select class="form-control template-dropdown" id="template-selector">
         {% if currentTemplate is defined %}
-          {% for tObj in templates %}
-            {% if currentTemplate[1] == tObj[1] %}
-              <option value="{{ tObj[0] }}" selected>{{ tObj[1] }}</option>
+          {% for tObj in config.templates %}
+            {% if currentTemplate == tObj.name %}
+              <option value="{{ tObj.name }}" selected>{{ tObj.name }}</option>
             {% else %}
-              <option value="{{ tObj[0] }}" >{{ tObj[1] }}</option>
+              <option value="{{ tObj.name }}" >{{ tObj.name }}</option>
             {% endif %}
           {% endfor %}
         {% else %}
-          {% for tObj in templates %}
-            <option value="{{ tObj[0] }}" >{{ tObj[1] }}</option>
+          {% for tObj in config.templates %}
+            <option value="{{ tObj.name }}" >{{ tObj.name }}</option>
           {% endfor %}
         {% endif %}
         </select>
@@ -77,14 +77,16 @@
     <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
     <div class="row lightsheet-row">
       <div id="steps">
-        {% for step in config['steps'] %}
-          {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-            {% set pipelineStep = pipelineSteps[step.name] %}
-            {% include "stepLoadJob.html" ignore missing with context %}
-          {% else %}
-            {% include "stepDefault.html" ignore missing with context %}
-          {% endif %}
-        {% endfor %}
+        {% if config['steps'] is not none %}
+          {% for step in config['steps'] %}
+            {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+              {% set pipelineStep = pipelineSteps[step.name] %}
+              {% include "stepLoadJob.html" ignore missing with context %}
+            {% else %}
+              {% include "stepDefault.html" ignore missing with context %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
       </div>
     </div>
     <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />

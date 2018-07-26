@@ -9,7 +9,7 @@ from app.settings import Settings
 from bson.objectid import ObjectId
 from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms
-from app.models import Dependency, templates
+from app.models import Dependency
 from bson.objectid import ObjectId
 
 settings = Settings()
@@ -36,17 +36,17 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico')
 
-@app.route('/template/<template_id>', methods=['GET','POST'])
-def template(template_id):
+@app.route('/template/<template_name>', methods=['GET','POST'])
+def template(template_name):
   lightsheetDB_id = request.args.get('lightsheetDB_id')
   if lightsheetDB_id == 'favicon.ico':
     lightsheetDB_id = None
   parentJobInfo = None
-  config = buildConfigObject(template_id)
+  config = buildConfigObject(template_name)
   currentTemplate = None
-  for template in templates:
-    if template[0] == template_id:
-      currentTemplate =  template
+  for template in config['templates']:
+    if template.name == template_name:
+      currentTemplate =  template_name
       break;
 
   parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
@@ -61,7 +61,7 @@ def template(template_id):
                        lightsheetDB_id = None,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
-                       templates=templates,
+                       templates=config['templates'],
                        currentTemplate=currentTemplate)
 
 @app.route('/', methods=['GET','POST'])
@@ -196,6 +196,7 @@ def index():
   jobs = allJobsInJSON(lightsheetDB)
   # if len(pipelineSteps) > 0:
   #Return index.html with pipelineSteps and serviceData
+
   return render_template('index.html',
                        title='Home',
                        pipelineSteps=pipelineSteps,
@@ -206,8 +207,7 @@ def index():
                        lightsheetDB_id = lightsheetDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
-                       templates=templates,
-                       currentTemplate=templates[0])
+                       currentTemplate='LightSheet')
 
 
 @app.route('/job_status', methods=['GET','POST'])

@@ -19,7 +19,7 @@ class AppConfig(Document):
       return self.name
 
 class Parameter(Document):
-    name = StringField(max_length=200)
+    name = StringField(max_length=200, unique=True)
     number1 = FloatField()
     number2 = FloatField()
     number3 = FloatField()
@@ -30,16 +30,25 @@ class Parameter(Document):
     formatting = StringField(max_length=20, choices=formats)
     empty = BooleanField()
     order = IntField()
+
     def __unicode__(self):
       return self.name
 
 class Step(Document):
-    name = StringField(max_length=200)
+    name = StringField(max_length=200, unique=True)
     description = StringField(max_length=500)
     order = IntField()
     parameter = ListField(ReferenceField(Parameter))
     submit = BooleanField(default=True)
     template = ListField(StringField(max_length=200, choices=templates))
+
+    def __unicode__(self):
+      return self.name
+
+class Template(Document):
+    name = StringField(max_length=200, unique=True)
+    steps = ListField(ReferenceField(Step))
+
     def __unicode__(self):
       return self.name
 
@@ -60,6 +69,9 @@ class StepView(ModelView):
 class ParameterView(ModelView):
     column_filters = ['name', 'description', 'frequency', 'formatting']
 
+class TemplateView(ModelView):
+    column_filters = ['name']
+
 class DependecyView(ModelView):
     column_filters = ['inputField', 'outputField', 'pattern']
     column_labels = dict(inputField='Input',
@@ -69,5 +81,6 @@ class DependecyView(ModelView):
 
 admin.add_view(ConfigView(AppConfig))
 admin.add_view(StepView(Step))
+admin.add_view(TemplateView(Template))
 admin.add_view(ParameterView(Parameter))
 admin.add_view(DependecyView(Dependency))

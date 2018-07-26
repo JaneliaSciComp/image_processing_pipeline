@@ -142,5 +142,4 @@ Backup and restore
 ```bash
  mongodump --host 10.40.3.155 --port 27036 --db lightsheet --out /opt/tmp/dump/
  mongorestore --drop -d lightsheet /opt/tmp/dump/lightsheet/
->>>>>>> Update README
 ```

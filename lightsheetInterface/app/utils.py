@@ -1,4 +1,4 @@
-import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re, math
+import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re, math, operator
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -11,7 +11,7 @@ from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
-from app.models import AppConfig, Step, Parameter
+from app.models import AppConfig, Step, Parameter, Template
 from app.settings import Settings
 
 settings = Settings()
@@ -106,15 +106,20 @@ def getParameters(parameter):
   return result
 
 # build object with information about steps and parameters about admin interface
-def buildConfigObject(template_id = None):
+def buildConfigObject(template_name = None):
   try:
-    if not template_id:
-      template_id = 'L'
+    if not template_name:
+      template_name = 'LightSheet'
 
-    steps = Step.objects.filter(template=template_id).order_by('order')
+    sorted_steps = None
+    template = Template.objects.filter(name=template_name).first()
+    if template:
+      steps = template.steps
+      sorted_steps = sorted(steps, key=operator.attrgetter('order'))
+    templates = Template.objects.all()
     p = Parameter.objects.all()
     paramDict = getParameters(p)
-    config = {'steps': steps, 'parameterDictionary': paramDict}
+    config = {'steps': sorted_steps, 'parameterDictionary': paramDict, 'templates': templates}
   except ServerSelectionTimeoutError:
     return 404
   return config
