@@ -19,7 +19,7 @@ class AppConfig(Document):
       return self.name
 
 class Parameter(Document):
-    name = StringField(max_length=200, unique=True)
+    name = StringField(max_length=200, unique=True, required=True)
     number1 = FloatField()
     number2 = FloatField()
     number3 = FloatField()
@@ -35,18 +35,18 @@ class Parameter(Document):
       return self.name
 
 class Step(Document):
-    name = StringField(max_length=200, unique=True)
+    name = StringField(max_length=200, unique=True, required=True)
     description = StringField(max_length=500)
-    order = IntField()
     parameter = ListField(ReferenceField(Parameter))
     submit = BooleanField(default=True)
     template = ListField(StringField(max_length=200, choices=templates))
+    order = IntField(required=True)
 
     def __unicode__(self):
       return self.name
 
 class Template(Document):
-    name = StringField(max_length=200, unique=True)
+    name = StringField(max_length=200, unique=True, required=True)
     steps = ListField(ReferenceField(Step))
 
     def __unicode__(self):
