@@ -76,10 +76,6 @@ fieldset {
   margin-left: 10px;
 }
 
-#steps .card:first-child .card-header {
-  background-color: rgba(0,0,0,0.1);
-}
-
 .empty-label {
   margin-top: 1.8em;
 }
@@ -199,6 +195,9 @@ select .template-dropdown {
   }
 }
 
+#globalParameters-card .card-header{
+  background-color: rgba(0,0,0,0.1);
+}
 
 @media (max-width: 2500px) {
   #job-table_length {
