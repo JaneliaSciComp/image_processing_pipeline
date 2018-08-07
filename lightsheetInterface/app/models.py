@@ -1,9 +1,10 @@
 from flask_mongoengine.wtf import model_form
 from wtforms.widgets import TextArea
 from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
-                         connect, DecimalField, StringField, IntField, FloatField, ListField, BooleanField, Document, ReferenceField, NULLIFY)
-
+                         connect, DecimalField, StringField, IntField, FloatField, ListField, BooleanField, Document, ReferenceField, NULLIFY, MultiLineStringField)
 from flask_admin.contrib.mongoengine import ModelView
+from wtforms import TextAreaField
+from wtforms.widgets import TextArea
 from app import admin
 
 types = (('', None), ('S','Step'), ('D','Directory'))
@@ -20,17 +21,17 @@ class AppConfig(Document):
 
 class Parameter(Document):
     name = StringField(max_length=200, unique=True, required=True)
+    description = StringField(max_length=500)
     number1 = FloatField()
     number2 = FloatField()
     number3 = FloatField()
     number4 = FloatField()
     text1 = StringField(max_length=500)
-    description = StringField(max_length=500)
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
     empty = BooleanField()
     order = IntField()
-
+    hint = MultiLineStringField()
     def __unicode__(self):
       return self.name
 
@@ -79,8 +80,28 @@ class DependecyView(ModelView):
                         outputStep='Step',
                         pattern='Pattern')
 
+class CKTextAreaWidget(TextArea):
+   def __call__(self, field, **kwargs):
+      if kwargs.get('class'):
+         kwargs['class'] += ' ckeditor'
+      else:
+         kwargs.setdefault('class', 'ckeditor')
+      return super(CKTextAreaWidget, self).__call__(field, **kwargs)
+
+class CKTextAreaField(TextAreaField):
+   widget = CKTextAreaWidget()
+
+
+class ExtendedParameterView(ModelView):
+   extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
+   orm_columns = ["name", "description", "number1", "number2", "number3", "number4", "text1", "frequency", "formatting", "empty", "order", "hint"]
+   form_overrides = {
+      'hint': CKTextAreaField
+   }
+
+
 admin.add_view(ConfigView(AppConfig))
 admin.add_view(StepView(Step))
 admin.add_view(TemplateView(Template))
-admin.add_view(ParameterView(Parameter))
+admin.add_view(ExtendedParameterView(Parameter))
 admin.add_view(DependecyView(Dependency))
