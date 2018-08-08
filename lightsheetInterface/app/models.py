@@ -31,7 +31,7 @@ class Parameter(Document):
     formatting = StringField(max_length=20, choices=formats)
     empty = BooleanField()
     order = IntField()
-    hint = MultiLineStringField()
+    hint = StringField()
     def __unicode__(self):
       return self.name
 
@@ -94,7 +94,8 @@ class CKTextAreaField(TextAreaField):
 
 class ExtendedParameterView(ModelView):
    extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-   orm_columns = ["name", "description", "number1", "number2", "number3", "number4", "text1", "frequency", "formatting", "empty", "order", "hint"]
+   form_columns = ["name", "description", "number1", "number2", "number3", "number4", "text1", "frequency", "formatting", "empty", "order", "hint"]
+   column_filters = ["name", "description", "number1", "number2", "number3", "number4", "text1", "frequency", "formatting"]
    form_overrides = {
       'hint': CKTextAreaField
    }

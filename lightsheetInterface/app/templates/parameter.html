@@ -59,6 +59,9 @@
           <label class="form-check-label" for="emptycheckbox_{{step}}-{{param}}">Empty Field</label>
         </div>
       {% endif %}
+      {% if value.hint %}
+        <i class="fa fa-info-circle info-icon"></i>
+      {% endif %}
       </div>
     </div>
 {% endif %}
