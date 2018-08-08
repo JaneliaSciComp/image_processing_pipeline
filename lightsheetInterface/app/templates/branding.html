@@ -6,16 +6,16 @@
 {% endblock %}
 {% block navbar %}
   {% if logged_in %}
-    <nav class="navbar navbar-light bg-light justify-content-end">
+    <nav class="navbar navbar-light bg-light justify-content-start">
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('index') }}"> Home </a>
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('job_status') }}"> Check Job Status </a>
-      <form class="form-inline">
+      <form class="form-inline" style="display: none;">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit" style="display: none;">Search</button>
       </form>
-      <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}"> Advanced Search </a>
+      <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}" style="display: none;"> Advanced Search </a>
       <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
-      <a class="navbar-brand" href="{{ url_for('login') }}"> Logout </a>
+      <a class="navbar-brand" href="{{ url_for('login') }}" style="display: none;"> Logout </a>
     </nav>
   {% endif %}
 {% endblock %}

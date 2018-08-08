@@ -60,8 +60,15 @@
         </div>
       {% endif %}
       {% if value.hint %}
-        <i class="fa fa-info-circle info-icon"></i>
-      {% endif %}
+          <div class="row hint-area">
+            <div class="input-group-sm mb-1">
+                <i class="fa fa-info-circle info-icon"></i>
+            </div>
+            <div class="input-group-sm mb-1 parameter-hint">
+              {{ value.hint | safe}}
+            </div>
+          </div>
+       {% endif %}
       </div>
     </div>
 {% endif %}

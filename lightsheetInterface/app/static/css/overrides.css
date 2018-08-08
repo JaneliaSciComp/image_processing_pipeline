@@ -133,6 +133,15 @@ fieldset {
   margin-bottom: 12px;
 }
 
+.hint-area  {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+.parameter-hint {
+  visibility: hidden;
+}
+
 select .template-dropdown {
   width: 200px !important;
 }
@@ -201,10 +210,11 @@ select .template-dropdown {
 
 .info-icon {
   font-size: 1.2em;
-  color: #454545;
+  color: #555555;
   margin-bottom: auto;
   margin-top: auto;
   margin-left: 0.4em;
+  margin-right: 1.5em;
 }
 
 @media (max-width: 2500px) {

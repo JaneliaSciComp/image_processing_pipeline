@@ -112,11 +112,13 @@
      {% else %}
         var table_data = null;
      {% endif %}
+
      {% if value_dependency is defined %}
         var value_dependencies = {{ value_dependency|safe }};
      {% else %}
         var value_dependencies = null;
      {% endif %}
+
      {% if dimension_dependency is defined %}
         var dimension_dependencies = {{ dimension_dependency|safe }};
      {% else %}
@@ -127,6 +129,7 @@
   <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
   <!-- contrib dependencies -->
   <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
+
   <!-- script to set default job name -->
   <script>
     $(document).ready(
@@ -195,6 +198,16 @@
         $('#template-selector').on('change', function(event){
           var template_id = $(this).find(":selected").val();
           window.location = window.origin + '/template/' + template_id;
+        });
+
+        $('.info-icon').on('click', function(event){
+          var elem = $(this.parentElement.parentElement.getElementsByClassName('parameter-hint')[0]);
+          if ( elem.css("visibility") == "hidden" ) {
+              elem.css("visibility","visible");
+          }
+          else {
+              elem.css("visibility","hidden");
+          }
         });
 
         $.fn.dataTable.ext.errMode = 'throw';
