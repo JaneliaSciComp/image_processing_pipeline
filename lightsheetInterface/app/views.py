@@ -268,6 +268,10 @@ def login():
                          logged_in=False,
                          version=getAppVersion(app.root_path))
 
+@app.route('/upload')
+def upload():
+  return render_template('upload.html',
+                         version=getAppVersion(app.root_path))
 
 @app.route('/config/<lightsheetDB_id>', methods=['GET'])
 def config(lightsheetDB_id):

@@ -1,0 +1,14 @@
+{% extends "branding.html" %}
+{% block content %}
+  <div class="row lightsheet-row">
+    <h4 id ="job-heading">Upload steps</h4>
+  </div>
+
+  <!-- Row with elements to configure -->
+  <div class="row lightsheet-row">
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+  </div>
+{% endblock %}

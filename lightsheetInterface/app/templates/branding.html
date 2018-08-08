@@ -5,7 +5,6 @@
 </div>
 {% endblock %}
 {% block navbar %}
-  {% if logged_in %}
     <nav class="navbar navbar-light bg-light justify-content-start">
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('index') }}"> Home </a>
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('job_status') }}"> Check Job Status </a>
@@ -14,8 +13,8 @@
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit" style="display: none;">Search</button>
       </form>
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}" style="display: none;"> Advanced Search </a>
+      <a class="navbar-brand" href="{{ url_for('upload') }}"> Upload Pipeline</a>
       <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
       <a class="navbar-brand" href="{{ url_for('login') }}" style="display: none;"> Logout </a>
     </nav>
-  {% endif %}
 {% endblock %}
