@@ -139,7 +139,7 @@ fieldset {
 }
 
 .parameter-hint {
-  visibility: hidden;
+  display: none;
 }
 
 select .template-dropdown {

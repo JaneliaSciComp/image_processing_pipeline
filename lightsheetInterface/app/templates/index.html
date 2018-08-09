@@ -202,11 +202,11 @@
 
         $('.info-icon').on('click', function(event){
           var elem = $(this.parentElement.parentElement.getElementsByClassName('parameter-hint')[0]);
-          if ( elem.css("visibility") == "hidden" ) {
-              elem.css("visibility","visible");
+          if ( elem.css("display") == "none" ) {
+              elem.css("display","block");
           }
           else {
-              elem.css("visibility","hidden");
+              elem.css("display","none");
           }
         });
 
