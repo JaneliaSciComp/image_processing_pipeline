@@ -18,6 +18,13 @@ toolbar = DebugToolbarExtension(app)
 
 from app import views, models #app package from which views will be imported
 
+
+def to_pretty_json(value):
+    return json.dumps(value, sort_keys=True,
+                      indent=6, separators=(',', ':'))
+
+app.jinja_env.filters['tojson_pretty'] = to_pretty_json
+
 # Define some global template variables
 @app.context_processor
 def add_global_variables():
@@ -34,7 +41,7 @@ def get_app_version():
   with open(result) as package_data:
     data = json.load(package_data)
     package_data.close()
-    return dict(v=data['version'])
+    return dict(version=data['version'])
 
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):

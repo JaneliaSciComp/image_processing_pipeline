@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from mongoengine import ValidationError, NotUniqueError
 from wtforms import *
 from multiprocessing import Pool
 from pprint import pprint
@@ -13,6 +14,7 @@ from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter, Template
 from app.settings import Settings
+
 
 settings = Settings()
 
@@ -365,6 +367,79 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
 
   fig.savefig(url_for('static', filename='img/test.jpg'))
   pool.close()
+
+
+def createDBentries(content):
+  message = []
+  if type(content) is list:
+    content = content[0]
+
+  for key in content:
+    obj = content[key]
+    if key == 'template':
+      print('template')
+      for o in obj:
+        t = Template()
+        if 'name' in o:
+          t.name = o['name']
+        if 'steps' in o:
+          # Query for steps and associate them with template
+          for step in o['steps']:
+            stepObj = Step.objects.filter(name=step).first()
+            if stepObj:
+              t['steps'].append(stepObj)
+            else:
+              print('No step object found')
+      try:
+          t.save()
+      except ValidationError as e:
+        message.append('Error creating the template: ' + str(e))
+        pass
+      except NotUniqueError as e:
+        message.append('Template with the same name has already been added: ' + t['name'])
+        pass
+      except:
+        message.append('There was an error creating a template')
+        pass
+
+    elif key == 'parameter':
+      for o in obj:
+        p = Parameter(**o)
+        try:
+          p.save()
+        except OSError as e:
+          message.append('Error creating the parameter: ' + str(e))
+          pass
+        except ValidationError as e:
+          message.append('Error creating the parameter: ' + str(e))
+          pass
+        except NotUniqueError as e:
+          message.append('Parameter with the same name has already been added: ' + p['name'])
+          pass
+
+    elif key == 'steps':
+      for o in obj:
+        s = Step()
+        if 'name' in o:
+          s['name'] = o['name']
+        if 'order' in o:
+          s['order'] = o['order']
+        if 'parameter' in o:
+          # Query for steps and associate them with template
+          for param in o['parameter']:
+            pObj = Parameter.objects.filter(name=param).first()
+            if pObj:
+              s['parameter'].append(pObj)
+        try:
+          s.save()
+        except ValidationError as e:
+          message.append('Error creating the parameter: ' + str(e))
+          pass
+        except NotUniqueError as e:
+          message.append('Step with the same name has already been added.')
+          continue
+
+    return message
 
 def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
   job_id=ObjectId(job_id)

@@ -1,6 +1,8 @@
 # Contains routes and functions to pass content to the template layer
 import requests, json, os, math, bson, re, subprocess, ipdb
 from flask import render_template, request, jsonify, abort, send_from_directory
+from flask import send_from_directory, redirect, url_for, jsonify
+from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from collections import OrderedDict
 from datetime import datetime
@@ -12,6 +14,8 @@ from app.jobs_io import reformatDataToPost, parseJsonDataNoForms
 from app.models import Dependency
 from bson.objectid import ObjectId
 
+
+ALLOWED_EXTENSIONS = set(['txt', 'json'])
 settings = Settings()
 
 # Prefix for all default pipeline step json file names
@@ -31,10 +35,15 @@ client = MongoClient(mongosettings)
 # lightsheetDB is the database containing lightsheet job information and parameters
 lightsheetDB = client.lightsheet
 
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico')
+
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
@@ -254,20 +263,55 @@ def register():
     flash('Thanks for registering')
     return redirect(url_for('login'))
   return render_template('register.html',
-                         form=form,
-                         version=getAppVersion(app.root_path))
+                         form=form)
 
 
 @app.route('/login')
 def login():
-  return render_template('login.html',
-                         logged_in=False,
-                         version=getAppVersion(app.root_path))
+  return render_template('login.html')
 
-@app.route('/upload')
+
+@app.route('/upload', methods=['GET', 'POST'])
 def upload():
-  return render_template('upload.html',
-                         version=getAppVersion(app.root_path))
+  if request.method == 'GET':
+    return render_template('upload.html')
+
+  if request.method == 'POST':
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+      filename = secure_filename(file.filename)
+      file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+      return redirect(url_for('uploaded_file',
+                             filename=filename))
+    else:
+      # allowed_ext = print(', '.join(ALLOWED_EXTENSIONS[:-1]) + " or " + ALLOWED_EXTENSIONS[-1])
+      allowed_ext = (', '.join(ALLOWED_EXTENSIONS))
+      message = 'Please make sure, your file extension is one of the following: ' + allowed_ext
+      return  render_template('upload.html', message = message)
+    return 'error'
+
+
+@app.route('/upload/<filename>', methods=['GET', 'POST'])
+def uploaded_file(filename):
+    try:
+      result = send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+      c = json.loads(result.response.file.read())
+      message = createDBentries(c)
+      return render_template('upload.html', content=c, filename=filename, message=message)
+    except BaseException as e:
+      message = []
+      message.append('There was an error uploading the file ' + filename + ": " + str(e))
+      return render_template('upload.html', filename=filename, message=message)
+
 
 @app.route('/config/<lightsheetDB_id>', methods=['GET'])
 def config(lightsheetDB_id):
