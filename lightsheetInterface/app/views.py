@@ -57,12 +57,12 @@ def template(template_name):
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
                        config = config,
-                       version = getAppVersion(app.root_path),
                        lightsheetDB_id = None,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
                        templates=config['templates'],
                        currentTemplate=currentTemplate)
+
 
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -203,7 +203,6 @@ def index():
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
                        config = config,
-                       version = getAppVersion(app.root_path),
                        lightsheetDB_id = lightsheetDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
@@ -237,15 +236,12 @@ def job_status():
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
                            logged_in=True,
-                           lightsheetDB_id=lightsheetDB_id,
-                           version = getAppVersion(app.root_path))
+                           lightsheetDB_id=lightsheetDB_id)
 
 
 @app.route('/search')
 def search():
-    return render_template('search.html',
-                           logged_in=True,
-                           version = getAppVersion(app.root_path))
+    return render_template('search.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -284,6 +280,7 @@ def config(lightsheetDB_id):
     else:
         return jsonify(output)
 
+
 def createDependencyResults(dependencies):
   result = []
   for d in dependencies:
@@ -297,6 +294,7 @@ def createDependencyResults(dependencies):
       result.append(obj)
   return result
 
+
 @app.context_processor
 def add_value_dependency_object():
   dep = Dependency.objects.filter(dependency_type='V');
@@ -304,6 +302,7 @@ def add_value_dependency_object():
   if dep is not None:
     result = createDependencyResults(dep)
   return dict(value_dependency=result)
+
 
 @app.context_processor
 def add_dimension_dependency_object():

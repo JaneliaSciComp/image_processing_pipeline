@@ -366,15 +366,6 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
   fig.savefig(url_for('static', filename='img/test.jpg'))
   pool.close()
 
-
-def getAppVersion(path):
-  mpath = path.split('/')
-  result = '/'.join(mpath[0:(len(mpath) - 1)]) + '/package.json'
-  with open(result) as package_data:
-    data = json.load(package_data)
-    package_data.close()
-    return data['version']
-
 def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
   job_id=ObjectId(job_id)
   configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(job_id)
