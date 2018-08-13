@@ -396,7 +396,7 @@ def createDBentries(content):
         message.append('Error creating the template: ' + str(e))
         pass
       except NotUniqueError as e:
-        message.append('Template with the same name has already been added: ' + t['name'])
+        message.append('Template with the name "{0}" has already been added.'.format(o['name']))
         pass
       except:
         message.append('There was an error creating a template')
@@ -414,7 +414,7 @@ def createDBentries(content):
           message.append('Error creating the parameter: ' + str(e))
           pass
         except NotUniqueError as e:
-          message.append('Parameter with the same name has already been added: ' + p['name'])
+          message.append('Parameter with the name "{0}" has already been added: '.format(p['name']))
           pass
 
     elif key == 'steps':
@@ -436,7 +436,7 @@ def createDBentries(content):
           message.append('Error creating the parameter: ' + str(e))
           pass
         except NotUniqueError as e:
-          message.append('Step with the same name has already been added.')
+          message.append('Step with the name "{0}" has already been added.'.format(o['name']))
           continue
 
     return message
