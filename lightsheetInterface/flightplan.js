@@ -115,7 +115,7 @@ plan.remote('deploy', function(remote) {
 
 plan.remote('deploy', function(remote) {
   remote.log('Create upload folder');
-  remote.exec('cd ' + config.projectDir + '; cd ../; mkdir upload');
+  remote.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
 });
 
 // plan.remote('deploy', function(remote) {
