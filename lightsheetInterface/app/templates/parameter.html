@@ -48,8 +48,7 @@
               <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" value="{{ param.number4 }}" id="{{ param.name }}-3">
             {% endif %}
           {% endif %}
-        </div>
-      {% if value.empty == True %}
+          {% if value.empty == True %}
         {% if value.type == 'Text' %}
           <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty string as field value">
         {% else %}
@@ -60,7 +59,7 @@
         </div>
       {% endif %}
       {% if value.hint %}
-          <div class="row hint-area">
+          <div class="form-group form-inline hint-area">
             <div class="input-group-sm mb-1">
                 <i class="fa fa-info-circle info-icon"></i>
             </div>
@@ -69,6 +68,7 @@
             </div>
           </div>
        {% endif %}
+        </div>
       </div>
     </div>
 {% endif %}

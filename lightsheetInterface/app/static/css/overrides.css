@@ -74,6 +74,7 @@ fieldset {
 
 .lightsheet-checkbox {
   margin-left: 10px;
+  margin-top: -1em;
 }
 
 .empty-label {
@@ -136,6 +137,8 @@ fieldset {
 .hint-area  {
   margin-left: 1em;
   margin-right: 1em;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .parameter-hint {
