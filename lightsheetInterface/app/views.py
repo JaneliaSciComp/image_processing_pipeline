@@ -302,15 +302,17 @@ def upload():
 
 @app.route('/upload/<filename>', methods=['GET', 'POST'])
 def uploaded_file(filename):
-    try:
-      result = send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-      c = json.loads(result.response.file.read())
-      message = createDBentries(c)
-      return render_template('upload.html', content=c, filename=filename, message=message)
-    except BaseException as e:
+      with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
+        c = json.loads(file.read())
+        message = createDBentries(c)
+        return render_template('upload.html', content=c, filename=filename, message=message)
       message = []
-      message.append('There was an error uploading the file ' + filename + ": " + str(e))
-      return render_template('upload.html', filename=filename, message=message)
+      message.append('Error uploading the file {0}'.format(filename))
+      return return render_template('upload.html', filename=filename, message=message)
+      # except BaseException as e:
+      #   message = []
+      #   message.append('There was an error uploading the file ' + filename + ": " + str(e))
+      #   return render_template('upload.html', filename=filename, message=message)
 
 
 @app.route('/config/<lightsheetDB_id>', methods=['GET'])
