@@ -30,7 +30,6 @@ fieldset {
 .lightsheet-input {
   max-width: 20em;
   min-width: 9em;
-  height: 1.8em;
 }
 
 .lightsheet-number {
@@ -63,6 +62,11 @@ fieldset {
   min-width: 4em;
 }
 
+.lightsheet-label-configure {
+  font-size: 0.9em;
+  min-width: 6em;
+}
+
 .lightsheet-search {
   margin-bottom: 1.2em;
   width: 33%;
@@ -70,10 +74,7 @@ fieldset {
 
 .lightsheet-checkbox {
   margin-left: 10px;
-}
-
-#steps .card:first-child .card-header {
-  background-color: rgba(0,0,0,0.1);
+  margin-top: -1em;
 }
 
 .empty-label {
@@ -131,6 +132,21 @@ fieldset {
 .apply-button {
   float: right;
   margin-bottom: 12px;
+}
+
+.hint-area  {
+  margin-left: 1em;
+  margin-right: 1em;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.parameter-hint {
+  display: none;
+}
+
+select .template-dropdown {
+  width: 200px !important;
 }
 
 @media (min-width: 769px) {
@@ -191,6 +207,22 @@ fieldset {
   }
 }
 
+#globalParameters-card .card-header{
+  background-color: rgba(0,0,0,0.1);
+}
+
+.info-icon {
+  font-size: 1.2em;
+  color: #555555;
+  margin-bottom: auto;
+  margin-top: auto;
+  margin-left: 0.4em;
+  margin-right: 1.5em;
+}
+
+.msg-error {
+  color: red;
+}
 
 @media (max-width: 2500px) {
   #job-table_length {

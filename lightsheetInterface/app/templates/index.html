@@ -20,15 +20,37 @@
   <div class="row lightsheet-row">
     <h4 id ="job-heading">Configure Job</h4>
   </div>
+
+  <!-- Row with elements to configure -->
   <div class="row">
-    <div class="col-lg-3 col-md-3 col-sm-3">
+    {% if config.templates is defined and config.templates is not none %}
+    <div class="col-lg-4 col-md-4 col-sm-4">
+      <div class="form-group form-inline">
+        <label class="lightsheet-label-configure">Template: </label>
+        <select class="form-control template-dropdown" id="template-selector">
+        {% if currentTemplate is defined %}
+          {% for tObj in config.templates %}
+            {% if currentTemplate == tObj.name %}
+              <option value="{{ tObj.name }}" selected>{{ tObj.name }}</option>
+            {% else %}
+              <option value="{{ tObj.name }}" >{{ tObj.name }}</option>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          {% for tObj in config.templates %}
+            <option value="{{ tObj.name }}" >{{ tObj.name }}</option>
+          {% endfor %}
+        {% endif %}
+        </select>
+      </div>
       <!-- Name field -->
       <div class="form-group form-inline">
-        <label class="lightsheet-label">Name: </label>
+        <label class="lightsheet-label-configure">Name: </label>
         <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
       </div>
     </div>
-    <div class="col-lg-6 col-md-6 col-sm-6">
+    {% endif %}
+    <div class="col-lg-8 col-md-8 col-sm-8">
       <!-- Select existing job -->
       <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
@@ -55,14 +77,16 @@
     <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
     <div class="row lightsheet-row">
       <div id="steps">
-        {% for step in config['steps'] %}
-          {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-            {% set pipelineStep = pipelineSteps[step.name] %}
-            {% include "stepLoadJob.html" ignore missing with context %}
-          {% else %}
-            {% include "stepDefault.html" ignore missing with context %}
-          {% endif %}
-        {% endfor %}
+        {% if config['steps'] is not none %}
+          {% for step in config['steps'] %}
+            {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+              {% set pipelineStep = pipelineSteps[step.name] %}
+              {% include "stepLoadJob.html" ignore missing with context %}
+            {% else %}
+              {% include "stepDefault.html" ignore missing with context %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
       </div>
     </div>
     <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
@@ -78,6 +102,8 @@
     <table class="table table-striped table-hover" id='job-table' />
   </div>
 
+  <script src="{{url_for('static', filename='js/table.js')}}"></script>
+
   <!-- template variables to be processed in JavaScript -->
   <script>
      /*
@@ -88,11 +114,13 @@
      {% else %}
         var table_data = null;
      {% endif %}
+
      {% if value_dependency is defined %}
         var value_dependencies = {{ value_dependency|safe }};
      {% else %}
         var value_dependencies = null;
      {% endif %}
+
      {% if dimension_dependency is defined %}
         var dimension_dependencies = {{ dimension_dependency|safe }};
      {% else %}
@@ -103,6 +131,7 @@
   <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
   <!-- contrib dependencies -->
   <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
+
   <!-- script to set default job name -->
   <script>
     $(document).ready(
@@ -165,6 +194,21 @@
                 }
               }
             }
+          }
+        });
+
+        $('#template-selector').on('change', function(event){
+          var template_id = $(this).find(":selected").val();
+          window.location = window.origin + '/template/' + template_id;
+        });
+
+        $('.info-icon').on('click', function(event){
+          var elem = $(this.parentElement.parentElement.getElementsByClassName('parameter-hint')[0]);
+          if ( elem.css("display") == "none" ) {
+              elem.css("display","block");
+          }
+          else {
+              elem.css("display","none");
           }
         });
 

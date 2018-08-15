@@ -114,15 +114,9 @@ plan.remote('deploy', function(remote) {
 });
 
 plan.remote('deploy', function(remote) {
-  remote.log('Copy over lightsheet.sock');
-  remote.exec('cp ' + config.projectDir + '/lightsheet.sock ' + config.projectDir + '/current/');
+  remote.log('Create upload folder');
+  remote.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
 });
-
-// plan.remote('deploy', function(remote)
-//   remote.log('Set owners and permissions');
-//   remote.sudo('chmod g+w /opt/projects/lightsheet/current', {user: config.root});
-//   remote.sudo('chown kazimiersa:nginx /opt/projects/lightsheet/current', {user: config.root});
-// });
 
 // plan.remote('deploy', function(remote) {
 //   remote.log('Restart services...');

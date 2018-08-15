@@ -1,8 +1,9 @@
-import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re, math
+import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re, math, operator
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from mongoengine import ValidationError, NotUniqueError
 from wtforms import *
 from multiprocessing import Pool
 from pprint import pprint
@@ -11,8 +12,9 @@ from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
-from app.models import AppConfig, Step, Parameter
+from app.models import AppConfig, Step, Parameter, Template
 from app.settings import Settings
+
 
 settings = Settings()
 
@@ -87,8 +89,10 @@ def getParameters(parameter):
         param.count = '1'
       elif param.number3 == None:
         param.count = '2'
-      else:
+      elif param.number4 == None:
         param.count = '3'
+      else:
+        param.count = '4'
     else:
       param.type = 'Text'
       param.count = '1'
@@ -104,12 +108,20 @@ def getParameters(parameter):
   return result
 
 # build object with information about steps and parameters about admin interface
-def buildConfigObject():
+def buildConfigObject(template_name = None):
   try:
-    steps = Step.objects.all().order_by('order')
+    if not template_name:
+      template_name = 'LightSheet'
+
+    sorted_steps = None
+    template = Template.objects.filter(name=template_name).first()
+    if template:
+      steps = template.steps
+      sorted_steps = sorted(steps, key=operator.attrgetter('order'))
+    templates = Template.objects.all()
     p = Parameter.objects.all()
     paramDict = getParameters(p)
-    config = {'steps': steps, 'parameterDictionary': paramDict}
+    config = {'steps': sorted_steps, 'parameterDictionary': paramDict, 'templates': templates}
   except ServerSelectionTimeoutError:
     return 404
   return config
@@ -357,13 +369,77 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
   pool.close()
 
 
-def getAppVersion(path):
-  mpath = path.split('/')
-  result = '/'.join(mpath[0:(len(mpath) - 1)]) + '/package.json'
-  with open(result) as package_data:
-    data = json.load(package_data)
-    package_data.close()
-    return data['version']
+def createDBentries(content):
+  message = []
+  if type(content) is list:
+    content = content[0]
+
+  for key in content:
+    obj = content[key]
+    if key == 'template':
+      print('template')
+      for o in obj:
+        t = Template()
+        if 'name' in o:
+          t.name = o['name']
+        if 'steps' in o:
+          # Query for steps and associate them with template
+          for step in o['steps']:
+            stepObj = Step.objects.filter(name=step).first()
+            if stepObj:
+              t['steps'].append(stepObj)
+            else:
+              print('No step object found')
+      try:
+          t.save()
+      except ValidationError as e:
+        message.append('Error creating the template: ' + str(e))
+        pass
+      except NotUniqueError as e:
+        message.append('Template with the name "{0}" has already been added.'.format(o['name']))
+        pass
+      except:
+        message.append('There was an error creating a template')
+        pass
+
+    elif key == 'parameter':
+      for o in obj:
+        p = Parameter(**o)
+        try:
+          p.save()
+        except OSError as e:
+          message.append('Error creating the parameter: ' + str(e))
+          pass
+        except ValidationError as e:
+          message.append('Error creating the parameter: ' + str(e))
+          pass
+        except NotUniqueError as e:
+          message.append('Parameter with the name "{0}" has already been added: '.format(p['name']))
+          pass
+
+    elif key == 'steps':
+      for o in obj:
+        s = Step()
+        if 'name' in o:
+          s['name'] = o['name']
+        if 'order' in o:
+          s['order'] = o['order']
+        if 'parameter' in o:
+          # Query for steps and associate them with template
+          for param in o['parameter']:
+            pObj = Parameter.objects.filter(name=param).first()
+            if pObj:
+              s['parameter'].append(pObj)
+        try:
+          s.save()
+        except ValidationError as e:
+          message.append('Error creating the parameter: ' + str(e))
+          pass
+        except NotUniqueError as e:
+          message.append('Step with the name "{0}" has already been added.'.format(o['name']))
+          continue
+
+    return message
 
 def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
   job_id=ObjectId(job_id)

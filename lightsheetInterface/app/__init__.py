@@ -1,4 +1,4 @@
-import dateutil, ipdb, socket
+import dateutil, ipdb, socket, json
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_cache import Cache
@@ -9,17 +9,23 @@ from pprint import pprint
 from datetime import datetime
 
 app = Flask(__name__) #app variable, an object of class FLask
-
 app.config.from_pyfile('lightsheet-config.cfg')
 app.cache = Cache(app)
 
-# db settings
 admin=Admin(app)
-
 db = MongoEngine(app)
 toolbar = DebugToolbarExtension(app)
+
 from app import views, models #app package from which views will be imported
 
+
+def to_pretty_json(value):
+    return json.dumps(value, sort_keys=True,
+                      indent=6, separators=(',', ':'))
+
+app.jinja_env.filters['tojson_pretty'] = to_pretty_json
+
+# Define some global template variables
 @app.context_processor
 def add_global_variables():
   return dict(date_now=datetime.now())
@@ -27,6 +33,15 @@ def add_global_variables():
 @app.context_processor
 def add_machine_name():
   return dict(machine_name=socket.gethostname())
+
+@app.context_processor
+def get_app_version():
+  mpath = app.root_path.split('/')
+  result = '/'.join(mpath[0:(len(mpath) - 1)]) + '/package.json'
+  with open(result) as package_data:
+    data = json.load(package_data)
+    package_data.close()
+    return dict(version=data['version'])
 
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):
