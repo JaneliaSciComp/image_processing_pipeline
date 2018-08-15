@@ -308,7 +308,7 @@ def uploaded_file(filename):
         return render_template('upload.html', content=c, filename=filename, message=message)
       message = []
       message.append('Error uploading the file {0}'.format(filename))
-      return return render_template('upload.html', filename=filename, message=message)
+      return render_template('upload.html', filename=filename, message=message)
       # except BaseException as e:
       #   message = []
       #   message.append('There was an error uploading the file ' + filename + ": " + str(e))
