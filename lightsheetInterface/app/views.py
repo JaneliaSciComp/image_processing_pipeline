@@ -304,8 +304,8 @@ def upload():
 def uploaded_file(filename):
       with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
-        message = createDBentries(c)
-        return render_template('upload.html', content=c, filename=filename, message=message)
+        result = createDBentries(c)
+        return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
       message = []
       message.append('Error uploading the file {0}'.format(filename))
       return render_template('upload.html', filename=filename, message=message)

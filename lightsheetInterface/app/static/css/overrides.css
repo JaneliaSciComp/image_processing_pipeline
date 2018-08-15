@@ -224,6 +224,10 @@ select .template-dropdown {
   color: red;
 }
 
+.msg-success {
+  color: green;
+}
+
 @media (max-width: 2500px) {
   #job-table_length {
     min-width: 2400px;
