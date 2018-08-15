@@ -32,8 +32,8 @@ global_error = None
 # Mongo client
 mongosettings = 'mongodb://' + app.config['MONGODB_SETTINGS']['host'] + ':' + str(app.config['MONGODB_SETTINGS']['port']) + '/'
 client = MongoClient(mongosettings)
-# lightsheetDB is the database containing lightsheet job information and parameters
-lightsheetDB = client.lightsheet
+# imageProcessingDB is the database containing lightsheet job information and parameters
+imageProcessingDB = client.lightsheet
 
 
 def allowed_file(filename):
@@ -47,9 +47,9 @@ def favicon():
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
-  lightsheetDB_id = request.args.get('lightsheetDB_id')
-  if lightsheetDB_id == 'favicon.ico':
-    lightsheetDB_id = None
+  imageProcessingDB_id = request.args.get('imageProcessingDB_id')
+  if imageProcessingDB_id == 'favicon.ico':
+    imageProcessingDB_id = None
   parentJobInfo = None
   config = buildConfigObject(template_name)
   currentTemplate = None
@@ -58,15 +58,15 @@ def template(template_name):
       currentTemplate =  template_name
       break;
 
-  parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
-  jobs = allJobsInJSON(lightsheetDB)
+  parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
+  jobs = allJobsInJSON(imageProcessingDB)
   return render_template('index.html',
                        title='Home',
                        pipelineSteps=None,
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
                        config = config,
-                       lightsheetDB_id = None,
+                       imageProcessingDB_id = None,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
                        templates=config['templates'],
@@ -76,20 +76,20 @@ def template(template_name):
 @app.route('/', methods=['GET','POST'])
 def index():
   submissionStatus = None
-  lightsheetDB_id = request.args.get('lightsheetDB_id')
+  imageProcessingDB_id = request.args.get('imageProcessingDB_id')
   reparameterize = request.args.get('reparameterize');
   config = buildConfigObject()
-  if lightsheetDB_id == 'favicon.ico':
-    lightsheetDB_id = None
+  if imageProcessingDB_id == 'favicon.ico':
+    imageProcessingDB_id = None
   pipelineSteps = {}
   formData = None
   countJobs = 0
-  jobData =  getJobStepData(lightsheetDB_id, client) # get the data for all jobs
+  jobData =  getJobStepData(imageProcessingDB_id, client) # get the data for all jobs
   ableToReparameterize=True
   succededButLatterStepFailed=[]
   globalParameters=None
   if jobData:
-    globalParametersAndRemainingStepNames = list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)},{"remainingStepNames":1,"globalParameters":1}))
+    globalParametersAndRemainingStepNames = list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)},{"remainingStepNames":1,"globalParameters":1}))
     if "globalParameters" in globalParametersAndRemainingStepNames[0]:
       globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
     if ("pause" in jobData[-1]["parameters"] and jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
@@ -98,7 +98,7 @@ def index():
     if errorStepIndex:
       for i in range(errorStepIndex):
         succededButLatterStepFailed.append(jobData[i]["name"])
-  if reparameterize=="true" and lightsheetDB_id:
+  if reparameterize=="true" and imageProcessingDB_id:
     reparameterize=True
     remainingStepNames=globalParametersAndRemainingStepNames[0]["remainingStepNames"]
     if not ableToReparameterize:
@@ -109,7 +109,7 @@ def index():
   # match data on step name
   matchNameIndex = {}
   if type(jobData) is list:
-    if lightsheetDB_id != None: # load data for an existing job
+    if imageProcessingDB_id != None: # load data for an existing job
       for i in range(len(jobData)):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
@@ -146,7 +146,7 @@ def index():
     submissionStatus = 'Job cannot be loaded.'
   if request.method == 'POST':
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-    #lightsheetDB is the database containing lightsheet job information and parameters
+    #imageProcessingDB is the database containing lightsheet job information and parameters
     if request.json != '[]' and request.json != None:
       file = open(settings.gitVersionIdPath,'r')
       currentLightsheetCommit = file.readline()
@@ -186,23 +186,23 @@ def index():
 
       # Insert the data to the db
       if reparameterize:
-        lightsheetDB_id=ObjectId(lightsheetDB_id)
+        imageProcessingDB_id=ObjectId(imageProcessingDB_id)
         subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
-        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": subDict})
+        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
         for currentStepDictionary in processedData:
-          lightsheetDB.jobs.update_one({"_id": lightsheetDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
+          imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
       else:
-        lightsheetDB_id = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+        imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
       if globalParametersPosted:
         globalParametersPosted.pop("")
-        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": {"globalParameters":globalParametersPosted}})
+        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
 
-      submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, reparameterize)
+      submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
 
-  updateDBStatesAndTimes(lightsheetDB)
-  parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id,"parent")
-  jobs = allJobsInJSON(lightsheetDB)
+  updateDBStatesAndTimes(imageProcessingDB)
+  parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
+  jobs = allJobsInJSON(imageProcessingDB)
   # if len(pipelineSteps) > 0:
   #Return index.html with pipelineSteps and serviceData
 
@@ -212,7 +212,7 @@ def index():
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
                        config = config,
-                       lightsheetDB_id = lightsheetDB_id,
+                       imageProcessingDB_id = imageProcessingDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
                        currentTemplate='LightSheet')
@@ -220,13 +220,13 @@ def index():
 
 @app.route('/job_status', methods=['GET','POST'])
 def job_status():
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
+    imageProcessingDB_id = request.args.get('imageProcessingDB_id')
     #Mongo client
-    updateDBStatesAndTimes(lightsheetDB)
-    parentJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "parent")
+    updateDBStatesAndTimes(imageProcessingDB)
+    parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent")
     childJobInfo=[]
     if request.method == 'POST':
-      pausedJobInformation=list(lightsheetDB.jobs.find({"_id":ObjectId(lightsheetDB_id)}))
+      pausedJobInformation=list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)}))
       pausedJobInformation=pausedJobInformation[0]
       pausedStates = [step['parameters']['pause'] for step in pausedJobInformation["steps"]]
       pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
@@ -234,18 +234,18 @@ def job_status():
       while pausedJobInformation["remainingStepNames"][0]!=pausedJobInformation["steps"][pausedStepIndex]["name"]:
         pausedJobInformation["remainingStepNames"].pop(0)
       pausedJobInformation["remainingStepNames"].pop(0) #Remove steps that have been completed/approved
-      lightsheetDB.jobs.update_one({"_id": ObjectId(lightsheetDB_id)},{"$set": pausedJobInformation})
-      submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, True)
-      updateDBStatesAndTimes(lightsheetDB)
-    if lightsheetDB_id is not None:
-        childJobInfo = getJobInfoFromDB(lightsheetDB, lightsheetDB_id, "child")
+      imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)},{"$set": pausedJobInformation})
+      submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, True)
+      updateDBStatesAndTimes(imageProcessingDB)
+    if imageProcessingDB_id is not None:
+        childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
         childJobInfo = childJobInfo[0]["steps"]
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
                            logged_in=True,
-                           lightsheetDB_id=lightsheetDB_id)
+                           imageProcessingDB_id=imageProcessingDB_id)
 
 
 @app.route('/search')
@@ -308,19 +308,19 @@ def uploaded_file(filename):
         return render_template('upload.html', content=c, filename=filename, message=message)
       message = []
       message.append('Error uploading the file {0}'.format(filename))
-      return return render_template('upload.html', filename=filename, message=message)
+      return render_template('upload.html', filename=filename, message=message)
       # except BaseException as e:
       #   message = []
       #   message.append('There was an error uploading the file ' + filename + ": " + str(e))
       #   return render_template('upload.html', filename=filename, message=message)
 
 
-@app.route('/config/<lightsheetDB_id>', methods=['GET'])
-def config(lightsheetDB_id):
+@app.route('/config/<imageProcessingDB_id>', methods=['GET'])
+def config(imageProcessingDB_id):
     globalParameter = request.args.get('globalParameter')
     stepName = request.args.get('stepName')
     stepParameter = request.args.get('stepParameter')
-    output=getConfigurationsFromDB(lightsheetDB_id, client, globalParameter, stepName, stepParameter)
+    output=getConfigurationsFromDB(imageProcessingDB_id, client, globalParameter, stepName, stepParameter)
     if output==404:
         abort(404)
     else:
