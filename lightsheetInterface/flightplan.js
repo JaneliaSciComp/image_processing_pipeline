@@ -118,12 +118,6 @@ plan.remote('deploy', function(remote) {
   remote.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
 });
 
-// plan.remote('deploy', function(remote) {
-//   remote.log('Restart services...');
-//   remote.sudo('systemctl stop lightsheet');
-//   remote.sudo('systemctl start lightsheet');
-// });
-
 plan.remote('rollback', function(remote) {
   remote.log('Rolling back release');
   var releases = getReleases(remote);
