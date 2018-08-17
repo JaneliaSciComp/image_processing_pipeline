@@ -47,7 +47,7 @@ def favicon():
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
-  imageProcessingDB_id = request.args.get('imageProcessingDB_id')
+  imageProcessingDB_id = request.args.get('lightsheetDB_id')
   if imageProcessingDB_id == 'favicon.ico':
     imageProcessingDB_id = None
   parentJobInfo = None
@@ -66,7 +66,7 @@ def template(template_name):
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
                        config = config,
-                       imageProcessingDB_id = None,
+                       lightsheetDB_id = None,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
                        templates=config['templates'],
@@ -76,7 +76,7 @@ def template(template_name):
 @app.route('/', methods=['GET','POST'])
 def index():
   submissionStatus = None
-  imageProcessingDB_id = request.args.get('imageProcessingDB_id')
+  imageProcessingDB_id = request.args.get('lightsheetDB_id')
   reparameterize = request.args.get('reparameterize');
   config = buildConfigObject()
   if imageProcessingDB_id == 'favicon.ico':
@@ -169,13 +169,13 @@ def index():
       globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
       processedData=[]
       remainingStepNames=[];
-      allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
-      for stepName in allStepNames:
-        currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
-        if currentStepDictionary:
-            remainingStepNames.append(currentStepDictionary["name"])
-            processedData.append(currentStepDictionary)
-
+      for step in config["steps"]: #Reorder json to get proper order and leave out global parameters
+        stepName=step.name
+        if "globalParameters" not in stepName:
+          currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
+          if currentStepDictionary:
+              remainingStepNames.append(currentStepDictionary["name"])
+              processedData.append(currentStepDictionary)
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "state": "NOT YET QUEUED",
@@ -184,7 +184,7 @@ def index():
                         "steps": processedData
                        }
 
-      # Insert the data to the db
+      #Insert the data to the db
       if reparameterize:
         imageProcessingDB_id=ObjectId(imageProcessingDB_id)
         subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
@@ -212,7 +212,7 @@ def index():
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
                        config = config,
-                       imageProcessingDB_id = imageProcessingDB_id,
+                       lightsheetDB_id = imageProcessingDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
                        currentTemplate='LightSheet')
@@ -220,7 +220,7 @@ def index():
 
 @app.route('/job_status', methods=['GET','POST'])
 def job_status():
-    imageProcessingDB_id = request.args.get('imageProcessingDB_id')
+    imageProcessingDB_id = request.args.get('lightsheetDB_id')
     #Mongo client
     updateDBStatesAndTimes(imageProcessingDB)
     parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent")
@@ -245,7 +245,7 @@ def job_status():
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
                            logged_in=True,
-                           imageProcessingDB_id=imageProcessingDB_id)
+                           lightsheetDB_id=imageProcessingDB_id)
 
 
 @app.route('/search')
