@@ -1,5 +1,5 @@
 # Contains routes and functions to pass content to the template layer
-import requests, json, os, math, bson, re, subprocess, ipdb
+import requests, json, os, math, bson, re, subprocess, ipdb, logging
 from flask import render_template, request, jsonify, abort, send_from_directory
 from flask import send_from_directory, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
@@ -145,6 +145,7 @@ def index():
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
   if request.method == 'POST':
+    app.logger.info('POST request root route -- json {0}'.format(request.json))
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #lightsheetDB is the database containing lightsheet job information and parameters
     if request.json != '[]' and request.json != None:
