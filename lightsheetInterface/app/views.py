@@ -72,8 +72,40 @@ def favicon():
 #                        templates=config['templates'],
 #                        currentTemplate=currentTemplate)
 
-@app.route('/', methods=['GET','POST'], defaults={'template_name':None})
 @app.route('/template/<template_name>', methods=['GET','POST'])
+def template(template_name):
+  lightsheetDB_id = request.args.get('lightsheetDB_id')
+  reparameterize = request.args.get('reparameterize');
+  if lightsheetDB_id == 'favicon.ico':
+    lightsheetDB_id = None
+  parentJobInfo = None
+  config = buildConfigObject(template_name)
+  currentTemplate = None
+  for template in config['templates']:
+    if template.name == template_name:
+      currentTemplate =  template_name
+      break;
+
+  if request.method == 'POST' and request.json:
+    print(request.args)
+    doThePost(request.json, reparameterize, imageProcessingDB, template_name)
+
+  updateDBStatesAndTimes(imageProcessingDB)
+  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id,"parent")
+  jobs = allJobsInJSON(imageProcessingDB)
+  return render_template('index.html',
+                       title='Home',
+                       pipelineSteps=None,
+                       parentJobInfo = parentJobInfo, # used by job status
+                       logged_in=True,
+                       config = config,
+                       lightsheetDB_id = None,
+                       jobsJson= jobs, # used by the job table
+                       submissionStatus = None,
+                       templates=config['templates'],
+                       currentTemplate=currentTemplate)
+
+@app.route('/', methods=['GET','POST'], defaults={'template_name':None})
 def index(template_name):
   submissionStatus = None
   imageProcessingDB_id = request.args.get('lightsheetDB_id')
@@ -152,7 +184,7 @@ def index(template_name):
 
   if request.method == 'POST' and request.json:
     app.logger.info('POST request root route -- json {0}'.format(request.json))
-    doThePost(request.json, reparameterize, imageProcessingDB)
+    doThePost(request.json, reparameterize, imageProcessingDB, 'LightSheet')
 
   # updateDBStatesAndTimes(imageProcessingDB)
   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
@@ -278,6 +310,9 @@ def config(imageProcessingDB_id):
     else:
         return jsonify(output)
 
+@app.route('/test')
+def test():
+  return 'test'
 
 def createDependencyResults(dependencies):
   result = []

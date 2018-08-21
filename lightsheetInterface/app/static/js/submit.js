@@ -9,7 +9,6 @@ var dataIo = dataIo || {};
 dataIo.customSubmit = function(){
 
   console.log(lightsheet.currentTemplate);
-  debugger;
   const url = window.origin;
   const formInput = $('form :input');
   // Initialize object which will contain data to be posted
@@ -62,10 +61,8 @@ dataIo.customSubmit = function(){
       })
   });
 
-  var finalUrl = url + "/" + location.search;
-  console.log(data);
-  const formDataRequest = new Request(finalUrl, { method: 'POST' });
-  fetch(url + "/" + location.search, {
+
+  fetch(dataIo.currentTemplate, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

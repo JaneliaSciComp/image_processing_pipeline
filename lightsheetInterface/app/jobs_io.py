@@ -2,7 +2,7 @@
 import re, ipdb, json
 from logging.config import dictConfig
 from mongoengine.queryset.visitor import Q
-from app.models import AppConfig, Step, Parameter
+from app.models import AppConfig, Step, Parameter, Template
 from pprint import pprint
 from enum import Enum
 from app import app
@@ -171,8 +171,9 @@ def parseJsonDataNoForms(data, stepName, config):
 
 
 #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-def doThePost(formJson, reparameterize, lightsheetDB):
+def doThePost(formJson, reparameterize, lightsheetDB, currentTemplate = None):
   app.logger.info('Post json data: {0}'.format(formJson))
+  app.logger.info('Current template: {0}'.format(currentTemplate))
   settings = Settings()
 
   if formJson != '[]' and formJson != None:
@@ -197,12 +198,15 @@ def doThePost(formJson, reparameterize, lightsheetDB):
       globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
       processedData=[]
       remainingStepNames=[];
-      allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
-      for stepName in allStepNames:
-        currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
-        if currentStepDictionary:
-            remainingStepNames.append(currentStepDictionary["name"])
-            processedData.append(currentStepDictionary)
+      # allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
+      # allStepNames = Template.objects.filter(name=currentTemplate).first()
+      allSteps = Step.objects.all()
+      if allSteps:
+        for step in allSteps:
+          currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == step.name), None)
+          if currentStepDictionary:
+              remainingStepNames.append(currentStepDictionary["name"])
+              processedData.append(currentStepDictionary)
 
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,

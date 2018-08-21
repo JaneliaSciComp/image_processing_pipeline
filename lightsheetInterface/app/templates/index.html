@@ -17,9 +17,15 @@
   <!--
       Rows to configure a new job
   -->
-  <div class="row lightsheet-row">
-    <h4 id ="job-heading">Configure Job</h4>
-  </div>
+  {% if currentTemplate is defined and currentTemplate is not none %}
+    <div class="row lightsheet-row">
+      <h4 id ="job-heading">Configure Job for {{ currentTemplate }}</h4>
+    </div>
+  {% else %}
+    <div class="row lightsheet-row">
+      <h4 id ="job-heading">Configure Job</h4>
+    </div>
+  {% endif %}
 
   <!-- Row with elements to configure -->
   <div class="row">
@@ -74,7 +80,7 @@
   -->
   <form action="" method="post">
     <!-- button to submit the forms -->
-    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
+    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="dataIo.customSubmit()" />
     <div class="row lightsheet-row">
       <div id="steps">
         {% if config['steps'] is not none %}
@@ -89,7 +95,7 @@
         {% endif %}
       </div>
     </div>
-    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="lightsheet.customSubmit()" />
+    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="dataIo.customSubmit()" />
   </form>
 
   <!--
@@ -102,7 +108,8 @@
     <table class="table table-striped table-hover" id='job-table' />
   </div>
 
-  <script src="{{url_for('static', filename='js/table.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/table.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/submit.js') }}"></script>
 
   <!-- template variables to be processed in JavaScript -->
   <script>
@@ -126,11 +133,21 @@
      {% else %}
         var dimension_dependencies = null;
      {% endif %}
+
+     {% if currentTemplate is defined %}
+        // var currentTemplate = String("{{ currentTemplate|safe }}").replace(/ /g, "%20");
+        var currentTemplate = String("{{ currentTemplate|safe }}");
+
+        dataIo.currentUrl = "{{ url_for('template', template_name='placeholder') }}";
+        dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
+     {% else %}
+        var dataIo.currentTemplate = null;
+        var dataIo.currentUrl = null;
+     {% endif %}
   </script>
+
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
-  <!-- contrib dependencies -->
-  <script src="{{ url_for('static', filename='components/moment/min/moment.min.js') }}"></script>
 
   <!-- script to set default job name -->
   <script>
@@ -216,54 +233,4 @@
       }
     )
   </script>
-
-  <script>
-  $(document).ready(function(){
-    $(':input[type=text]').each(function(){ //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
-        let currentValue = $(this).val();
-        let currentID = "#"+$(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
-        var dependenciesFound = currentValue.match(/{([^}]+)}/g);
-        if(dependenciesFound != null){
-          for (var i=0; i< dependenciesFound.length; i++){
-              let currentDependency="#"+dependenciesFound[i].substr(1,dependenciesFound[i].length-2);
-              if($(currentDependency).prop('type')=="hidden"){
-                temp="select_"+dependenciesFound[i].substr(1,dependenciesFound[i].length-2);
-                currentDependency='[data-id="'+temp+'"]'; //multiselect checkbox still acts weird... cant get it to react when clicked or anything
-              }
-              $(currentDependency).bind("focus click keyup change",function(){
-                let updatedValue = currentValue;
-                for (var j=0; j< dependenciesFound.length; j++){
-                  let standardID=dependenciesFound[j].substr(1,dependenciesFound[j].length-2);
-                  let tempDependency="#"+standardID;
-                  let type = $(tempDependency).prop('type');
-                  if(type == "hidden"){
-                    tempDependency = "select_"+standardID;
-                    tempDependencyValue = $('[data-id="'+tempDependency+'"]').prop('title');
-                    if (tempDependencyValue == "Nothing selected" || tempDependencyValue==undefined){tempDependencyValue = "";}
-                  }
-                  else{
-                    tempDependencyValue = $(tempDependency).val();
-                  }
-
-                  if (standardID.includes("doubledash")){
-                      let flagName = standardID.match(/doubledash(.*)_/)[1];
-                      if(tempDependencyValue != ""){
-                        if(type=="hidden"){tempDependencyValue = "--" + flagName }
-                        else{tempDependencyValue = "--" + flagName + " " + tempDependencyValue; }
-                      }
-                  }
-                  updatedValue = updatedValue.replace(dependenciesFound[j],tempDependencyValue);
-                };
-                $(currentID).val(updatedValue);
-          });
-          //initialize
-          $(currentDependency).trigger("focus");
-          $(currentDependency).trigger("click");
-          $(currentDependency).trigger("keyup");
-          $(currentDependency).trigger("change");
-          };
-        };
-    });
-  });
-</script>
 {% endblock %}
