@@ -31,7 +31,6 @@ lightsheet.testCheckboxes = (function(){
  * Grab data and submit it when pressing the button
  */
 lightsheet.customSubmit = function(){
-
   const url = window.origin;
   const formInput = $('form :input');
   // Initialize object which will contain data to be posted

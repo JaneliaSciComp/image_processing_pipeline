@@ -45,40 +45,45 @@ def favicon():
                                'favicon.ico')
 
 
+# @app.route('/template/<template_name>', methods=['GET','POST'])
+# def template(template_name):
+#   imageProcessingDB_id = request.args.get('lightsheetDB_id')
+#   if imageProcessingDB_id == 'favicon.ico':
+#     imageProcessingDB_id = None
+#   parentJobInfo = None
+#   config = buildConfigObject(template_name)
+#   currentTemplate = None
+#   for template in config['templates']:
+#     if template.name == template_name:
+#       currentTemplate =  template_name
+#       break;
+
+#   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
+#   jobs = allJobsInJSON(imageProcessingDB)
+#   return render_template('index.html',
+#                        title='Home',
+#                        pipelineSteps=None,
+#                        parentJobInfo = parentJobInfo, # used by job status
+#                        logged_in=True,
+#                        config = config,
+#                        lightsheetDB_id = None,
+#                        jobsJson= jobs, # used by the job table
+#                        submissionStatus = None,
+#                        templates=config['templates'],
+#                        currentTemplate=currentTemplate)
+
+@app.route('/', methods=['GET','POST'], defaults={'template_name':None})
 @app.route('/template/<template_name>', methods=['GET','POST'])
-def template(template_name):
+def index(template_name):
+  submissionStatus = None
   imageProcessingDB_id = request.args.get('lightsheetDB_id')
-  if imageProcessingDB_id == 'favicon.ico':
-    imageProcessingDB_id = None
-  parentJobInfo = None
+  reparameterize = request.args.get('reparameterize');
   config = buildConfigObject(template_name)
   currentTemplate = None
   for template in config['templates']:
     if template.name == template_name:
       currentTemplate =  template_name
       break;
-
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
-  jobs = allJobsInJSON(imageProcessingDB)
-  return render_template('index.html',
-                       title='Home',
-                       pipelineSteps=None,
-                       parentJobInfo = parentJobInfo, # used by job status
-                       logged_in=True,
-                       config = config,
-                       lightsheetDB_id = None,
-                       jobsJson= jobs, # used by the job table
-                       submissionStatus = None,
-                       templates=config['templates'],
-                       currentTemplate=currentTemplate)
-
-
-@app.route('/', methods=['GET','POST'])
-def index():
-  submissionStatus = None
-  imageProcessingDB_id = request.args.get('lightsheetDB_id')
-  reparameterize = request.args.get('reparameterize');
-  config = buildConfigObject()
   if imageProcessingDB_id == 'favicon.ico':
     imageProcessingDB_id = None
   pipelineSteps = {}
@@ -144,7 +149,11 @@ def index():
             }
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
+
   if request.method == 'POST':
+    print(template_name)
+    print(request.json)
+    print(config["steps"])
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #imageProcessingDB is the database containing lightsheet job information and parameters
     if request.json != '[]' and request.json != None:
@@ -183,29 +192,26 @@ def index():
                         "remainingStepNames":remainingStepNames,
                         "steps": processedData
                        }
-
       #Insert the data to the db
-      if reparameterize:
-        imageProcessingDB_id=ObjectId(imageProcessingDB_id)
-        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
-        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
-        for currentStepDictionary in processedData:
-          imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
-      else:
-        imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
+      # if reparameterize:
+      #   imageProcessingDB_id=ObjectId(imageProcessingDB_id)
+      #   subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
+      #   imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
+      #   for currentStepDictionary in processedData:
+      #     imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
+      # else:
+      #   imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
-      if globalParametersPosted:
-        globalParametersPosted.pop("")
-        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
+      # if globalParametersPosted:
+      #   globalParametersPosted.pop("")
+      #   imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
 
-      submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
+      # submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
 
-  updateDBStatesAndTimes(imageProcessingDB)
+  # updateDBStatesAndTimes(imageProcessingDB)
   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
   jobs = allJobsInJSON(imageProcessingDB)
-  # if len(pipelineSteps) > 0:
   #Return index.html with pipelineSteps and serviceData
-
   return render_template('index.html',
                        title='Home',
                        pipelineSteps=pipelineSteps,
@@ -215,7 +221,7 @@ def index():
                        lightsheetDB_id = imageProcessingDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
-                       currentTemplate='LightSheet')
+                       currentTemplate=template_name)
 
 
 @app.route('/job_status', methods=['GET','POST'])
