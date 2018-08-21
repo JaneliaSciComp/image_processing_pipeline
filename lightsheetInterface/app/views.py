@@ -191,20 +191,20 @@ def index(template_name):
                         "steps": processedData
                        }
       #Insert the data to the db
-      # if reparameterize:
-      #   imageProcessingDB_id=ObjectId(imageProcessingDB_id)
-      #   subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
-      #   imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
-      #   for currentStepDictionary in processedData:
-      #     imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
-      # else:
-      #   imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
+      if reparameterize:
+        imageProcessingDB_id=ObjectId(imageProcessingDB_id)
+        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
+        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
+        for currentStepDictionary in processedData:
+          imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
+      else:
+        imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
-      # if globalParametersPosted:
-      #   globalParametersPosted.pop("")
-      #   imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
+      if globalParametersPosted:
+        globalParametersPosted.pop("")
+        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
 
-      # submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
+      submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
 
   # updateDBStatesAndTimes(imageProcessingDB)
   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
