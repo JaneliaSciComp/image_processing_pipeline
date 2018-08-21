@@ -6,7 +6,6 @@ import matplotlib.gridspec as gridspec
 from mongoengine import ValidationError, NotUniqueError
 from wtforms import *
 from multiprocessing import Pool
-from pprint import pprint
 from scipy import misc
 from datetime import datetime
 from pytz import timezone
@@ -371,13 +370,13 @@ def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specim
 
 def createDBentries(content):
   message = []
+  success = False
   if type(content) is list:
     content = content[0]
-
-  for key in content:
+  keys = content.keys()
+  for key in keys:
     obj = content[key]
     if key == 'template':
-      print('template')
       for o in obj:
         t = Template()
         if 'name' in o:
@@ -390,18 +389,17 @@ def createDBentries(content):
               t['steps'].append(stepObj)
             else:
               print('No step object found')
-      try:
+        try:
           t.save()
-      except ValidationError as e:
-        message.append('Error creating the template: ' + str(e))
-        pass
-      except NotUniqueError as e:
-        message.append('Template with the name "{0}" has already been added.'.format(o['name']))
-        pass
-      except:
-        message.append('There was an error creating a template')
-        pass
-
+        except ValidationError as e:
+          message.append('Error creating the template: ' + str(e))
+          pass
+        except NotUniqueError as e:
+          message.append('Template with the name "{0}" has already been added.'.format(o['name']))
+          pass
+        except:
+          message.append('There was an error creating a template')
+          pass
     elif key == 'parameter':
       for o in obj:
         p = Parameter(**o)
@@ -437,9 +435,16 @@ def createDBentries(content):
           pass
         except NotUniqueError as e:
           message.append('Step with the name "{0}" has already been added.'.format(o['name']))
-          continue
+          pass
 
-    return message
+  if len(message) == 0:
+    success = True
+    message.append('File has been uploaded successfully.')
+
+  result = {}
+  result['message'] = message
+  result['success'] = success
+  return result
 
 def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
   job_id=ObjectId(job_id)
@@ -467,7 +472,7 @@ def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
     updateDBStatesAndTimes(lightsheetDB)
     submissionStatus = "success"
   except requests.exceptions.RequestException as e:
-    pprint('Exception occured')
+    print('Exception occured')
     submissionStatus = e
     if not continueOrReparameterize:
       lightsheetDB.jobs.remove({"_id":job_id})

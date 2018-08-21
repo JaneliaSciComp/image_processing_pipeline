@@ -1,7 +1,11 @@
 {% extends "branding.html" %}
 {% block content %}
   {% if message is defined %}
-    <div class="row lightsheet-row msg-error">
+    {% if success == true %}
+      <div class="row lightsheet-row msg-success">
+    {% else %}
+      <div class="row lightsheet-row msg-error">
+    {% endif %}
       {% for m in message %}
         {{ m }} </br>
       {% endfor %}

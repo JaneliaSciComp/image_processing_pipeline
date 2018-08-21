@@ -9,7 +9,7 @@ from app import admin
 
 types = (('', None), ('S','Step'), ('D','Directory'))
 frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
-formats = (('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'))
+formats = (('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'), ('O', 'Option'), ('F', 'Flag'))
 dependency_type = (('V', 'Value'), ('D', 'Dimension'))
 templates = ( ('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal') )
 
@@ -27,6 +27,7 @@ class Parameter(Document):
     number3 = FloatField()
     number4 = FloatField()
     text1 = StringField(max_length=500)
+    boolean = BooleanField()
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
     empty = BooleanField()
@@ -49,6 +50,7 @@ class Step(Document):
 class Template(Document):
     name = StringField(max_length=200, unique=True, required=True)
     steps = ListField(ReferenceField(Step))
+    order = IntField(required=True)
 
     def __unicode__(self):
       return self.name
@@ -94,8 +96,8 @@ class CKTextAreaField(TextAreaField):
 
 class ExtendedParameterView(ModelView):
    extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-   form_columns = ["name", "description", "number1", "number2", "number3", "number4", "text1", "frequency", "formatting", "empty", "order", "hint"]
-   column_filters = ["name", "description", "number1", "number2", "number3", "number4", "text1", "frequency", "formatting"]
+   form_columns = ["name", "description", "number1", "number2", "number3", "number4", "text1", "boolean", "frequency", "formatting", "empty", "order", "hint"]
+   column_filters = ["name", "description", "number1", "number2", "number3", "number4",  "text1", "boolean", "frequency", "formatting"]
    form_overrides = {
       'hint': CKTextAreaField
    }

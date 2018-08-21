@@ -1,5 +1,5 @@
 # Contains routes and functions to pass content to the template layer
-import requests, json, os, math, bson, re, subprocess, ipdb
+import requests, json, os, math, bson, re, subprocess, ipdb, logging
 from flask import render_template, request, jsonify, abort, send_from_directory
 from flask import send_from_directory, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
@@ -151,9 +151,7 @@ def index(template_name):
     submissionStatus = 'Job cannot be loaded.'
 
   if request.method == 'POST':
-    print(template_name)
-    print(request.json)
-    print(config["steps"])
+    app.logger.info('POST request root route -- json {0}'.format(request.json))
     #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
     #imageProcessingDB is the database containing lightsheet job information and parameters
     if request.json != '[]' and request.json != None:
@@ -310,8 +308,8 @@ def upload():
 def uploaded_file(filename):
       with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
-        message = createDBentries(c)
-        return render_template('upload.html', content=c, filename=filename, message=message)
+        result = createDBentries(c)
+        return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
       message = []
       message.append('Error uploading the file {0}'.format(filename))
       return render_template('upload.html', filename=filename, message=message)
