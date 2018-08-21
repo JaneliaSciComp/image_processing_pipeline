@@ -1,8 +1,19 @@
 # Contains functons to load jobs and submit jobs
 import re, ipdb, json
+from logging.config import dictConfig
 from mongoengine.queryset.visitor import Q
 from app.models import AppConfig, Step, Parameter
 from pprint import pprint
+from enum import Enum
+from app import app
+from app.settings import Settings
+from app.utils import submitToJACS
+
+class ParameterTypes(Enum):
+  checkbox = 1
+  rangeParam = 2
+  flag = 3
+  option = 4
 
 # change data before job is resubmitted
 def reformatDataToPost(postedData):
@@ -20,12 +31,19 @@ def reformatDataToPost(postedData):
         # Find checkboxes and deal with them separately
         if 'checkbox' in parameterKey:
           checkboxes.append(parameterKey);
+        paramType= None
         range = False
+
+        q = Parameter.objects.filter(Q(formatting='F') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
+        if (len(q) != 0): # this parameter is a range parameter
+          paramType = ParameterTypes.flag
+
         # First test if it's a nested parameter
         if '-' in parameterKey: # check, whether this is a range parameter
           splitRest = parameterKey.split('-')
           q = Parameter.objects.filter(Q(formatting='R') & (Q(name=parameterKey.split('-')[0]) | Q(name= parameterKey.split('-')[0] + '_' + step )))
           if (len(q) != 0): # this parameter is a range parameter
+            paramType = ParameterTypes.rangeParam
             range = True
 
         # Then check if stepname is part of parameter name
@@ -36,7 +54,8 @@ def reformatDataToPost(postedData):
         else:
           parameter = parameterKey;
         parameter = parameter.split('-')[0]
-        if range:
+
+        if paramType and paramType == ParameterTypes.rangeParam:
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter] # get the existing object
           else:
@@ -58,6 +77,9 @@ def reformatDataToPost(postedData):
           if not paramValueSet:
             paramValueSet = []
           stepParamResult[parameter] = paramValueSet
+
+          # if paramType and paramType == ParameterTypes.flag:
+            #TODO: 'cope with flag parameters when submitting the job'
 
           # check if current value is a float within a string and needs to be converted
           currentValue = postedData[step][parameterKey]
@@ -146,3 +168,62 @@ def parseJsonDataNoForms(data, stepName, config):
   result['sometimes'] = pSometimes
   result['rare'] = pRare
   return result
+
+
+#If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
+def doThePost(formJson, reparameterize, lightsheetDB):
+  app.logger.info('Post json data: {0}'.format(formJson))
+  settings = Settings()
+
+  if formJson != '[]' and formJson != None:
+      file = open(settings.gitVersionIdPath,'r')
+      currentLightsheetCommit = file.readline()
+      file.close()
+
+      # trim \n in the end
+      currentLightsheetCommit = currentLightsheetCommit.rstrip('\n')
+      app.logger.info(currentLightsheetCommit)
+
+      userDefinedJobName=[]
+
+      # get the name of the job first
+      jobName = formJson['jobName']
+      del(formJson['jobName'])
+
+      # delete the jobName entry from the dictionary so that the other entries are all steps
+      jobSteps = list(formJson.keys())
+
+      processedDataTemp = reformatDataToPost(formJson)
+      globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
+      processedData=[]
+      remainingStepNames=[];
+      allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
+      for stepName in allStepNames:
+        currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
+        if currentStepDictionary:
+            remainingStepNames.append(currentStepDictionary["name"])
+            processedData.append(currentStepDictionary)
+
+      # Prepare the db data
+      dataToPostToDB = {"jobName": jobName,
+                        "state": "NOT YET QUEUED",
+                        "lightsheetCommit":currentLightsheetCommit,
+                        "remainingStepNames":remainingStepNames,
+                        "steps": processedData
+                       }
+
+      # Insert the data to the db
+      if reparameterize:
+        lightsheetDB_id=ObjectId(lightsheetDB_id)
+        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
+        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": subDict})
+        for currentStepDictionary in processedData:
+          lightsheetDB.jobs.update_one({"_id": lightsheetDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
+      else:
+        lightsheetDB_id = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+
+      if globalParametersPosted:
+        globalParametersPosted.pop("")
+        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": {"globalParameters":globalParametersPosted}})
+
+      submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, reparameterize)

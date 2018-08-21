@@ -10,7 +10,7 @@ from app import app
 from app.settings import Settings
 from bson.objectid import ObjectId
 from app.utils import *
-from app.jobs_io import reformatDataToPost, parseJsonDataNoForms
+from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost
 from app.models import Dependency
 from bson.objectid import ObjectId
 
@@ -150,61 +150,9 @@ def index(template_name):
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
 
-  if request.method == 'POST':
+  if request.method == 'POST' and request.json:
     app.logger.info('POST request root route -- json {0}'.format(request.json))
-    #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-    #imageProcessingDB is the database containing lightsheet job information and parameters
-    if request.json != '[]' and request.json != None:
-      file = open(settings.gitVersionIdPath,'r')
-      currentLightsheetCommit = file.readline()
-      file.close()
-      # trim ending \n
-      if currentLightsheetCommit.endswith('\n'):
-        currentLightsheetCommit = currentLightsheetCommit[:-1]
-      userDefinedJobName=[]
-
-      # get the name of the job first
-      jobName = request.json['jobName']
-      del(request.json['jobName'])
-
-      # delete the jobName entry from the dictionary so that the other entries are all steps
-      jobSteps = list(request.json.keys())
-#      stepsString = ','.join(str(y) for y in jobSteps)
-#      allSelectedTimePoints= ', '.join(timePointList)
-      # go through the data and prepare it for posting it to db
-      processedDataTemp = reformatDataToPost(request.json)
-      globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
-      processedData=[]
-      remainingStepNames=[];
-      for step in config["steps"]: #Reorder json to get proper order and leave out global parameters
-        stepName=step.name
-        if "globalParameters" not in stepName:
-          currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == stepName), None) 
-          if currentStepDictionary:
-              remainingStepNames.append(currentStepDictionary["name"])
-              processedData.append(currentStepDictionary)
-      # Prepare the db data
-      dataToPostToDB = {"jobName": jobName,
-                        "state": "NOT YET QUEUED",
-                        "lightsheetCommit":currentLightsheetCommit,
-                        "remainingStepNames":remainingStepNames,
-                        "steps": processedData
-                       }
-      #Insert the data to the db
-      if reparameterize:
-        imageProcessingDB_id=ObjectId(imageProcessingDB_id)
-        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
-        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
-        for currentStepDictionary in processedData:
-          imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
-      else:
-        imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
-
-      if globalParametersPosted:
-        globalParametersPosted.pop("")
-        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
-
-      submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
+    doThePost(request.json, reparameterize, imageProcessingDB)
 
   # updateDBStatesAndTimes(imageProcessingDB)
   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")

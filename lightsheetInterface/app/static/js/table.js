@@ -81,7 +81,7 @@ $(document).ready(() => {
         data: 'jacs_id',
         render(data, type, row, meta) {
           var jacsLinks="";
-          if(data.constructor === Array){
+          if(data && data.constructor === Array){
             for(var i=0; i<data.length; i++){
               jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data[i] +  "\">" + data[i] + "</a>,";
             }
