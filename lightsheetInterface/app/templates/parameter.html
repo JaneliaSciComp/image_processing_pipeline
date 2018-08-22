@@ -2,17 +2,27 @@
   Contains the template for rendering a parameter, different types of parameter can exist
 -->
 {% if param.name == key %}
+  {% set displayName = param.name %}
+  {% if param.displayName %}
+      {% set displayName = param.displayName %}
+  {% endif %}
   {% if value.description is not none %}
     <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
   {% else %}
     <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
   {% endif %}
     <div class="input-group-prepend lightsheet-area" title="{{ value.description }}">
-        <span class="input-group-text lightsheet-input">
-          {{ param.name | trimend }}
+        <span class="input-group-text lightsheet-input" value="">
+          {{ displayName| trimend }}
         </span>
         <div class="input-group-prepend lightsheet-fields">
-          {% if value.formatting == 'C' %}
+          {% if value.formatting == 'F' %}
+            {% if value.boolean == true %}
+              <input type="checkbox" class="flag-parameter" step="any" checked id="{{ param.name }}-1">
+            {% else %}
+              <input type="checkbox" class="flag-parameter" step="any" id="{{ param.name }}-1">
+            {% endif %}
+          {% elif value.formatting == 'C' %}
             {% include "multiselect-parameter.html" ignore missing with context %}
           {% elif value.type == 'Text' %}
             <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}" id="{{ param.name }}">

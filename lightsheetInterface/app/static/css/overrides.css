@@ -145,6 +145,11 @@ fieldset {
   display: none;
 }
 
+.flag-parameter {
+  margin-top: 0.5em;
+  margin-left: 2em;
+}
+
 select .template-dropdown {
   width: 200px !important;
 }

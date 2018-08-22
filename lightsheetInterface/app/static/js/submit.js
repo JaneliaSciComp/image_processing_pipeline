@@ -7,8 +7,6 @@ var dataIo = dataIo || {};
  * Grab data and submit it when pressing the button
  */
 dataIo.customSubmit = function(){
-
-  console.log(lightsheet.currentTemplate);
   const url = window.origin;
   const formInput = $('form :input');
   // Initialize object which will contain data to be posted
@@ -51,17 +49,18 @@ dataIo.customSubmit = function(){
           data[step][val.id] = "[]";
         }
         else {
-          if (val.value) {
-            data[step][val.id] = val.value;  
+          if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
+            alert(val.checked);
+            if (val.value !== undefined && val.value !== false && val.value !== 'false'){
+              data[step][val.id] = "True";
+            }
           }
-          else {
-
+          else if (val.value) {
+            data[step][val.id] = val.value;
           }
         }
       })
   });
-
-
   fetch(dataIo.currentTemplate, {
     method: 'POST',
     headers: {
@@ -73,4 +72,5 @@ dataIo.customSubmit = function(){
   }).then(function(data) {
     console.log('error in fetch');
   });
+
 }
