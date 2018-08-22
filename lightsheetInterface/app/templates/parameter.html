@@ -3,9 +3,18 @@
 -->
 {% if param.name == key %}
   {% set displayName = param.name %}
+  {% set addAttribute = none %}
+
+  <!-- Set field to read only if ignore flag is set -->
+  {% if param.ignore == True %}
+      {% set addAttribute = 'readonly' %}
+  {% endif %}
+
+  <!-- Use display name instead of internal name if display name is not empty -->
   {% if param.displayName %}
       {% set displayName = param.displayName %}
   {% endif %}
+
   {% if value.description is not none %}
     <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
   {% else %}
@@ -20,12 +29,12 @@
             {% if value.boolean == true %}
               <input type="checkbox" class="flag-parameter" step="any" checked id="{{ param.name }}-1">
             {% else %}
-              <input type="checkbox" class="flag-parameter" step="any" id="{{ param.name }}-1">
+              <input type="checkbox" class="flag-parameter" disabled step="any" id="{{ param.name }}-1">
             {% endif %}
           {% elif value.formatting == 'C' %}
             {% include "multiselect-parameter.html" ignore missing with context %}
           {% elif value.type == 'Text' %}
-            <input type="text" class="form-control lightsheet-text" value="{{ param.text1 }}" id="{{ param.name }}">
+            <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ param.text1 }}" id="{{ param.name }}">
           {% elif value.type == 'Number' %}
             {% if value.count == '1' %}
               <input type="number" step="any" class="form-control lightsheet-number" value="{{ param.number1 }}" id="{{ param.name }}">
