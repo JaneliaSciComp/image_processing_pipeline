@@ -117,7 +117,7 @@ def buildConfigObject(template_name = None):
     if template:
       steps = template.steps
       sorted_steps = sorted(steps, key=operator.attrgetter('order'))
-    templates = Template.objects.all()
+    templates = Template.objects.all().order_by('order')
     p = Parameter.objects.all()
     paramDict = getParameters(p)
     config = {'steps': sorted_steps, 'parameterDictionary': paramDict, 'templates': templates}
