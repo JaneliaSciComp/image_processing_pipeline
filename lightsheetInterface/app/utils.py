@@ -454,7 +454,7 @@ def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
                "resources": {"gridAccountId": "lightsheet"}
            }
   try:
-    postUrl = settings.devOrProductionJACS + '/async-services/lightsheetProcessing'
+    postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
     requestOutput = requests.post(postUrl,
                                   headers=getHeaders(),
                                   data=json.dumps(postBody))

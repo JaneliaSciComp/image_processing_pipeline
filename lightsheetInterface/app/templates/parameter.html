@@ -18,9 +18,9 @@
         <div class="input-group-prepend lightsheet-fields">
           {% if value.formatting == 'F' %}
             {% if value.boolean == true %}
-              <input type="checkbox" class="flag-parameter" step="any" checked id="{{ param.name }}-1">
+              <input type="checkbox" class="flag-parameter" step="any" checked id="{{ param.name }}">
             {% else %}
-              <input type="checkbox" class="flag-parameter" step="any" id="{{ param.name }}-1">
+              <input type="checkbox" class="flag-parameter" step="any" id="{{ param.name }}">
             {% endif %}
           {% elif value.formatting == 'C' %}
             {% include "multiselect-parameter.html" ignore missing with context %}
