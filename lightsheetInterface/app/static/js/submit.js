@@ -43,24 +43,30 @@ dataIo.customSubmit = function(){
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
       data[step] = {};
-      var inputFields = $('#collapse' + step).find('input');
+      var inputFields = $('#collapse' + step).find('input:not([ignore])');
+
       inputFields.each( function(k,val) {
-        if (this.disabled) {
-          data[step][val.id] = "[]";
-        }
-        else {
-          if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
-            alert(val.checked);
-            if (val.value !== undefined && val.value !== false && val.value !== 'false'){
-              data[step][val.id] = "True";
+        if (!this.hasAttribute('ignore')) {
+          if (this.disabled) {
+            data[step][val.id] = "[]";
+          }
+          else {
+            if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
+              if (val.value !== undefined && val.value !== false && val.value !== 'false'){
+                data[step][val.id] = "True";
+              }
+            }
+            else if (val.value) {
+              data[step][val.id] = val.value;
             }
           }
-          else if (val.value) {
-            data[step][val.id] = val.value;
-          }
         }
-      })
+        else {
+          console.log('ignore');
+        }
+      });
   });
+
   fetch(dataIo.currentTemplate, {
     method: 'POST',
     headers: {
