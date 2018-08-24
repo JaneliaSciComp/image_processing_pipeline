@@ -239,7 +239,6 @@
         let currentValue = $(this).val();
         let currentID = "#"+$(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
         var dependenciesFound = currentValue.match(/{([^}]+)}/g);
-        console.log(dependenciesFound);
         if(dependenciesFound != null){
           for (var i=0; i< dependenciesFound.length; i++){
               let currentDependency="#"+dependenciesFound[i].substr(1,dependenciesFound[i].length-2);
@@ -256,8 +255,6 @@
                   tempDependencyValue = null;
                   if(type=="checkbox"){
                     if ($(tempDependency).prop('checked')){tempDependencyValue = "";}
-                    console.log(tempDependency)
-                    console.log($(tempDependency).checked)
                   }
                   else if(type == "hidden"){
                     tempDependency = "select_"+standardID;
@@ -268,9 +265,10 @@
                     tempDependencyValue = $(tempDependency).val();
                   }
 
-                  if (standardID.includes("doubledash")){
-                      let flagName = standardID.match(/doubledash(.*)_/)[1];
-                      if(tempDependencyValue != null){ tempDependencyValue = "--" + flagName + " " + tempDependencyValue; }
+                  if (standardID.match("^--") || standardID.match("^-")){ //If it starts or ends with a - or --
+                      var lastIndex=standardID.lastIndexOf("_");
+                      let flagName = standardID.substr(0,lastIndex);
+                      if(tempDependencyValue != null){ tempDependencyValue = flagName + " " + tempDependencyValue; }
                       else{tempDependencyValue="";}
                   }
                   updatedValue = updatedValue.replace(dependenciesFound[j],tempDependencyValue);
