@@ -11,4 +11,5 @@ lightsheetInterface/app/lightsheet-config.cfg
 lightsheetInterface/node_modules
 lightsheetInterface/package-lock.json
 lightsheetInterface/upload
+lightsheetInterface/flightplan.js
 .idea
