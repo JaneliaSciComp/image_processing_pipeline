@@ -4,11 +4,8 @@ from flask import render_template, request, jsonify, abort, send_from_directory
 from flask import send_from_directory, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
-from collections import OrderedDict
-from datetime import datetime
 from app import app
 from app.settings import Settings
-from bson.objectid import ObjectId
 from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost
 from app.models import Dependency

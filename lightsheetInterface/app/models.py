@@ -1,5 +1,3 @@
-from flask_mongoengine.wtf import model_form
-from wtforms.widgets import TextArea
 from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
                          connect, DecimalField, StringField, IntField, FloatField, ListField, BooleanField, Document, ReferenceField, NULLIFY, MultiLineStringField)
 from flask_admin.contrib.mongoengine import ModelView

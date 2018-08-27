@@ -1,16 +1,12 @@
 import dateutil, ipdb, socket, json, logging
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
-from flask_cache import Cache
 from flask_mongoengine import MongoEngine
-from mongoengine import connect
 from flask_admin import Admin
-from pprint import pprint
 from datetime import datetime
 
 app = Flask(__name__) #app variable, an object of class FLask
 app.config.from_pyfile('lightsheet-config.cfg')
-app.cache = Cache(app)
 
 admin=Admin(app)
 db = MongoEngine(app)
