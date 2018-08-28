@@ -204,6 +204,7 @@ def getConfigurationsFromDB(lightsheetDB_id, client, globalParameter=None, stepN
 
 # get the job parameter information from db
 def getArgumentsToRunJob(lightsheetDB, _id):
+  lightsheetSteps=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS","clusterFR"]
   currentJobSteps = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.timepoints':1,'steps.parameters.pause':1})
   temp = list(lightsheetDB.jobs.find({"_id":ObjectId(_id)},{'_id':0,"remainingStepNames":1}))
   remainingStepNames=temp[0]["remainingStepNames"];
@@ -214,15 +215,16 @@ def getArgumentsToRunJob(lightsheetDB, _id):
     if currentJobSteps[0]["steps"][currentStepIndex]["name"] in remainingStepNames:
       step = currentJobSteps[0]["steps"][currentStepIndex]
       output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
-      timepoints = step["parameters"]["timepoints"];
-      timepointStart = timepoints["start"]
-      timepointEvery = timepoints["every"]
-      timepointEnd = timepoints["end"]
-      output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+','
+      if step["name"] in lightsheetSteps:
+        timepoints = step["parameters"]["timepoints"];
+        timepointStart = timepoints["start"]
+        timepointEvery = timepoints["every"]
+        timepointEnd = timepoints["end"]
+        output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+','
       if ("pause" in step["parameters"]) :
         pauseState = step["parameters"]["pause"]; 
     currentStepIndex=currentStepIndex+1
-  if output["currentJACSJobStepNames"] and output["currentJACSJobTimePoints"]:
+  if output["currentJACSJobStepNames"]:
     output["currentJACSJobStepNames"]=output["currentJACSJobStepNames"][:-1]
     output["currentJACSJobTimePoints"]= output["currentJACSJobTimePoints"][:-1]
     configOutputPath = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'configOutputPath':1})
@@ -454,7 +456,7 @@ def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
                "resources": {"gridAccountId": "lightsheet"}
            }
   try:
-    postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
+    postUrl = settings.devOrProductionJACS + '/async-services/genericServicePipeline' #'/async-services/lightsheetPipeline'
     requestOutput = requests.post(postUrl,
                                   headers=getHeaders(),
                                   data=json.dumps(postBody))

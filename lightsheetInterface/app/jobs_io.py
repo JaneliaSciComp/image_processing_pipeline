@@ -53,7 +53,7 @@ def reformatDataToPost(postedData):
           parameter = split[0]
         else:
           parameter = parameterKey;
-        parameter = parameter.split('-')[0]
+        #parameter = parameter.split('-')[0]
 
         if paramType and paramType == ParameterTypes.rangeParam:
           if parameter in stepParamResult:
