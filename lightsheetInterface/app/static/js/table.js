@@ -40,6 +40,7 @@ $(document).ready(() => {
         render(data, type, row, meta) {
           names = data["names"].split(",");
           states = data["states"].split(",");
+          submissionAddress = data["submissionAddress"];
           for(var i=0;i<states.length; i++){
             if(states[i]=="RUNNING"){
               names[i] = "<font color=\"blue\">" + names[i] +"</font>";
@@ -51,7 +52,7 @@ $(document).ready(() => {
               names[i] = "<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>";
             }
             else if(states[i]=='RESET'){
-              names[i] = "<form action=\"?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>";
+              names[i] = "<form action=\""+submissionAddress+"?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>";
             }
             else if(states[i]!="NOT YET QUEUED"){
               names[i] = "<font color=\"red\">" + names[i] +"</font>";
@@ -59,6 +60,13 @@ $(document).ready(() => {
           }
           names=names.join(",");
           return names ? names : null;
+        },
+      },
+      {
+       title: 'Temp',
+        data: 'submissionAddress',
+        render(data,type,row,meta){
+          return data ? data: null
         }
       },
       {

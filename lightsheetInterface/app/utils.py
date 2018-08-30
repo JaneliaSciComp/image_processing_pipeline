@@ -18,12 +18,12 @@ from app.settings import Settings
 settings = Settings()
 
 # collect the information about existing job used by the job_status page
-def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParameters=False):
+def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent", getParameters=False):
   if _id:
     _id = ObjectId(_id)
 
   if parentOrChild=="parent":
-    parentJobInfo = list(lightsheetDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "lightsheetCommit":1,"steps.name":1,"steps.state":1}))
+    parentJobInfo = list(imageProcessingDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "lightsheetCommit":1,"steps.name":1,"steps.state":1}))
     for currentJobInfo in parentJobInfo:
       selectedStepNames=''
       for step in currentJobInfo["steps"]:
@@ -37,9 +37,9 @@ def getJobInfoFromDB(lightsheetDB, _id=None, parentOrChild="parent", getParamete
     return parentJobInfo
   elif parentOrChild=="child" and _id:
     if getParameters:
-      return list(lightsheetDB.jobs.find({"_id":_id}))
+      return list(imageProcessingDB.jobs.find({"_id":_id}))
     else:
-      return list(lightsheetDB.jobs.find({"_id":_id},{"steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
+      return list(imageProcessingDB.jobs.find({"_id":_id},{"steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
   else:
     return 404
 
@@ -50,14 +50,18 @@ def mapJobsToDict(x):
     result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
   if 'jobName' in x:
     result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
+  if 'submissionAddress' in x:
+    result['submissionAddress'] = x['submissionAddress'] if x['submissionAddress'] is not None else ''
+  else: result['submissionAddress'] = ''
   if 'creationDate' in x:
     result['creationDate'] = x['creationDate'] if x['creationDate'] is not None else ''
   if 'state' in x:
     result['state'] = x['state'] if x['state'] is not None else ''
   if 'jacs_id' in x:
     result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
-  result['selectedSteps']={'names':'','states':''};
+  result['selectedSteps']={'names':'','states':'','submissionAddress':''};
   for i,step in enumerate(x["steps"]):
+    result['selectedSteps']['submissionAddress'] = result['submissionAddress']
     result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
     result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
     if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
@@ -72,8 +76,8 @@ def mapJobsToDict(x):
   return result;
 
 # get job information used by jquery datatable
-def allJobsInJSON(lightsheetDB):
-  parentJobInfo = lightsheetDB.jobs.find({})
+def allJobsInJSON(imageProcessingDB):
+  parentJobInfo = imageProcessingDB.jobs.find({})
   return list(map(mapJobsToDict, parentJobInfo))
 
 # build object with meta information about parameters from the admin interface
@@ -147,11 +151,11 @@ def getJobStepData(_id, mongoClient):
 # get the job parameter information from db
 def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
   result = None
-  lightsheetDB = mongoClient.lightsheet
+  imageProcessingDB = mongoClient.lightsheet
   if _id == "templateConfigurations":
-    jobSteps = list(lightsheetDB.templateConfigurations.find({}, {'_id': 0, 'steps': 1}))
+    jobSteps = list(imageProcessingDB.templateConfigurations.find({}, {'_id': 0, 'steps': 1}))
   else:
-    jobSteps = list(lightsheetDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'steps': 1}))
+    jobSteps = list(imageProcessingDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'steps': 1}))
 
   if jobSteps:
     jobStepsList = jobSteps[0]["steps"]
@@ -162,72 +166,47 @@ def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
   return None
 
 # get the job parameter information from db
-def getConfigurationsFromDB(lightsheetDB_id, client, globalParameter=None, stepName=None, stepParameter=None):
-  lightsheetDB = client.lightsheet
+def getConfigurationsFromDB(imageProcessingDB_id, client, globalParameter=None, stepName=None, stepParameter=None):
+  imageProcessingDB = client.lightsheet
   output={}
   if globalParameter:
-    globalParameterValue = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,globalParameter:1}))
+    globalParameterValue = list(imageProcessingDB.jobs.find({'_id':ObjectId(imageProcessingDB_id)},{'_id':0,globalParameter:1}))
     output=globalParameterValue[0]
     if not output:
       output={globalParameter:""}
   else:
     if stepName:
         if stepName=="getArgumentsToRunJob":
-          output=getArgumentsToRunJob(lightsheetDB,lightsheetDB_id)
-        elif stepName=="all":
-          if stepParameter=="name":
-            currentJACSJobStepNames = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,"steps.name":1}))
-            output={"currentJACSJobStepNames":""}
-            for step in currentJACSJobStepNames[0]["steps"]:
-              output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
-            output["currentJACSJobStepNames"]=output["currentJACSJobStepNames"][:-1]
-          elif stepParameter=="timePoints":
-            currentJACSJobTimePoints = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,"steps.parameters.timepoints":1}))
-            output={"currentJACSJobTimePoints":""}
-            for step in currentJACSJobTimePoints[0]["steps"]:
-              timepoints = step["parameters"]["timepoints"];
-              timepointStart = timepoints["start"]
-              timepointEvery = timepoints["every"]
-              timepointEnd = timepoints["end"]
-              output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+',' 
-            output["currentJACSJobTimePoints"]=output["currentJACSJobTimePoints"][:-1]
+          output=getArgumentsToRunJob(imageProcessingDB,imageProcessingDB_id)
         else:
-         output = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
+         output = list(imageProcessingDB.jobs.find({'_id':ObjectId(imageProcessingDB_id),'steps.name':stepName},{'_id':0,"steps.$.parameters":1}))
          if output:
           output=output[0]["steps"][0]["parameters"]
     else:
-      output = list(lightsheetDB.jobs.find({'_id':ObjectId(lightsheetDB_id)},{'_id':0,'steps':1}))
+      output = list(imageProcessingDB.jobs.find({'_id':ObjectId(imageProcessingDB_id)},{'_id':0,'steps':1}))
   if output:
     return output
   else:
     return 404
 
 # get the job parameter information from db
-def getArgumentsToRunJob(lightsheetDB, _id):
-  lightsheetSteps=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS","clusterFR"]
-  currentJobSteps = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.timepoints':1,'steps.parameters.pause':1})
-  temp = list(lightsheetDB.jobs.find({"_id":ObjectId(_id)},{'_id':0,"remainingStepNames":1}))
+def getArgumentsToRunJob(imageProcessingDB, _id):
+  currentJobSteps = imageProcessingDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.pause':1})
+  temp = list(imageProcessingDB.jobs.find({"_id":ObjectId(_id)},{'_id':0,"remainingStepNames":1}))
   remainingStepNames=temp[0]["remainingStepNames"];
-  output={"currentJACSJobStepNames":'', "currentJACSJobTimePoints":'','configOutputPath':''}
+  output={"currentJACSJobStepNames":'','configOutputPath':''}
   pauseState=False
   currentStepIndex=0
   while pauseState==False and currentStepIndex<len(currentJobSteps[0]["steps"]):
     if currentJobSteps[0]["steps"][currentStepIndex]["name"] in remainingStepNames:
       step = currentJobSteps[0]["steps"][currentStepIndex]
       output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"]+step["name"]+','
-      if step["name"] in lightsheetSteps:
-        timepoints = step["parameters"]["timepoints"];
-        timepointStart = timepoints["start"]
-        timepointEvery = timepoints["every"]
-        timepointEnd = timepoints["end"]
-        output["currentJACSJobTimePoints"] = output["currentJACSJobTimePoints"] +str(int(1+math.ceil(timepointEnd-timepointStart)/timepointEvery))+','
       if ("pause" in step["parameters"]) :
         pauseState = step["parameters"]["pause"]; 
     currentStepIndex=currentStepIndex+1
   if output["currentJACSJobStepNames"]:
     output["currentJACSJobStepNames"]=output["currentJACSJobStepNames"][:-1]
-    output["currentJACSJobTimePoints"]= output["currentJACSJobTimePoints"][:-1]
-    configOutputPath = lightsheetDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'configOutputPath':1})
+    configOutputPath = imageProcessingDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'configOutputPath':1})
     if configOutputPath[0]:
       output["configOutputPath"]=configOutputPath[0];
     return output
@@ -235,8 +214,8 @@ def getArgumentsToRunJob(lightsheetDB, _id):
     return 404
 
 # get latest status information about jobs from db
-def updateDBStatesAndTimes(lightsheetDB):
-  allJobInfoFromDB = list(lightsheetDB.jobs.find())
+def updateDBStatesAndTimes(imageProcessingDB):
+  allJobInfoFromDB = list(imageProcessingDB.jobs.find())
   for parentJobInfoFromDB in allJobInfoFromDB:
     if 'jacs_id' in parentJobInfoFromDB: # TODO handle case, when jacs_id is missing
       if parentJobInfoFromDB["state"]: # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
@@ -251,7 +230,7 @@ def updateDBStatesAndTimes(lightsheetDB):
                                                       headers=getHeaders(True)).json()
           if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
             parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
-            lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
+            imageProcessingDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"]},
                                          {"$set": {"state":parentJobInfoFromJACS["state"] }})
             allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS+'/services/',
                                                 params={'parent-id': jacs_id},
@@ -267,7 +246,7 @@ def updateDBStatesAndTimes(lightsheetDB):
                     if "outputPath" in currentChildJobInfoFromJACS:
                       outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
 
-                    lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
+                    imageProcessingDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
                                                  {"$set": {"steps.$.state":currentChildJobInfoFromJACS["state"],
                                                            "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
                                                            "steps.$.elapsedTime":str(datetime.now(eastern)-creationTime),
@@ -276,7 +255,7 @@ def updateDBStatesAndTimes(lightsheetDB):
 
                     if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
                       endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
-                      lightsheetDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
+                      imageProcessingDB.jobs.update_one({"_id":parentJobInfoFromDB["_id"],"steps.name": currentChildJobInfoFromDB["name"]},
                                                    {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
                                                              "steps.$.elapsedTime": str(endTime-creationTime)
                                                            }})
@@ -448,7 +427,7 @@ def createDBentries(content):
   result['success'] = success
   return result
 
-def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
+def submitToJACS(imageProcessingDB, job_id, continueOrReparameterize):
   job_id=ObjectId(job_id)
   configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(job_id)
   postBody = { "processingLocation": "LSF_JAVA",
@@ -456,7 +435,7 @@ def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
                "resources": {"gridAccountId": "lightsheet"}
            }
   try:
-    postUrl = settings.devOrProductionJACS + '/async-services/genericServicePipeline' #'/async-services/lightsheetPipeline'
+    postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
     requestOutput = requests.post(postUrl,
                                   headers=getHeaders(),
                                   data=json.dumps(postBody))
@@ -464,17 +443,17 @@ def submitToJACS(lightsheetDB, job_id, continueOrReparameterize):
     creationDate = job_id.generation_time
     creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
     if continueOrReparameterize:
-        lightsheetDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"], "jacs_id": requestOutputJsonified["_id"] }})
+        imageProcessingDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"], "jacs_id": requestOutputJsonified["_id"] }})
     else:
-        lightsheetDB.jobs.update_one({"_id":job_id},{"$set": {"jacs_id":[requestOutputJsonified["_id"]], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
+        imageProcessingDB.jobs.update_one({"_id":job_id},{"$set": {"jacs_id":[requestOutputJsonified["_id"]], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
 
     #JACS service states
     # if any are not Canceled, timeout, error, or successful then
     #updateLightsheetDatabaseStatus
-    updateDBStatesAndTimes(lightsheetDB)
+    updateDBStatesAndTimes(imageProcessingDB)
     submissionStatus = "success"
   except requests.exceptions.RequestException as e:
     print('Exception occured')
     submissionStatus = e
     if not continueOrReparameterize:
-      lightsheetDB.jobs.remove({"_id":job_id})
+      imageProcessingDB.jobs.remove({"_id":job_id})

@@ -41,69 +41,12 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico')
 
-
-# @app.route('/template/<template_name>', methods=['GET','POST'])
-# def template(template_name):
-#   imageProcessingDB_id = request.args.get('lightsheetDB_id')
-#   if imageProcessingDB_id == 'favicon.ico':
-#     imageProcessingDB_id = None
-#   parentJobInfo = None
-#   config = buildConfigObject(template_name)
-#   currentTemplate = None
-#   for template in config['templates']:
-#     if template.name == template_name:
-#       currentTemplate =  template_name
-#       break;
-
-#   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
-#   jobs = allJobsInJSON(imageProcessingDB)
-#   return render_template('index.html',
-#                        title='Home',
-#                        pipelineSteps=None,
-#                        parentJobInfo = parentJobInfo, # used by job status
-#                        logged_in=True,
-#                        config = config,
-#                        lightsheetDB_id = None,
-#                        jobsJson= jobs, # used by the job table
-#                        submissionStatus = None,
-#                        templates=config['templates'],
-#                        currentTemplate=currentTemplate)
+@app.route('/')
+def index():
+  return redirect(request.base_url + "template/LightSheet")
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
-  lightsheetDB_id = request.args.get('lightsheetDB_id')
-  reparameterize = request.args.get('reparameterize');
-  if lightsheetDB_id == 'favicon.ico':
-    lightsheetDB_id = None
-  parentJobInfo = None
-  config = buildConfigObject(template_name)
-  currentTemplate = None
-  for template in config['templates']:
-    if template.name == template_name:
-      currentTemplate =  template_name
-      break;
-
-  if request.method == 'POST' and request.json:
-    print(request.args)
-    doThePost(request.json, reparameterize, imageProcessingDB, template_name)
-
-  updateDBStatesAndTimes(imageProcessingDB)
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id,"parent")
-  jobs = allJobsInJSON(imageProcessingDB)
-  return render_template('index.html',
-                       title='Home',
-                       pipelineSteps=None,
-                       parentJobInfo = parentJobInfo, # used by job status
-                       logged_in=True,
-                       config = config,
-                       lightsheetDB_id = None,
-                       jobsJson= jobs, # used by the job table
-                       submissionStatus = None,
-                       templates=config['templates'],
-                       currentTemplate=currentTemplate)
-
-@app.route('/', methods=['GET','POST'], defaults={'template_name':None})
-def index(template_name):
   submissionStatus = None
   imageProcessingDB_id = request.args.get('lightsheetDB_id')
   reparameterize = request.args.get('reparameterize');
@@ -115,6 +58,7 @@ def index(template_name):
       break;
   if imageProcessingDB_id == 'favicon.ico':
     imageProcessingDB_id = None
+
   pipelineSteps = {}
   formData = None
   countJobs = 0
@@ -179,11 +123,12 @@ def index(template_name):
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
 
+  print(request.url)
   if request.method == 'POST' and request.json:
     app.logger.info('POST request root route -- json {0}'.format(request.json))
-    doThePost(request.json, reparameterize, imageProcessingDB, 'LightSheet')
+    doThePost(request.json, reparameterize, imageProcessingDB, imageProcessingDB_id, request.base_url,template_name)
 
-  # updateDBStatesAndTimes(imageProcessingDB)
+  updateDBStatesAndTimes(imageProcessingDB)
   parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
   jobs = allJobsInJSON(imageProcessingDB)
   #Return index.html with pipelineSteps and serviceData

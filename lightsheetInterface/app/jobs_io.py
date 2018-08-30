@@ -171,20 +171,12 @@ def parseJsonDataNoForms(data, stepName, config):
 
 
 #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-def doThePost(formJson, reparameterize, lightsheetDB, currentTemplate = None):
+def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id, submissionAddress, currentTemplate = None):
   app.logger.info('Post json data: {0}'.format(formJson))
   app.logger.info('Current template: {0}'.format(currentTemplate))
   settings = Settings()
 
   if formJson != '[]' and formJson != None:
-      file = open(settings.gitVersionIdPath,'r')
-      currentLightsheetCommit = file.readline()
-      file.close()
-
-      # trim \n in the end
-      currentLightsheetCommit = currentLightsheetCommit.rstrip('\n')
-      app.logger.info(currentLightsheetCommit)
-
       userDefinedJobName=[]
 
       # get the name of the job first
@@ -210,24 +202,24 @@ def doThePost(formJson, reparameterize, lightsheetDB, currentTemplate = None):
 
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
+                        "submissionAddress": submissionAddress,
                         "state": "NOT YET QUEUED",
-                        "lightsheetCommit":currentLightsheetCommit,
+                        "containerVersion":"placeholder",
                         "remainingStepNames":remainingStepNames,
                         "steps": processedData
                        }
 
       # Insert the data to the db
       if reparameterize:
-        lightsheetDB_id=ObjectId(lightsheetDB_id)
-        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'state', 'lightsheetCommit', 'remainingStepNames')}
-        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": subDict})
+        imageProcessingDB_id=ObjectId(imageProcessingDB_id)
+        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'submissionAddress', 'state', 'containerVersion', 'remainingStepNames')}
+        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
         for currentStepDictionary in processedData:
-          lightsheetDB.jobs.update_one({"_id": lightsheetDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
+          imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
       else:
-        lightsheetDB_id = lightsheetDB.jobs.insert_one(dataToPostToDB).inserted_id
+        imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
       if globalParametersPosted:
         globalParametersPosted.pop("")
-        lightsheetDB.jobs.update_one({"_id": lightsheetDB_id},{"$set": {"globalParameters":globalParametersPosted}})
-
-      submissionStatus = submitToJACS(lightsheetDB, lightsheetDB_id, reparameterize)
+        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
+      submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
