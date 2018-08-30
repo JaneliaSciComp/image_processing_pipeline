@@ -277,8 +277,6 @@
                       if(dependencyToUpdateValue != null){ 
                         if (isThisALoop!=null){//Then this needs to loop
                           let splitString = dependencyToUpdateValue.split(" ");
-                          console.log(dependencyToUpdateValue)
-                          console.log(splitString.length)
                           dependencyToUpdateValue = "";
                           for(var k=0; k<splitString.length; k++){
                             if(splitString[k]!=""){dependencyToUpdateValue = dependencyToUpdateValue + flagName + " " + splitString[k] + " ";}
