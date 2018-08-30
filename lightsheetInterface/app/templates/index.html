@@ -240,38 +240,58 @@
         let currentID = "#"+$(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
         var dependenciesFound = currentValue.match(/{([^}]+)}/g);
         if(dependenciesFound != null){
-          for (var i=0; i< dependenciesFound.length; i++){
-              let currentDependency="#"+dependenciesFound[i].substr(1,dependenciesFound[i].length-2);
+          for (var i=0; i< dependenciesFound.length; i++){//Loop over dependencies
+              let dependencyFound = dependenciesFound[i]
+              var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{var}}, after parsing above, will be missing a closing bracket
+              if (isThisALoop != null){dependencyFound = isThisALoop[0];}
+              let currentDependency="#"+dependencyFound.substr(1,dependencyFound.length-2);
               if($(currentDependency).prop('type')=="hidden"){
-                temp="select_"+dependenciesFound[i].substr(1,dependenciesFound[i].length-2);
+                temp="select_"+dependencyFound.substr(1,dependencyFound.length-2);
                 currentDependency='[data-id="'+temp+'"]'; //multiselect checkbox still acts weird... cant get it to react when clicked or anything
               }
               $(currentDependency).bind("focus click keyup change checked",function(){
                 let updatedValue = currentValue;
-                for (var j=0; j< dependenciesFound.length; j++){
-                  let standardID=dependenciesFound[j].substr(1,dependenciesFound[j].length-2);
-                  let tempDependency="#"+standardID;
-                  let type = $(tempDependency).prop('type');
-                  tempDependencyValue = null;
-                  if(type=="checkbox"){
-                    if ($(tempDependency).prop('checked')){tempDependencyValue = "";}
+                for (var j=0; j< dependenciesFound.length; j++){//Need to loop through dependencies to ensure that all values are updated, not just the one that was just changed
+                  loopedDependencyFound = dependenciesFound[j];
+                  var isThisALoop = loopedDependencyFound.substr(1,loopedDependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{var}}, after parsing above, will be missing a closing bracket
+                  if (isThisALoop != null){loopedDependencyFound = isThisALoop[0];}
+                  let standardID=loopedDependencyFound.substr(1,loopedDependencyFound.length-2);
+                  let dependencyToUpdate="#"+standardID; //Current one we are updating
+                  let type = $(dependencyToUpdate).prop('type');
+                  dependencyToUpdateValue = null; //Initialize dependencyToUpdateValue to null
+                  if(type=="checkbox"){//If check box is checked, then dependencyToUpdateValue equals empty string
+                    if ($(dependencyToUpdate).prop('checked')){dependencyToUpdateValue = "";}
                   }
-                  else if(type == "hidden"){
-                    tempDependency = "select_"+standardID;
-                    tempDependencyValue = $('[data-id="'+tempDependency+'"]').prop('title');
-                    if (tempDependencyValue == "Nothing selected" || tempDependencyValue==undefined){tempDependencyValue = null;}
+                  else if(type == "hidden"){//Multiselect checkbox
+                    dependencyToUpdate = "select_"+standardID;
+                    dependencyToUpdateValue = $('[data-id="'+dependencyToUpdate+'"]').prop('title');
+                    if (dependencyToUpdateValue == "Nothing selected" || dependencyToUpdateValue==undefined){dependencyToUpdateValue = null;}
                   }
-                  else{
-                    tempDependencyValue = $(tempDependency).val();
+                  else{//dependencyToUpdateValue takes on the value of the dependency
+                    dependencyToUpdateValue = $(dependencyToUpdate).val();
                   }
 
                   if (standardID.match("^--") || standardID.match("^-")){ //If it starts or ends with a - or --
                       var lastIndex=standardID.lastIndexOf("_");
                       let flagName = standardID.substr(0,lastIndex);
-                      if(tempDependencyValue != null){ tempDependencyValue = flagName + " " + tempDependencyValue; }
-                      else{tempDependencyValue="";}
+                      if(dependencyToUpdateValue != null){ 
+                        if (isThisALoop!=null){//Then this needs to loop
+                          let splitString = dependencyToUpdateValue.split(" ");
+                          console.log(dependencyToUpdateValue)
+                          console.log(splitString.length)
+                          dependencyToUpdateValue = "";
+                          for(var k=0; k<splitString.length; k++){
+                            if(splitString[k]!=""){dependencyToUpdateValue = dependencyToUpdateValue + flagName + " " + splitString[k] + " ";}
+                          }
+                          loopedDependencyFound = "{"+ loopedDependencyFound + "}";
+                        }
+                        else{
+                          dependencyToUpdateValue = flagName + " " + dependencyToUpdateValue; 
+                        }
+                      }
+                      else{dependencyToUpdateValue="";}
                   }
-                  updatedValue = updatedValue.replace(dependenciesFound[j],tempDependencyValue);
+                  updatedValue = updatedValue.replace(loopedDependencyFound,dependencyToUpdateValue);
                 };
                 $(currentID).val(updatedValue);
           });
