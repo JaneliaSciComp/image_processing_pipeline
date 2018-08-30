@@ -190,14 +190,13 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
       processedData=[]
       remainingStepNames=[];
-      # allStepNames=["clusterPT","clusterMF","localAP","clusterTF","localEC","clusterCS", "clusterFR"]
-      # allStepNames = Template.objects.filter(name=currentTemplate).first()
       allSteps = Step.objects.all()
       if allSteps:
         for step in allSteps:
           currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == step.name), None)
           if currentStepDictionary:
-              remainingStepNames.append(currentStepDictionary["name"])
+              if step.submit:
+                remainingStepNames.append(currentStepDictionary["name"])
               processedData.append(currentStepDictionary)
 
       # Prepare the db data

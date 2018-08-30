@@ -18,16 +18,19 @@ from app.settings import Settings
 settings = Settings()
 
 # collect the information about existing job used by the job_status page
-def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent", getParameters=False):
+def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
+  allSteps=Step.objects.all()
   if _id:
     _id = ObjectId(_id)
 
   if parentOrChild=="parent":
-    parentJobInfo = list(imageProcessingDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "lightsheetCommit":1,"steps.name":1,"steps.state":1}))
+    parentJobInfo = list(imageProcessingDB.jobs.find({},{"configAddress":1,"state":1, "jobName":1, "creationDate":1, "jacs_id":1, "steps.name":1,"steps.state":1}))
     for currentJobInfo in parentJobInfo:
       selectedStepNames=''
       for step in currentJobInfo["steps"]:
-        selectedStepNames = selectedStepNames+step["name"]+','
+        stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
+        if stepTemplate == None or stepTemplate.submit: #None implies a deprecated name
+          selectedStepNames = selectedStepNames+step["name"]+','
       selectedStepNames = selectedStepNames[:-1]
       currentJobInfo.update({'selectedStepNames':selectedStepNames})
       currentJobInfo.update({"selected":""})
@@ -36,15 +39,20 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent", getPar
             currentJobInfo.update({"selected":"selected"})
     return parentJobInfo
   elif parentOrChild=="child" and _id:
-    if getParameters:
-      return list(imageProcessingDB.jobs.find({"_id":_id}))
-    else:
-      return list(imageProcessingDB.jobs.find({"_id":_id},{"steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
+      childJobInfo=[]
+      tempList  = list(imageProcessingDB.jobs.find({"_id":_id},{"steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
+      tempList = tempList[0];
+      for step in tempList["steps"]:
+        stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
+        if stepTemplate == None or stepTemplate.submit: #None implies a deprecated name
+          childJobInfo.append(step)
+      return childJobInfo
   else:
     return 404
 
 # build result object of existing job information
 def mapJobsToDict(x):
+  allSteps=Step.objects.all()
   result = {}
   if '_id' in x:
     result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
@@ -61,15 +69,17 @@ def mapJobsToDict(x):
     result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
   result['selectedSteps']={'names':'','states':'','submissionAddress':''};
   for i,step in enumerate(x["steps"]):
-    result['selectedSteps']['submissionAddress'] = result['submissionAddress']
-    result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
-    result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
-    if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
-      result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESET' + ','
-      result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
-    elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state']=="SUCCESSFUL":
-      result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESUME,RESET' + ','
-      result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
+    stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
+    if stepTemplate == None or stepTemplate.submit: #None implies a deprecated name
+      result['selectedSteps']['submissionAddress'] = result['submissionAddress']
+      result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
+      result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
+      if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
+        result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESET' + ','
+        result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
+      elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state']=="SUCCESSFUL":
+        result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESUME,RESET' + ','
+        result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
 
   result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
   result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
@@ -77,7 +87,7 @@ def mapJobsToDict(x):
 
 # get job information used by jquery datatable
 def allJobsInJSON(imageProcessingDB):
-  parentJobInfo = imageProcessingDB.jobs.find({})
+  parentJobInfo = imageProcessingDB.jobs.find({},{"_id":1,"jobName":1,"submissionAddress":1, "creationDate":1, "state":1, "jacs_id":1,"steps.state":1,"steps.name":1,"steps.parameters.pause":1})
   return list(map(mapJobsToDict, parentJobInfo))
 
 # build object with meta information about parameters from the admin interface
@@ -146,23 +156,6 @@ def getJobStepData(_id, mongoClient):
   result = getConfigurationsFromDB(_id, mongoClient, stepName=None)
   if result != None and result != 404 and len(result) > 0 and 'steps' in result[0]:
     return result[0]['steps']
-  return None
-
-# get the job parameter information from db
-def getConfigurationsFromDB2(_id, mongoClient, stepName=None):
-  result = None
-  imageProcessingDB = mongoClient.lightsheet
-  if _id == "templateConfigurations":
-    jobSteps = list(imageProcessingDB.templateConfigurations.find({}, {'_id': 0, 'steps': 1}))
-  else:
-    jobSteps = list(imageProcessingDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'steps': 1}))
-
-  if jobSteps:
-    jobStepsList = jobSteps[0]["steps"]
-    if stepName is not None:
-      stepDictionary = next((dictionary for dictionary in jobStepsList if dictionary["name"] == stepName), None)
-      if stepDictionary is not None:
-        return stepDictionary["parameters"]
   return None
 
 # get the job parameter information from db
@@ -264,89 +257,6 @@ def convertJACStime(t):
    t=datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
    t=UTC.localize(t).astimezone(eastern)
    return t
-
-def convertArrayFieldValue(stringValue):
-  stringValue = stringValue.replace("{","") #remove cell formatting
-  stringValue = stringValue.replace("}","")
-  stringValue = stringValue.replace(" ",",") #replace commas with spaces
-  #stringValue = ' '.join(stringValue.split()) #make sure everything is singlespaced
-  #stringValue = stringValue.replace(" ",",") #replace spaces by commas
-  stringValue = re.sub(',,+' , ',', stringValue) #replace two or more commas with single comma
-  #lots of substitutions to have it make sense. First get rid of extra commas
-  #Then get rid of semicolon-comma pairs
-  #Then make sure arrays are separated properly
-  #Finally add brackets to the beginning/end if necessary
-  stringValue = re.sub('\[,' , '[', stringValue) 
-  stringValue = re.sub(',\]' , ']', stringValue)
-  stringValue = re.sub(';,' , ';', stringValue)
-  stringValue = re.sub(',;' , ';', stringValue)
-  stringValue = re.sub('\];\[' , '],[', stringValue)
-  stringValue = re.sub(';', '],[', stringValue)
-  if '],[' in stringValue:
-    stringValue = "[" + stringValue + "]"
-  return 
-
-
-def convertEpochTime(v):
-  if type(v) is str:
-    return v
-  else:
-    return datetime.fromtimestamp(int(v) / 1000, eastern)
-
-
-def insertImage(camera, channel, plane):
-  imagePath = path + 'SPC' + specimenString + '_TM' + timepointString + '_ANG000_CM' + camera + '_CHN' + channel.zfill(
-    2) + '_PH0_PLN' + str(plane).zfill(4) + '.tif'
-  return misc.imread(imagePath)
-
-
-def generateThumbnailImages(path, timepoint, specimen, cameras, channels, specimenString, timepointString):
-  # path = sys.argv[1]
-  # timepoint = sys.argv[2]
-  # specimen = sys.argv[3]
-  # cameras = sys.argv[4].split(',')
-  # channels = sys.argv[5].split(',')
-  # specimenString = specimen.zfill(2)
-  # timepointString = timepoint.zfill(5)
-  # path = path+'/SPM' + specimenString + '/TM' + timepointString + '/ANG000/'
-
-  pool = Pool(processes=32)
-  numberOfChannels = len(channels)
-  numberOfCameras = len(cameras)
-  # fig, ax = plt.subplots(nrows = numberOfChannels, ncols = 2*numberOfCameras)#, figsize=(16,8))
-  fig = plt.figure();
-  fig.set_size_inches(16, 8)
-  outer = gridspec.GridSpec(numberOfChannels, numberOfCameras, wspace=0.3, hspace=0.3)
-
-  for channelCounter, channel in enumerate(channels):
-    for cameraCounter, camera in enumerate(cameras):
-      inner = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=outer[cameraCounter, channelCounter], wspace=0.1,
-                                               hspace=0.1)
-      newList = [(camera, channel, 0)]
-      numberOfPlanes = len(glob.glob1(path, '*CM' + camera + '_CHN' + channel.zfill(2) + '*'))
-      for plane in range(1, numberOfPlanes):
-        newList.append((camera, channel, plane))
-
-      images = pool.starmap(insertImage, newList)
-      images = numpy.asarray(images).transpose(1, 2, 0)
-      xy = numpy.amax(images, axis=2)
-      xz = numpy.amax(images, axis=1)
-      ax1 = plt.Subplot(fig, inner[0])
-      ax1.imshow(xy, cmap='gray')
-      fig.add_subplot(ax1)
-      ax1.axis('auto')
-      ax2 = plt.Subplot(fig, inner[1])
-      ax2.imshow(xz, cmap='gray')
-      fig.add_subplot(ax2)
-      ax2.axis('auto')
-      ax2.get_yaxis().set_visible(False)
-      # ax1.get_shared_y_axes().join(ax1, ax2)
-      baseString = 'CM' + camera + '_CHN' + channel.zfill(2)
-      ax1.set_title(baseString + ' xy')  # , fontsize=12)
-      ax2.set_title(baseString + ' xz')  # , fontsize=12)
-
-  fig.savefig(url_for('static', filename='img/test.jpg'))
-  pool.close()
 
 
 def createDBentries(content):

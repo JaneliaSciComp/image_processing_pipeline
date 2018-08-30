@@ -123,7 +123,6 @@ def template(template_name):
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
 
-  print(request.url)
   if request.method == 'POST' and request.json:
     app.logger.info('POST request root route -- json {0}'.format(request.json))
     doThePost(request.json, reparameterize, imageProcessingDB, imageProcessingDB_id, request.base_url,template_name)
@@ -165,7 +164,6 @@ def job_status():
       updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
         childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
-        childJobInfo = childJobInfo[0]["steps"]
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
