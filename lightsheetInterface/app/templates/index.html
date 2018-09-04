@@ -291,6 +291,8 @@
                   }
                   updatedValue = updatedValue.replace(loopedDependencyFound,dependencyToUpdateValue);
                 };
+                updatedValue = updatedValue.replace(/\s\s+/g, ' '); //remove extra spaces
+                updatedValue = updatedValue.trim(); //remove leading/trailing spaces
                 $(currentID).val(updatedValue);
           });
           //initialize
