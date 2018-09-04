@@ -18,6 +18,11 @@
 	        {{ state }}>
         {{ step.description }}
       </label>
+      <label class="step-type">
+        {% if step.steptype is not none %}
+          {{ step.steptype }}
+        {% endif %}
+      </label>
     </h5>
   </div>
   <div id="collapse{{ step.name }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">

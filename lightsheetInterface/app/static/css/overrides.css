@@ -150,6 +150,11 @@ fieldset {
   margin-left: 2em;
 }
 
+.step-type {
+  float: right;
+  color: #BBBBBB;
+}
+
 select .template-dropdown {
   width: 200px !important;
 }
