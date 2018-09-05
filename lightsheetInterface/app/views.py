@@ -104,6 +104,9 @@ def template(template_name):
 
 @app.route('/', methods=['GET','POST'], defaults={'template_name':None})
 def index(template_name):
+  if template_name == None:
+    return redirect(url_for('template', template_name = "LightSheet"))
+
   submissionStatus = None
   imageProcessingDB_id = request.args.get('lightsheetDB_id')
   reparameterize = request.args.get('reparameterize');
