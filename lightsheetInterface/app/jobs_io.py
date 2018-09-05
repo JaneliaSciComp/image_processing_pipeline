@@ -18,14 +18,16 @@ class ParameterTypes(Enum):
 # change data before job is resubmitted
 def reformatDataToPost(postedData):
   result = []
+  p = 'parameters'
   if postedData and postedData != {}:
     for step in postedData.keys():
       # first part: get the parameter values into lists
       stepResult = {}
       stepResult['name'] = step
+      stepResult['type'] = postedData[step]['type']
       stepResult['state'] = 'NOT YET QUEUED'
       stepParamResult = {}
-      sortedParameters = sorted(postedData[step].keys())
+      sortedParameters = sorted(postedData[step][p].keys())
       checkboxes = []
       for parameterKey in sortedParameters:
         # Find checkboxes and deal with them separately
@@ -62,11 +64,11 @@ def reformatDataToPost(postedData):
             paramValueSet = {} # create a new object
           # move the parts of the range parameter to the right key of the object
           if splitRest[1] == 'start':
-            paramValueSet['start'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
+            paramValueSet['start'] = float(postedData[step][p][parameterKey]) if postedData[step][p][parameterKey] is not '' else ''
           elif splitRest[1] == 'end':
-            paramValueSet['end'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
+            paramValueSet['end'] = float(postedData[step][p][parameterKey]) if postedData[step][p][parameterKey] is not '' else ''
           elif splitRest[1] == 'every':
-            paramValueSet['every'] = float(postedData[step][parameterKey]) if postedData[step][parameterKey] is not '' else ''
+            paramValueSet['every'] = float(postedData[step][p][parameterKey]) if postedData[step][p][parameterKey] is not '' else ''
           # update the object
           stepParamResult[parameter] = paramValueSet
         else: # no range
@@ -82,7 +84,7 @@ def reformatDataToPost(postedData):
             #TODO: 'cope with flag parameters when submitting the job'
 
           # check if current value is a float within a string and needs to be converted
-          currentValue = postedData[step][parameterKey]
+          currentValue = postedData[step][p][parameterKey]
           if re.match("[-+]?[0-9]*\.?[0-9]*.$", currentValue) is None: # no float
             try:
               tmp = json.loads(currentValue)
@@ -94,7 +96,7 @@ def reformatDataToPost(postedData):
 
       checkboxesClean = []
       for param in checkboxes:
-        if postedData[step][param] == 'true':
+        if postedData[step][p][param] == 'true':
           checkboxesClean.append(param.split('-')[1].split('_')[0])
 
       if 'emptycheckbox' in stepParamResult.keys():

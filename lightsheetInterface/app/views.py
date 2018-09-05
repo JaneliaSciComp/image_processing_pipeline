@@ -78,13 +78,13 @@ def template(template_name):
   parentJobInfo = None
   config = buildConfigObject(template_name)
   currentTemplate = None
+
   for template in config['templates']:
     if template.name == template_name:
       currentTemplate =  template_name
       break;
 
   if request.method == 'POST' and request.json:
-    print(request.args)
     doThePost(request.json, reparameterize, imageProcessingDB, template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)

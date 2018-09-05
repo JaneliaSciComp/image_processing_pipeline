@@ -7,7 +7,6 @@ var dataIo = dataIo || {};
  * Grab data and submit it when pressing the button
  */
 dataIo.customSubmit = function(){
-  const url = window.origin;
   const formInput = $('form :input');
   // Initialize object which will contain data to be posted
   var data = {}
@@ -20,7 +19,7 @@ dataIo.customSubmit = function(){
 
   //Get the checkboxes for steps, which are checked
   const checked_boxes = $('form :input[id^=check-]:checked');
-  
+
   // Store values of multi-select checkboxes in corresponding input fields
   var innerFieldClass = 'filter-option-inner-inner';
   var multiCheckboxClass = 'custom-multi-checkbox';
@@ -42,32 +41,48 @@ dataIo.customSubmit = function(){
   // Submit empty values
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
-      data[step] = {};
-      var inputFields = $('#collapse' + step).find('input:not([ignore])');
+    var stepType = $(this.closest('.card-header')).find('.step-type')[0].innerText;
+    data[step] = {};
 
-      inputFields.each( function(k,val) {
-        if (!this.hasAttribute('ignore')) {
-          if (this.disabled) {
-            data[step][val.id] = "[]";
-          }
-          else {
-            if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
-              if (val.value !== undefined && val.value !== false && val.value !== 'false'){
-                data[step][val.id] = "True";
-              }
-            }
-            else if (val.value) {
-              data[step][val.id] = val.value;
-            }
-          }
+    if (stepType){
+      if (stepType == "L"){
+        data[step]['type'] = 'LightSheet';
+      }
+      else if (stepType == "Sp"){
+        data[step]['type'] = 'Sparks';
+      }
+      else if (stepType == "Si"){
+        data[step]['type'] = 'Singularity';
+      }
+    }
+    var inputFields = $('#collapse' + step).find('input:not([ignore])');
+
+    const p = 'parameters';
+    data[step][p] = {}
+
+    inputFields.each( function(k,val) {
+      if (!this.hasAttribute('ignore')) {
+        if (this.disabled) {
+          data[step][p][val.id] = "[]";
         }
         else {
-          console.log('ignore');
+          if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
+            if (val.value !== undefined && val.value !== false && val.value !== 'false'){
+              data[step][p][val.id] = "True";
+            }
+          }
+          else if (val.value) {
+            data[step][p][val.id] = val.value;
+          }
         }
-      });
+      }
+      else {
+        console.log('ignore');
+      }
+    });
   });
 
-  fetch(dataIo.currentTemplate, {
+  fetch(window.location, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
