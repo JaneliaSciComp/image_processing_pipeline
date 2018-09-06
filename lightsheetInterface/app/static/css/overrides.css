@@ -155,6 +155,10 @@ fieldset {
   color: #BBBBBB;
 }
 
+.label-mount {
+  background-color: #ced4da;
+}
+
 select .template-dropdown {
   width: 200px !important;
 }

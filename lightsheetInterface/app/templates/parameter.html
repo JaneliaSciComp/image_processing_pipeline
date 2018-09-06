@@ -4,9 +4,12 @@
 {% if param.name == key %}
   {% set displayName = param.name %}
   {% set addAttribute = '' %}
-  <!-- Set field to read only if ignore flag is set -->
+  {% set labelClass = 'lightsheet-label' %}
+  {% set spanClass = 'input-group-text lightsheet-input' %}
+  <!-- Set some additional attributes to the input field based on which flags are set for the parameter in the model -->
   {% if param.mount == True %}
     {% set addAttribute = addAttribute + ' mount' %}
+    {% set spanClass = spanClass + ' label-mount' %}
   {% endif %}
 
   {% if param.ignore == True %}
@@ -26,7 +29,7 @@
     <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
   {% endif %}
     <div class="input-group-prepend lightsheet-area" title="{{ value.description }}">
-        <span class="input-group-text lightsheet-input" value="">
+        <span class="{{ spanClass }}" value="">
           {{ displayName| trimend }}
         </span>
         <div class="input-group-prepend lightsheet-fields">
@@ -49,15 +52,15 @@
             {% elif value.count == '3' %}
               {% if value.formatting == 'R' %}
                 <div class="form-group form-inline">
-                  <label class="lightsheet-label" for="{{ param.name }}-number1">From: </label>
+                  <label class="{{ labelClass }}" for="{{ param.name }}-number1">From: </label>
                   <input type="number" step="any" class="form-control lightsheet-number" id="{{ param.name }}-start" {{ addAttribute }} value="{{ param.number1 }}">
                 </div>
                 <div class="form-group form-inline">
-                  <label class="lightsheet-label" for="{{ param.name }}-number2">To: </label>
+                  <label class="{{ labelClass }}" for="{{ param.name }}-number2">To: </label>
                   <input type="number" step="any" class="form-control lightsheet-number" id="{{ param.name }}-end" {{ addAttribute }} value="{{ param.number2 }}">
                 </div>
                 <div class="form-group form-inline">
-                  <label class="lightsheet-label" for="{{ param.name }}-number3">Every:</label>
+                  <label class="{{ labelClass }}" for="{{ param.name }}-number3">Every:</label>
                   <input type="number" step="any" class="form-control lightsheet-number" id="{{ param.name }}-every" {{ addAttribute }} value="{{ param.number3 }}">
                 </div>
               {% else %}
