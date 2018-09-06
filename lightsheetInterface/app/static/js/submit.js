@@ -3,6 +3,25 @@
 */
 var dataIo = dataIo || {};
 
+dataIo.fetch = function(url, method, data, params){
+  return fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  }).then(function(response) {
+    if (response.status == 200) {
+      return response.json();
+    }
+    throw new Error('Unexpected status code: ' +  response.status);
+  });
+};
+
+dataIo.handleError = function(err){
+  console.log(err);
+};
+
 /*
  * Grab data and submit it when pressing the button
  */
@@ -82,16 +101,6 @@ dataIo.customSubmit = function(){
     });
   });
 
-  fetch(window.location, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  }).then(function(response) {
-      return response.json();
-  }).then(function(data) {
-    console.log('error in fetch');
-  });
-
+  dataIo.fetch(window.location, 'POST', data)
+      .catch(dataIo.handleError);
 }
