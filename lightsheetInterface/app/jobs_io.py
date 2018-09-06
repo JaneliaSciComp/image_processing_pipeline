@@ -24,8 +24,14 @@ def reformatDataToPost(postedData):
       # first part: get the parameter values into lists
       stepResult = {}
       stepResult['name'] = step
+
+      # add some optional paramters
       if 'type' in postedData[step].keys():
         stepResult['type'] = postedData[step]['type']
+
+      if 'bindPaths' in postedData[step].keys():
+        stepResult['bindPaths'] = postedData[step]['bindPaths']
+
       stepResult['state'] = 'NOT YET QUEUED'
       stepParamResult = {}
       sortedParameters = sorted(postedData[step][p].keys())

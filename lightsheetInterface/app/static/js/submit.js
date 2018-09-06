@@ -75,11 +75,14 @@ dataIo.customSubmit = function(){
       }
     }
     var inputFields = $('#collapse' + step).find('input:not([ignore])');
-
     const p = 'parameters';
     data[step][p] = {}
 
+    var bindPath = []
     inputFields.each( function(k,val) {
+      if (this.hasAttribute('mount')) {
+        bindPath.push(val.value);
+      }
       if (!this.hasAttribute('ignore')) {
         if (this.disabled) {
           data[step][p][val.id] = "[]";
@@ -99,6 +102,7 @@ dataIo.customSubmit = function(){
         console.log('ignore');
       }
     });
+    data[step]['bindPaths'] = bindPath.join(", ");
   });
 
   dataIo.fetch(window.location, 'POST', data)

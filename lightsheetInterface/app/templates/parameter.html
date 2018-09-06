@@ -4,12 +4,15 @@
 {% if param.name == key %}
   {% set displayName = param.name %}
   {% set addAttribute = '' %}
-
   <!-- Set field to read only if ignore flag is set -->
+  {% if param.mount == True %}
+    {% set addAttribute = addAttribute + ' mount' %}
+  {% endif %}
+
   {% if param.ignore == True %}
-      {% set addAttribute = 'ignore readonly' %}
+    {% set addAttribute = addAttribute + ' ignore readonly' %}
   {% elif param.readonly == True %}
-      {% set addAttribute = 'readonly' %}
+    {% set addAttribute = addAttribute + ' readonly' %}
   {% endif %}
 
   <!-- Use display name instead of internal name if display name is not empty -->
