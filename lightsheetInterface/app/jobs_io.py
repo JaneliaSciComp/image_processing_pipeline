@@ -180,7 +180,7 @@ def parseJsonDataNoForms(data, stepName, config):
 
 
 #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id, submissionAddress, currentTemplate = None):
+def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id, submissionAddress = None, currentTemplate = None):
   app.logger.info('Post json data: {0}'.format(formJson))
   app.logger.info('Current template: {0}'.format(currentTemplate))
   settings = Settings()

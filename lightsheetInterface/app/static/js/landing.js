@@ -18,13 +18,13 @@ lightsheet.testAllCheckboxes = function(){
       this.disabled = true;
     });
   }
-}
+};
 
 /*
  * Do checkbox test once when loading the page
 */
 lightsheet.testCheckboxes = (function(){
-  lightsheet.testAllCheckboxes()
+  lightsheet.testAllCheckboxes();
 })();
 
 
@@ -34,8 +34,6 @@ lightsheet.testCheckboxes = (function(){
 lightsheet.buildParameterObject = function(fieldObject) {
   // Check if the id of the fieldObject has a hyphen in there:
   var fieldName = fieldObject.id;
-  // get just the first part, if the parameter name contains a hyphen
-  var coreName = fieldName.split('-')[0]
   // save paramter values into one global
 
   if (lightsheet.dictParameters !== null) {
@@ -54,39 +52,11 @@ lightsheet.buildParameterObject = function(fieldObject) {
     lightsheet.dictParameters[fieldName] = [];
     lightsheet.dictParameters[fieldName].push(fieldObject.value);
   }
-}
-
-
-lightsheet.filterTable = function() {
-  var input, filter, table, tr, td, i;
-  var input = document.getElementById("search-input");
-  var filter = input.value.toUpperCase();
-  var table = document.getElementById("job-table-body");
-  var tr = table.getElementsByTagName("tr");
-  var found = null;
-  for (var i = 0; i < tr.length; i++) {
-    var td = tr[i].getElementsByTagName("td");
-    found = false;
-    if (td) {
-      for (var j = 0; j < td.length; j++) {
-        if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
-          found = true;
-          break;
-        }
-      }
-    }
-    if (found) {
-      tr[i].style.display = "";
-    }
-    else {
-      tr[i].style.display = "none";
-    }
-  }
-}
+};
 
 
 lightsheet.sortTable = function(n) {
-   var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
   table = document.getElementById("job-table");
   switching = true;
   //Set the sorting direction to ascending:
@@ -138,7 +108,7 @@ lightsheet.sortTable = function(n) {
       }
     }
   }
-}
+};
 
 // Expand tabs for checkbox checked
 lightsheet.stepsExistingJob = function(){
@@ -149,25 +119,24 @@ lightsheet.stepsExistingJob = function(){
       $('#' + 'collapse' + name).addClass('show');
     }
   });
-}
+};
 
 // Disable input fields, when checkbox is checked, that those fields should be ignored
 lightsheet.passEmptyField = function(obj){
   var fields = obj.parentNode.parentNode.getElementsByClassName('lightsheet-fields');
   if (fields && fields.length > 0) {
+    var inputs = fields[0].getElementsByTagName('input');
     if (obj.checked) {
-      var inputs = fields[0].getElementsByTagName('input');
       for (var i = 0; i < inputs.length; i++) {
         inputs[i].disabled = true;
         obj.value = true;
       }
     }
     else {
-      var inputs = fields[0].getElementsByTagName('input');
       for (var i = 0; i < inputs.length; i++) {
         inputs[i].disabled = false;
         obj.value = false;
       }
     }
   }
-}
+};

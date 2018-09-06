@@ -26,12 +26,10 @@ dataIo.handleError = function(err){
  * Grab data and submit it when pressing the button
  */
 dataIo.customSubmit = function(){
-  const formInput = $('form :input');
   // Initialize object which will contain data to be posted
-  var data = {}
+  var data = {};
 
   const jobField = $('#jobId');
-  let job_name = null;
   if (jobField && jobField.length > 0) {
     data['jobName'] = $('#jobId')[0].value;
   }
@@ -48,9 +46,9 @@ dataIo.customSubmit = function(){
     var selectedElements = checkBoxInnerFields[i].getElementsByClassName(innerFieldClass)[0].innerHTML;
     var outputField = checkBoxInnerFields[i].getElementsByTagName('input')[0];
 
-    var result = "[" + selectedElements + "]";
-    if (selectedElements == "Nothing selected") {
-      outputField = []
+    var result = '[' + selectedElements + ']';
+    if (selectedElements == 'Nothing selected') {
+      outputField = [];
     }
     else {
       outputField.value = result;
@@ -64,33 +62,33 @@ dataIo.customSubmit = function(){
     data[step] = {};
 
     if (stepType){
-      if (stepType == "L"){
+      if (stepType == 'L'){
         data[step]['type'] = 'LightSheet';
       }
-      else if (stepType == "Sp"){
+      else if (stepType == 'Sp'){
         data[step]['type'] = 'Sparks';
       }
-      else if (stepType == "Si"){
+      else if (stepType == 'Si'){
         data[step]['type'] = 'Singularity';
       }
     }
     var inputFields = $('#collapse' + step).find('input:not([ignore])');
     const p = 'parameters';
-    data[step][p] = {}
+    data[step][p] = {};
 
-    var bindPath = []
+    var bindPath = [];
     inputFields.each( function(k,val) {
       if (this.hasAttribute('mount')) {
         bindPath.push(val.value);
       }
       if (!this.hasAttribute('ignore')) {
         if (this.disabled) {
-          data[step][p][val.id] = "[]";
+          data[step][p][val.id] = '[]';
         }
         else {
           if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
             if (val.value !== undefined && val.value !== false && val.value !== 'false'){
-              data[step][p][val.id] = "True";
+              data[step][p][val.id] = 'True';
             }
           }
           else if (val.value) {
@@ -98,13 +96,10 @@ dataIo.customSubmit = function(){
           }
         }
       }
-      else {
-        console.log('ignore');
-      }
     });
-    data[step]['bindPaths'] = bindPath.join(", ");
+    data[step]['bindPaths'] = bindPath.join(', ');
   });
 
   dataIo.fetch(window.location, 'POST', data)
-      .catch(dataIo.handleError);
-}
+    .catch(dataIo.handleError);
+};
