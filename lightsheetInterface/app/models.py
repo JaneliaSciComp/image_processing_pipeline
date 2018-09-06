@@ -29,6 +29,7 @@ class Parameter(Document):
     text1 = StringField(max_length=500)
     boolean = BooleanField()
     ignore = BooleanField()
+    mount = BooleanField()
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
     readonly = BooleanField()
@@ -98,8 +99,8 @@ class CKTextAreaField(TextAreaField):
 
 class ExtendedParameterView(ModelView):
    extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-   form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1", "boolean", "readonly", "ignore", "empty", "frequency", "formatting", "order", "hint"]
-   column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4",  "text1", "boolean", "frequency", "formatting", "ignore"]
+   form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1", "boolean", "readonly", "ignore", "mount", "empty", "frequency", "formatting", "order", "hint"]
+   column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4",  "text1", "boolean", "mount", "frequency", "formatting", "ignore"]
    form_overrides = {
       'hint': CKTextAreaField
    }
