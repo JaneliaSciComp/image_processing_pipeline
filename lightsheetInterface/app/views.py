@@ -74,19 +74,21 @@ def template(template_name):
                        templates=config['templates'],
                        currentTemplate=currentTemplate)
 
-@app.route('/', methods=['GET','POST'], defaults={'template_name':None})
-def index(template_name):
-  if template_name == None:
-    return redirect(url_for('template', template_name = "LightSheet"))
+@app.route('/', methods=['GET'])
+def index():
+  return redirect(url_for('template', template_name = "LightSheet"))
+
+@app.route('/job/<image_db>', methods=['GET'])
+def load_job(image_db):
   submissionStatus = None
-  imageProcessingDB_id = request.args.get('lightsheetDB_id')
+  imageProcessingDB_id = image_db
   reparameterize = request.args.get('reparameterize');
+
+  template_name = None
+
   config = buildConfigObject(template_name)
   currentTemplate = None
-  for template in config['templates']:
-    if template.name == template_name:
-      currentTemplate =  template_name
-      break;
+ 
   if imageProcessingDB_id == 'favicon.ico':
     imageProcessingDB_id = None
 

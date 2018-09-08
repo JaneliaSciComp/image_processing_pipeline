@@ -35,6 +35,9 @@
         <label class="lightsheet-label-configure">Template: </label>
         <select class="form-control template-dropdown" id="template-selector">
         {% if currentTemplate is defined %}
+          {% if currentTemplate is none %}
+            <option value="" selected></option>
+          {% endif %}
           {% for tObj in config.templates %}
             {% if currentTemplate == tObj.name %}
               <option value="{{ tObj.name }}" selected>{{ tObj.name }}</option>
@@ -62,7 +65,7 @@
         <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
           {% if parentJobInfo is not none %}
             {% for currentJobInfo in parentJobInfo %}
-              <option value={{ url_for('index', lightsheetDB_id=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
+              <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
                 {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo%}
                   {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
                 {% else %}
