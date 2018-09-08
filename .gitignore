@@ -13,4 +13,5 @@ lightsheetInterface/package-lock.json
 lightsheetInterface/upload
 lightsheetInterface/flightplan.js
 lightsheetInterface/.eslintrc.js
+flightplan.js
 .idea
