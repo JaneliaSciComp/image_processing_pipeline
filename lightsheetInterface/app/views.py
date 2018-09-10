@@ -119,6 +119,7 @@ def load_job(image_db):
   ableToReparameterize=True
   succededButLatterStepFailed=[]
   globalParameters=None
+
   if jobData:
     globalParametersAndRemainingStepNames = list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)},{"remainingStepNames":1,"globalParameters":1}))
     if "globalParameters" in globalParametersAndRemainingStepNames[0]:
@@ -145,7 +146,7 @@ def load_job(image_db):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
       # go through all steps and find those, which are used by the current job
-      for step in configObj['steps']:
+      for step in configObj['stepsAll']:
         currentStep = step.name
         # If loading previous run parameters for specific step, then it should be checked sett editable
         if currentStep in matchNameIndex.keys() or currentStep=="globalParameters":
@@ -181,14 +182,13 @@ def load_job(image_db):
     doThePost(request.json, reparameterize, imageProcessingDB, imageProcessingDB_id, request.base_url,template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,"parent")
+  parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent")
   jobs = allJobsInJSON(imageProcessingDB)
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                        title='Home',
                        pipelineSteps=pipelineSteps,
                        parentJobInfo = parentJobInfo, # used by job status
-                       logged_in=True,
                        config = configObj,
                        lightsheetDB_id = imageProcessingDB_id,
                        jobsJson= jobs, # used by the job table

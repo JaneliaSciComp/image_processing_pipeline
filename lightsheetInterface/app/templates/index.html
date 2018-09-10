@@ -130,6 +130,15 @@
                 {% include "stepDefault.html" ignore missing with context %}
               {% endif %}
             {% endfor %}
+          {% else %}
+            {% for step in config['stepsAll'] %}
+              {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                {% set pipelineStep = pipelineSteps[step.name] %}
+                {% include "stepLoadJob.html" ignore missing with context %}
+              {% else %}
+                {% include "stepDefault.html" ignore missing with context %}
+              {% endif %}
+            {% endfor %}
           {% endif %}
         {% endif %}
       </div>
