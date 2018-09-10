@@ -30,10 +30,12 @@
   <!-- Row with elements to configure -->
   <div class="row">
     {% if config.templates is defined and config.templates is not none %}
-    <div class="col-lg-4 col-md-4 col-sm-4">
+    <div class="col-lg-4 col-md-5 col-sm-12">
+
+      <!-- Select a template -->
       <div class="form-group form-inline">
         <label class="lightsheet-label-configure">Template: </label>
-        <select class="form-control template-dropdown" id="template-selector">
+        <select class="form-control ip-dropdown" id="template-selector">
         {% if currentTemplate is defined %}
           {% if currentTemplate is none %}
             <option value="" selected></option>
@@ -52,29 +54,55 @@
         {% endif %}
         </select>
       </div>
-      <!-- Name field -->
+
+      <!-- Select a Step -->
       <div class="form-group form-inline">
-        <label class="lightsheet-label-configure">Name: </label>
-        <input type="text" class="form-control lightsheet-input" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
+        <label class="lightsheet-label-configure">Step: </label>
+        <select class="form-control ip-dropdown" id="step-selector">
+        {% if currentStep is defined %}
+          {% if currentStep is none %}
+            <option value="" selected></option>
+          {% endif %}
+          {% for sObj in config.stepsAll %}
+            {% if currentStep == sObj.name %}
+              <option value="{{ sObj.name }}" selected>{{ sObj.name }}</option>
+            {% else %}
+              <option value="{{ sObj.name }}" >{{ sObj.name }}</option>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <option value="" selected></option>
+          {% for sObj in config.stepsAll %}
+            <option value="{{ sObj.name }}" >{{ sObj.name }}</option>
+          {% endfor %}
+        {% endif %}
+        </select>
       </div>
     </div>
     {% endif %}
-    <div class="col-lg-8 col-md-8 col-sm-8">
+    <div class="col-lg-8 col-md-7 col-sm-12">
+      <!-- Name field -->
+      <div class="form-group form-inline">
+        <label class="lightsheet-label-configure">Name: </label>
+        <input type="text" class="form-control lightsheet-input ip-namefield" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
+      </div>
       <!-- Select existing job -->
-      <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
-        <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
-          {% if parentJobInfo is not none %}
-            {% for currentJobInfo in parentJobInfo %}
-              <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
-                {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo%}
-                  {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
-                {% else %}
-                  job {{ loop.index }}
-                {% endif %}
-              </option>
-            {% endfor %}
-          {% endif %}
-      </select>
+      <div class="form-group form-inline">
+        <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
+          <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
+            {% if parentJobInfo is not none %}
+              {% for currentJobInfo in parentJobInfo %}
+                <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
+                  {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo%}
+                    {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
+                  {% else %}
+                    job {{ loop.index }}
+                  {% endif %}
+                </option>
+              {% endfor %}
+            {% endif %}
+        </select>
+      </div>
     </div>
   </div>
 
@@ -87,14 +115,22 @@
     <div class="row lightsheet-row">
       <div id="steps">
         {% if config['steps'] is not none %}
-          {% for step in config['steps'] %}
-            {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-              {% set pipelineStep = pipelineSteps[step.name] %}
-              {% include "stepLoadJob.html" ignore missing with context %}
-            {% else %}
-              {% include "stepDefault.html" ignore missing with context %}
-            {% endif %}
-          {% endfor %}
+          {% if currentTemplate is defined and currentTemplate is not none %}
+            {% for step in config['steps'][currentTemplate] %}
+              {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                {% set pipelineStep = pipelineSteps[step.name] %}
+                {% include "stepLoadJob.html" ignore missing with context %}
+              {% else %}
+                {% include "stepDefault.html" ignore missing with context %}
+              {% endif %}
+            {% endfor %}
+          {% elif currentStep is defined and currentStep is not none %}
+            {% for step in config['stepsAll'] %}
+              {% if step.name == currentStep %}
+                {% include "stepDefault.html" ignore missing with context %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
         {% endif %}
       </div>
     </div>
@@ -217,9 +253,15 @@
           }
         });
 
+
         $('#template-selector').on('change', function(event){
           var template_id = $(this).find(":selected").val();
           window.location = window.origin + '/template/' + template_id;
+        });
+
+        $('#step-selector').on('change', function(event){
+          var step_id = $(this).find(":selected").val();
+          window.location = window.origin + '/step/' + step_id;
         });
 
         $('.info-icon').on('click', function(event){

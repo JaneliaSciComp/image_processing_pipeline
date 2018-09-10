@@ -159,6 +159,14 @@ fieldset {
   background-color: #dce6ef;
 }
 
+.ip-namefield {
+  min-width: 30em
+}
+
+.ip-dropdown {
+  min-width: 15em;
+}
+
 select .template-dropdown {
   width: 200px !important;
 }
@@ -166,6 +174,10 @@ select .template-dropdown {
 @media (min-width: 769px) {
   .lightsheet-text {
     min-width: 20em;
+  }
+
+  .ip-dropdown {
+    min-width: 10em;
   }
 }
 
@@ -176,6 +188,10 @@ select .template-dropdown {
 
   #steps {
     min-width: 62em;
+  }
+
+  .ip-dropdown {
+    min-width: 15em;
   }
 }
 

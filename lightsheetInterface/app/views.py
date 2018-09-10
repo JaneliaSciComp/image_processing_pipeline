@@ -11,6 +11,7 @@ from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost
 from app.models import Dependency
 from bson.objectid import ObjectId
 
+configObj = buildConfigObject()
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
 settings = Settings()
@@ -41,6 +42,32 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico')
 
+
+@app.route('/step/<step_name>', methods=['GET','POST'])
+def step(step_name):
+  lightsheetDB_id = None
+
+  currentStep = None
+  for step in configObj['stepsAll']:
+    if step.name == step_name:
+      currentStep =  step_name
+
+  if request.method == 'POST' and request.json:
+    doThePost(request.json, reparameterize, imageProcessingDB, template_name)
+
+  updateDBStatesAndTimes(imageProcessingDB)
+  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id, "parent")
+  jobs = allJobsInJSON(imageProcessingDB)
+
+  return render_template('index.html',
+                       parentJobInfo = parentJobInfo, # used by job status
+                       config = configObj,
+                       jobsJson= jobs, # used by the job table
+                       submissionStatus = None,
+                       currentStep=currentStep,
+                       currentTemplate=None
+  )
+
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
   lightsheetDB_id = request.args.get('lightsheetDB_id')
@@ -48,10 +75,9 @@ def template(template_name):
   if lightsheetDB_id == 'favicon.ico':
     lightsheetDB_id = None
   parentJobInfo = None
-  config = buildConfigObject(template_name)
   currentTemplate = None
 
-  for template in config['templates']:
+  for template in configObj['templates']:
     if template.name == template_name:
       currentTemplate =  template_name
       break;
@@ -60,25 +86,20 @@ def template(template_name):
     doThePost(request.json, reparameterize, imageProcessingDB, template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id,"parent")
+  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id, "parent")
   jobs = allJobsInJSON(imageProcessingDB)
   return render_template('index.html',
-                       title='Home',
-                       pipelineSteps=None,
                        parentJobInfo = parentJobInfo, # used by job status
-                       logged_in=True,
-                       config = config,
-                       lightsheetDB_id = None,
+                       config = configObj,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,
-                       templates=config['templates'],
                        currentTemplate=currentTemplate)
 
 @app.route('/', methods=['GET'])
 def index():
   return redirect(url_for('template', template_name = "LightSheet"))
 
-@app.route('/job/<image_db>', methods=['GET'])
+@app.route('/job/<image_db>', methods=['GET', 'POST'])
 def load_job(image_db):
   submissionStatus = None
   imageProcessingDB_id = image_db
@@ -86,7 +107,6 @@ def load_job(image_db):
 
   template_name = None
 
-  config = buildConfigObject(template_name)
   currentTemplate = None
  
   if imageProcessingDB_id == 'favicon.ico':
@@ -125,7 +145,7 @@ def load_job(image_db):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
       # go through all steps and find those, which are used by the current job
-      for step in config['steps']:
+      for step in configObj['steps']:
         currentStep = step.name
         # If loading previous run parameters for specific step, then it should be checked sett editable
         if currentStep in matchNameIndex.keys() or currentStep=="globalParameters":
@@ -142,7 +162,7 @@ def load_job(image_db):
               checkboxState = 'unchecked'
           if stepData:
             forms = None
-            jobs = parseJsonDataNoForms(stepData, currentStep, config)
+            jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
             # Pipeline steps is passed to index.html for formatting the html based
             pipelineSteps[currentStep] = {
               'stepName': step.name,
@@ -169,7 +189,7 @@ def load_job(image_db):
                        pipelineSteps=pipelineSteps,
                        parentJobInfo = parentJobInfo, # used by job status
                        logged_in=True,
-                       config = config,
+                       config = configObj,
                        lightsheetDB_id = imageProcessingDB_id,
                        jobsJson= jobs, # used by the job table
                        submissionStatus = None,

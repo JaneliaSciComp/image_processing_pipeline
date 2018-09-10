@@ -121,20 +121,19 @@ def getParameters(parameter):
   return result
 
 # build object with information about steps and parameters about admin interface
-def buildConfigObject(template_name = None):
+def buildConfigObject():
   try:
-    if not template_name:
-      template_name = 'LightSheet'
-
-    sorted_steps = None
-    template = Template.objects.filter(name=template_name).first()
-    if template:
+    sorted_steps = {}
+    templates = Template.objects.all()
+    allSteps = Step.objects.all()
+    for template in templates:
       steps = template.steps
-      sorted_steps = sorted(steps, key=operator.attrgetter('order'))
+      sorted_steps[template.name] = sorted(steps, key=operator.attrgetter('order'))
+
     templates = Template.objects.all().order_by('order')
     p = Parameter.objects.all()
     paramDict = getParameters(p)
-    config = {'steps': sorted_steps, 'parameterDictionary': paramDict, 'templates': templates}
+    config = {'steps': sorted_steps, 'stepsAll': allSteps, 'parameterDictionary': paramDict, 'templates': templates}
   except ServerSelectionTimeoutError:
     return 404
   return config
