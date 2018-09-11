@@ -185,7 +185,13 @@ def getConfigurationsFromDB(imageProcessingDB_id, client, globalParameter=None, 
 def getArgumentsToRunJob(imageProcessingDB, _id):
   currentJobSteps = imageProcessingDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'steps.name':1,'steps.parameters.pause':1})
   temp = list(imageProcessingDB.jobs.find({"_id":ObjectId(_id)},{'_id':0,"remainingStepNames":1}))
-  remainingStepNames=temp[0]["remainingStepNames"];
+  if "remainingStepNames" in temp[0]:
+    remainingStepNames=temp[0]["remainingStepNames"]
+  else:
+    remainingStepNames=[]
+    for step in currentJobSteps[0]["steps"]:
+      remainingStepNames.append(step["name"])
+
   output={"currentJACSJobStepNames":'','configOutputPath':''}
   pauseState=False
   currentStepIndex=0
@@ -201,6 +207,7 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
     configOutputPath = imageProcessingDB.jobs.find({'_id':ObjectId(_id)},{'_id':0,'configOutputPath':1})
     if configOutputPath[0]:
       output["configOutputPath"]=configOutputPath[0];
+  if currentJobSteps:
     return output
   else:
     return 404
