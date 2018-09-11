@@ -11,8 +11,6 @@ from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost
 from app.models import Dependency
 from bson.objectid import ObjectId
 
-configObj = buildConfigObject()
-
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
 settings = Settings()
 
@@ -45,8 +43,11 @@ def favicon():
 
 @app.route('/step/<step_name>', methods=['GET','POST'])
 def step(step_name):
-  lightsheetDB_id = None
+  configObj = buildConfigObject()
+  template_name = None
+  reparameterize = None
 
+  lightsheetDB_id = None
   currentStep = None
   for step in configObj['stepsAll']:
     if step.name == step_name:
@@ -70,6 +71,7 @@ def step(step_name):
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
+  configObj = buildConfigObject()
   lightsheetDB_id = request.args.get('lightsheetDB_id')
   reparameterize = request.args.get('reparameterize');
   if lightsheetDB_id == 'favicon.ico':
@@ -101,6 +103,7 @@ def index():
 
 @app.route('/job/<image_db>', methods=['GET', 'POST'])
 def load_job(image_db):
+  configObj = buildConfigObject()
   submissionStatus = None
   imageProcessingDB_id = image_db
   reparameterize = request.args.get('reparameterize');

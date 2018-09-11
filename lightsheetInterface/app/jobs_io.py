@@ -64,21 +64,30 @@ def reformatDataToPost(postedData):
           parameter = parameterKey;
         #parameter = parameter.split('-')[0]
 
+        rangeParam = False
         if paramType and paramType == ParameterTypes.rangeParam:
+          rangeParam = True
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter] # get the existing object
           else:
             paramValueSet = {} # create a new object
           # move the parts of the range parameter to the right key of the object
-          if splitRest[1] == 'start':
-            paramValueSet['start'] = float(postedData[step][p][parameterKey]) if postedData[step][p][parameterKey] is not '' else ''
-          elif splitRest[1] == 'end':
-            paramValueSet['end'] = float(postedData[step][p][parameterKey]) if postedData[step][p][parameterKey] is not '' else ''
-          elif splitRest[1] == 'every':
-            paramValueSet['every'] = float(postedData[step][p][parameterKey]) if postedData[step][p][parameterKey] is not '' else ''
-          # update the object
-          stepParamResult[parameter] = paramValueSet
-        else: # no range
+          if splitRest[1] == 'start' or splitRest[1] == 'end' or splitRest[1] == 'every':
+            currValue = postedData[step][p][parameterKey]
+            if currValue == "empty":
+              rangeParam = False
+            else :
+              if splitRest[1] == 'start':
+                paramValueSet['start'] = float(currValue) if currValue is not '' and currValue != "[]" else ''
+              elif splitRest[1] == 'end':
+                paramValueSet['end'] = float(currValue) if currValue is not '' and currValue != "[]" else ''
+              elif splitRest[1] == 'every':
+               paramValueSet['every'] = float(currValue) if currValue is not '' and currValue != "[]" else ''
+          if rangeParam:
+            # update the object
+            stepParamResult[parameter] = paramValueSet
+
+        if not rangeParam: # no range
           if parameter in stepParamResult:
             paramValueSet = stepParamResult[parameter]
           else:
@@ -106,6 +115,8 @@ def reformatDataToPost(postedData):
         if postedData[step][p][param] == 'true':
           checkboxesClean.append(param.split('-')[1].split('_')[0])
 
+      print('empty checkbox')
+      print(stepParamResult)
       if 'emptycheckbox' in stepParamResult.keys():
         stepParamResult.pop('emptycheckbox')
 
