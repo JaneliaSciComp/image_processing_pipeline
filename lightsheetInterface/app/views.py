@@ -279,9 +279,15 @@ def upload():
       return  render_template('upload.html', message = message)
     return 'error'
 
+@app.route('/upload_config', methods=['GET', 'POST'])
+def upload_config(filename = None):
+  if request.method == "POST":
+    print('POST')
+  message = []
+  return  render_template('upload_config.html', message = message)
 
 @app.route('/upload/<filename>', methods=['GET', 'POST'])
-def uploaded_file(filename):
+def uploaded_file(filename = None):
       with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
         result = createDBentries(c)

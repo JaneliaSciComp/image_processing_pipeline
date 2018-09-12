@@ -6,11 +6,9 @@
     {% else %}
       <div class="row lightsheet-row msg-error">
     {% endif %}
-      {% if message is defined and message is not none %}
-        {% for m in message %}
-          {{ m }} </br>
-        {% endfor %}
-      {% endif %}
+      {% for m in message %}
+        {{ m }} </br>
+      {% endfor %}
     </div>
   {% else %}
     <div class="row lightsheet-row"></div>
@@ -19,7 +17,7 @@
     {% if filename is defined %}
       <h4 id ="job-heading">Upload {{ filename }}</h4>
     {% else %}
-      <h4 id ="job-heading">Upload steps</h4>
+      <h4 id ="job-heading">Upload pipeline configuration</h4>
     {% endif %}
   </div>
   <!-- Row with elements to configure -->
@@ -34,9 +32,15 @@
       <textarea class="form-control rounded-0" rows="20">{{ content | safe }}</textarea>
     </div>
   </div>
-  <!-- {% if content is defined %}
-    <div class="row lightsheet-row">
-      {{ content.data | safe | tojson_pretty }}
-    </div>
-  {% endif %} -->
 {% endblock %}
+<script>
+    const jsonData = JSON.stringify(data);
+    const url = window.origin + '/config/' + user;
+    const calculateRequest = new Request(url, {
+        method: 'POST',
+        body: jsonData,
+        headers: {
+            'content-type': 'application/json'
+        },
+    });
+</script>

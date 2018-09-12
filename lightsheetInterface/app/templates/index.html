@@ -27,10 +27,6 @@
     </div>
   {% endif %}
 
-  {{ currentTemplate }}<br/>
-  {{ currentStep }}<br/>
-  {{ currentJob }}<br/>
-
   <!-- Row with elements to configure -->
   <div class="row">
     {% if config.templates is defined and config.templates is not none %}
@@ -107,6 +103,16 @@
             {% endif %}
         </select>
       </div>
+
+      <div class="form-group form-inline">
+        <div class="row lightsheet-row">
+          <form method=post enctype=multipart/form-data>
+            <input type=file name=file value>
+            <input type=submit value='Upload Configuration'>
+          </form>
+        </div>
+      </div>
+
     </div>
   </div>
 
