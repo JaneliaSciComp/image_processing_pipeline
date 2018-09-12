@@ -85,7 +85,7 @@ dataIo.customSubmit = function(){
       }
       if (!this.hasAttribute('ignore')) {
         if (this.disabled) {
-          data[step][p][val.id] = 'empty';
+          data[step][p][val.id] = '';
         }
         else {
           if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
