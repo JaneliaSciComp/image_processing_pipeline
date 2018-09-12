@@ -72,6 +72,8 @@ dataIo.customSubmit = function(){
         data[step]['type'] = 'Singularity';
       }
     }
+
+    // input fields
     var inputFields = $('#collapse' + step).find('input:not([ignore])');
     const p = 'parameters';
     data[step][p] = {};
@@ -83,7 +85,7 @@ dataIo.customSubmit = function(){
       }
       if (!this.hasAttribute('ignore')) {
         if (this.disabled) {
-          data[step][p][val.id] = '[]';
+          data[step][p][val.id] = '';
         }
         else {
           if (val.type == 'checkbox') { // For chedkbox parameters, only add value if it's true
