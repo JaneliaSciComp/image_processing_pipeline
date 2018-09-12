@@ -27,6 +27,10 @@
     </div>
   {% endif %}
 
+  {{ currentTemplate }}<br/>
+  {{ currentStep }}<br/>
+  {{ currentJob }}<br/>
+
   <!-- Row with elements to configure -->
   <div class="row">
     {% if config.templates is defined and config.templates is not none %}
@@ -282,6 +286,16 @@
               elem.css("display","none");
           }
         });
+
+        $( "input[id^='emptycheckbox_']" ).on('click', function(event){
+          if (this.checked) {
+            // $($(this.closest('.input-group')).find('span')).attr('disabled',true);
+            $($(this.closest('.lightsheet-fields')).find('input.form-control')).attr('disabled',true);
+          }
+          else {
+            $($(this.closest('.lightsheet-fields')).find('input.form-control')).removeAttr('disabled');
+          }
+        })
 
         $.fn.dataTable.ext.errMode = 'throw';
       }
