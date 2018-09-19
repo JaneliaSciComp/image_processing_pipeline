@@ -83,6 +83,9 @@ class ConfigurationInstance(Document):
   text1 = StringField(max_length=500)
   boolean = BooleanField()
 
+  def __unicode__(self):
+    return self.creation_date.strftime("%d/%m/%y-%H:%m")
+
   def save(self, *args, **kwargs):
     if not self.creation_date:
         self.creation_date = datetime.datetime.now()
@@ -91,6 +94,9 @@ class ConfigurationInstance(Document):
 class Configuration(Document):
   name = StringField(default=lambda: str(uuid.uuid4()), primary_key=True)
   instances = ListField(ReferenceField(ConfigurationInstance))
+
+  def __unicode__(self):
+    return self.name
 
 # Customized admin views
 class ConfigView(ModelView):
