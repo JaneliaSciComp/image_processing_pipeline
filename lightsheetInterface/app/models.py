@@ -116,7 +116,7 @@ class ConfigurationView(ModelView):
   column_filters = ['name']
 
 class ConfigurationInstanceView(ModelView):
-  column_filters = ['creation_date', 'step', 'parameter']
+  column_filters = ['creation_date']
 
 class CKTextAreaWidget(TextArea):
    def __call__(self, field, **kwargs):
