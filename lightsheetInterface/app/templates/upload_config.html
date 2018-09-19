@@ -20,27 +20,4 @@
       <h4 id ="job-heading">Upload pipeline configuration</h4>
     {% endif %}
   </div>
-  <!-- Row with elements to configure -->
-  <div class="row lightsheet-row">
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-  </div>
-  <div class="row lightsheet-row" style="display: none;">
-    <div class="col-lg-6 col-md-8 col-sm-10">
-      <textarea class="form-control rounded-0" rows="20">{{ content | safe }}</textarea>
-    </div>
-  </div>
 {% endblock %}
-<script>
-    const jsonData = JSON.stringify(data);
-    const url = window.origin + '/config/' + user;
-    const calculateRequest = new Request(url, {
-        method: 'POST',
-        body: jsonData,
-        headers: {
-            'content-type': 'application/json'
-        },
-    });
-</script>
