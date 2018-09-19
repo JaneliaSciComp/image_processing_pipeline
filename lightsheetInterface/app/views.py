@@ -279,13 +279,6 @@ def upload():
       return  render_template('upload.html', message = message)
     return 'error'
 
-@app.route('/upload_config', methods=['GET', 'POST'])
-def upload_config(filename = None):
-  if request.method == "POST":
-    print('POST')
-  message = []
-  return  render_template('upload_config.html', message = message)
-
 @app.route('/upload/<filename>', methods=['GET', 'POST'])
 def uploaded_file(filename = None):
       with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
@@ -300,6 +293,43 @@ def uploaded_file(filename = None):
       #   message.append('There was an error uploading the file ' + filename + ": " + str(e))
       #   return render_template('upload.html', filename=filename, message=message)
 
+@app.route('/upload_config', methods=['GET', 'POST'])
+def upload_config(filename = None):
+  if request.method == 'GET':
+    return render_template('upload_config.html')
+  # Handle uploaded file
+  if request.method == "POST":
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+      filename = secure_filename(file.filename)
+      file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+      return redirect(url_for('uploaded_configfile',
+                             filename=filename))
+    else:
+      # allowed_ext = print(', '.join(ALLOWED_EXTENSIONS[:-1]) + " or " + ALLOWED_EXTENSIONS[-1])
+      allowed_ext = (', '.join(ALLOWED_EXTENSIONS))
+      message = 'Please make sure, your file extension is one of the following: ' + allowed_ext
+      return  render_template('upload.html', message = message)
+    return 'error'
+
+@app.route('/upload_conf/<filename>', methods=['GET', 'POST'])
+def uploaded_configfile(filename = None):
+  with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
+    c = json.loads(file.read())
+    result = createConfig(c)
+    return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
+  message = []
+  message.append('Error uploading the file {0}'.format(filename))
+  return render_template('upload.html', filename=filename, message=message)
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
 def config(imageProcessingDB_id):
