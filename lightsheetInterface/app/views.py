@@ -8,7 +8,7 @@ from app import app
 from app.settings import Settings
 from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost
-from app.models import Dependency
+from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
@@ -88,12 +88,10 @@ def template(template_name):
     doThePost(request.json, reparameterize, imageProcessingDB, template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id, "parent")
-  jobs = allJobsInJSON(imageProcessingDB)
   return render_template('index.html',
-                       parentJobInfo = parentJobInfo, # used by job status
+                       parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id, "parent"),
                        config = configObj,
-                       jobsJson= jobs, # used by the job table
+                       jobsJson = allJobsInJSON(imageProcessingDB),
                        submissionStatus = None,
                        currentTemplate=currentTemplate)
 
@@ -157,8 +155,7 @@ def load_job(image_db):
           checkboxState = 'checked'
           stepData=None
           if currentStep =="globalParameters":
-            if globalParameters:
-              stepData = globalParameters
+            continue
           else:
             stepData = jobData[matchNameIndex[currentStep]]
             if (reparameterize and currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed):
@@ -185,16 +182,13 @@ def load_job(image_db):
     doThePost(request.json, reparameterize, imageProcessingDB, imageProcessingDB_id, request.base_url,template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent")
-  jobs = allJobsInJSON(imageProcessingDB)
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
-                       title='Home',
                        pipelineSteps=pipelineSteps,
-                       parentJobInfo = parentJobInfo, # used by job status
+                       parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent"),
+                       jobsJson = allJobsInJSON(imageProcessingDB),
                        config = configObj,
                        lightsheetDB_id = imageProcessingDB_id,
-                       jobsJson= jobs, # used by the job table
                        submissionStatus = None,
                        currentTemplate=template_name)
 
@@ -227,6 +221,19 @@ def job_status():
                            logged_in=True,
                            lightsheetDB_id=imageProcessingDB_id)
 
+@app.route('/load/<config_name>', methods=['GET'])
+def load_configuration(config_name):
+
+  pipeline_config = Configuration.objects.filter(name=config_name).first();
+  for instance in pipeline_config.instances:
+
+      print(instance.creation_date)
+  return render_template('index.html',
+            configurations = pipeline_config,
+            parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
+            jobsJson = allJobsInJSON(imageProcessingDB),
+            config = buildConfigObject(),
+    )
 
 @app.route('/search')
 def search():

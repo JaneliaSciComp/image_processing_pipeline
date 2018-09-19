@@ -11,7 +11,7 @@ from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
-from app.models import AppConfig, Step, Parameter, Template
+from app.models import AppConfig, Step, Parameter, Template, Configuration, ConfigurationInstance
 from app.settings import Settings
 
 
@@ -125,7 +125,7 @@ def buildConfigObject():
   try:
     sorted_steps = {}
     templates = Template.objects.all()
-    allSteps = Step.objects.all()
+    allSteps = Step.objects.all().order_by('order')
     for template in templates:
       steps = template.steps
       sorted_steps[template.name] = sorted(steps, key=operator.attrgetter('order'))
@@ -341,6 +341,56 @@ def createDBentries(content):
   result = {}
   result['message'] = message
   result['success'] = success
+  return result
+
+def createConfig(content):
+  kSteps = 'steps'
+  kParams = 'parameters'
+  if kSteps in content:
+    c = Configuration()
+    c.save()
+    steps = content[kSteps]
+    for step in steps:
+      if 'name' in step:
+        stepObj = Step.objects.filter(name=step['name']).first()
+        if kParams in step:
+          parameters = step[kParams]
+          pNames = step[kParams].keys()
+          for p in pNames:
+            pName = p + '_' + stepObj.name
+            paramObj = Parameter.objects.filter(name=pName).first()
+            i = ConfigurationInstance()
+            i['step'] = stepObj
+            i['parameter'] = paramObj
+            if type(parameters[p]) is float:
+              i['number1'] = parameters[p]
+            elif type(parameters[p]) is str:
+              i['text1'] = parameters[p]
+            elif type(parameters[p]) is list:
+              if len(parameters[p]) <= 3:
+                for index,value in enumerate(parameters[p]):
+                  i['number{}'.format(index + 1)] = value
+              else:
+                i['text1'] = "TBA"
+            elif type(parameters[p]) is dict:
+              if 'end' in parameters[p] and 'every' in parameters[p] and 'start' in parameters[p]:
+                i['number1'] = parameters[p]['start']
+                i['number2'] = parameters[p]['end']
+                i['number3'] = parameters[p]['every']
+              else:
+                i['text1'] = "TBA"
+            i.save()
+            c['instances'].append(i)
+            c.save()
+  name = None
+  message = []
+  success = True
+  result = {}
+  # Create new database objects configuration and configuration instances
+
+  result['message'] = message
+  result['success'] = success
+  result['name'] = name
   return result
 
 def submitToJACS(imageProcessingDB, job_id, continueOrReparameterize):

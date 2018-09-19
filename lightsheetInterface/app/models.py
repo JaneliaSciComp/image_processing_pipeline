@@ -74,8 +74,8 @@ class Dependency(Document):
 # existing pipeline
 class ConfigurationInstance(Document):
   creation_date = DateTimeField()
-  step = ListField(ReferenceField(Step))
-  parameter = ListField(ReferenceField(Parameter))
+  step = ReferenceField(Step)
+  parameter = ReferenceField(Parameter)
   number1 = FloatField()
   number2 = FloatField()
   number3 = FloatField()
