@@ -20,4 +20,11 @@
       <h4 id ="job-heading">Upload pipeline configuration</h4>
     {% endif %}
   </div>
+  <!-- Row with elements to configure -->
+  <div class="row lightsheet-row">
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+  </div>
 {% endblock %}
