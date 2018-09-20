@@ -11,7 +11,7 @@ from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
-from app.models import AppConfig, Step, Parameter, Template, Configuration, ConfigurationInstance
+from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
 from app.settings import Settings
 
 
@@ -176,10 +176,10 @@ def getConfigurationsFromDB(imageProcessingDB_id, client, globalParameter=None, 
           output=output[0]["steps"][0]["parameters"]
     else:
       output = list(imageProcessingDB.jobs.find({'_id':ObjectId(imageProcessingDB_id)},{'_id':0,'steps':1}))
+
   if output:
     return output
-  else:
-    return 404
+  return 404
 
 # get the job parameter information from db
 def getArgumentsToRunJob(imageProcessingDB, _id):
@@ -344,53 +344,16 @@ def createDBentries(content):
   return result
 
 def createConfig(content):
-  kSteps = 'steps'
-  kParams = 'parameters'
-  if kSteps in content:
-    c = Configuration()
-    c.save()
-    steps = content[kSteps]
-    for step in steps:
-      if 'name' in step:
-        stepObj = Step.objects.filter(name=step['name']).first()
-        if kParams in step:
-          parameters = step[kParams]
-          pNames = step[kParams].keys()
-          for p in pNames:
-            pName = p + '_' + stepObj.name
-            paramObj = Parameter.objects.filter(name=pName).first()
-            i = ConfigurationInstance()
-            i['step'] = stepObj
-            i['parameter'] = paramObj
-            if type(parameters[p]) is float:
-              i['number1'] = parameters[p]
-            elif type(parameters[p]) is str:
-              i['text1'] = parameters[p]
-            elif type(parameters[p]) is list:
-              if len(parameters[p]) <= 3:
-                for index,value in enumerate(parameters[p]):
-                  i['number{}'.format(index + 1)] = value
-              else:
-                i['text1'] = "TBA"
-            elif type(parameters[p]) is dict:
-              if 'end' in parameters[p] and 'every' in parameters[p] and 'start' in parameters[p]:
-                i['number1'] = parameters[p]['start']
-                i['number2'] = parameters[p]['end']
-                i['number3'] = parameters[p]['every']
-              else:
-                i['text1'] = "TBA"
-            i.save()
-            c['instances'].append(i)
-            c.save()
-  name = None
+  pInstance = PipelineInstance()
+  pInstance.content = json.dumps(content)
+  pInstance.save()
+
   message = []
-  success = True
   result = {}
   # Create new database objects configuration and configuration instances
-
   result['message'] = message
-  result['success'] = success
-  result['name'] = name
+  result['success'] = True
+  result['name'] = pInstance.name
   return result
 
 def submitToJACS(imageProcessingDB, job_id, continueOrReparameterize):

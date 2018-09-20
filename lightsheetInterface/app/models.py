@@ -98,6 +98,19 @@ class Configuration(Document):
   def __unicode__(self):
     return self.name
 
+class PipelineInstance(Document):
+  name = StringField(default=lambda: str(uuid.uuid4()), primary_key=True)
+  creation_date = DateTimeField()
+  content = StringField()
+
+  def save(self, *args, **kwargs):
+    if not self.creation_date:
+        self.creation_date = datetime.datetime.now()
+    return super(PipelineInstance, self).save(*args, **kwargs)
+
+  def __unicode__(self):
+    return self.name
+
 # Customized admin views
 class ConfigView(ModelView):
   column_filters = ['name']
@@ -122,6 +135,9 @@ class ConfigurationView(ModelView):
   column_filters = ['name']
 
 class ConfigurationInstanceView(ModelView):
+  column_filters = ['creation_date']
+
+class PipelineInstanceView(ModelView):
   column_filters = ['creation_date']
 
 class CKTextAreaWidget(TextArea):
@@ -152,3 +168,4 @@ admin.add_view(ExtendedParameterView(Parameter))
 admin.add_view(DependecyView(Dependency))
 admin.add_view(ConfigurationView(Configuration))
 admin.add_view(ConfigurationInstanceView(ConfigurationInstance))
+admin.add_view(PipelineInstanceView(PipelineInstance))

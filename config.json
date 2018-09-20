@@ -1,0 +1,49 @@
+{
+  "parameter": [
+    {
+      "name":"sample name 1",
+      "number1":0.0,
+      "number2":0.0,
+      "number3":0.0,
+      "number4":0.0,
+      "text1":"",
+      "description":"sample description",
+      "frequency":"F",
+      "formatting":"R",
+      "empty": false,
+      "order": 2
+    },
+    { 
+      "name":"sample name 2",
+      "number1":0.0,
+      "number3":1.0,
+      "number2":50.0,
+      "text1":"",
+      "description":" time points to be processed (provided as a range)",
+      "frequency":"F",
+      "formatting":"R",
+      "empty": true, "order": 2 }
+  ]
+}
+
+// Store step information in jsom formatted text
+{
+  "steps": [
+    {
+      "name":"sample step name 1",
+      "description":"sample description",
+      "parameter":[],
+      "submit":true,
+      "template":["I","L"],
+      "order":8      
+    },
+    {
+      "name":"sample step name 2",
+      "description":"sample description",
+      "parameter":[],
+      "submit":false,
+      "template":["I","L"],
+      "order":8      
+    }
+  ]
+}
