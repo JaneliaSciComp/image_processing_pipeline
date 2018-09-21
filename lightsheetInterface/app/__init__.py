@@ -13,7 +13,7 @@ db = MongoEngine(app)
 toolbar = DebugToolbarExtension(app)
 
 from app import views, models #app package from which views will be imported
-
+from app.models import PipelineInstance
 
 def to_pretty_json(value):
     return json.dumps(value, sort_keys=True,
@@ -29,6 +29,14 @@ def add_global_variables():
 @app.context_processor
 def add_machine_name():
   return dict(machine_name=socket.gethostname())
+
+@app.context_processor
+def get_configurations():
+  configs = []
+  instances = PipelineInstance.objects.all()
+  for i in instances:
+    configs.append(i.name)
+  return dict(pConfig=configs)
 
 @app.context_processor
 def get_app_version():

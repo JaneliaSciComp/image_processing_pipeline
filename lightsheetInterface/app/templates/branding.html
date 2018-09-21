@@ -17,6 +17,12 @@
       <a class="navbar-brand" href="{{ url_for('upload_config') }}"> Upload Config</a>
       <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
       <a class="navbar-brand" href="{{ url_for('login') }}" style="display: none;"> Logout </a>
-      <a class="navbar-brand" href="http://localhost:8090/load/5ba404c16ca4a72287c1e234"> http://localhost:8090/load/5ba404c16ca4a72287c1e234</a>
+      <select onchange="location = {{ url_for('load_configuration', config_name = 'test') }}"">
+        {% if pConfig is defined %}
+          {% for p in pConfig %}
+            <option>{{ p }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
     </nav>
 {% endblock %}

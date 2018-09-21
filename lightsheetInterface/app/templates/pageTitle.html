@@ -1,0 +1,18 @@
+<!--
+    Rows to configure a new job
+-->
+{% if pipeline_config is defined %}
+  <div class="row lightsheet-row">
+    <h4 id ="job-heading">Pipeline {{ pipeline_config }}</h4>
+  </div>
+{% else %}
+  {% if currentTemplate is defined and currentTemplate is not none %}
+    <div class="row lightsheet-row">
+      <h4 id ="job-heading">Configure Job for {{ currentTemplate }}</h4>
+    </div>
+  {% else %}
+    <div class="row lightsheet-row">
+      <h4 id ="job-heading">Configure Job</h4>
+    </div>
+  {% endif %}
+{% endif %}

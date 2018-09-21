@@ -220,21 +220,6 @@ def job_status():
                            logged_in=True,
                            lightsheetDB_id=imageProcessingDB_id)
 
-@app.route('/load/<config_name>', methods=['GET'])
-def load_configuration(config_name):
-  configObj = buildConfigObject();
-  pInstance = PipelineInstance.objects.filter(name=config_name).first();
-  ipdb.set_trace()
-  if pInstance:
-    print(pInstance.content)
-    return render_template('index.html',
-              configurations = pipeline_config,
-              parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
-              jobsJson = allJobsInJSON(imageProcessingDB),
-              config = configObj,
-      )
-  return 'test'
-
 def buildTemplateSteps(configObj):
   for step in configObj['stepsAll']:
         currentStep = step.name
@@ -360,10 +345,25 @@ def uploaded_configfile(filename = None):
   with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
     c = json.loads(file.read())
     result = createConfig(c)
-    return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
+    return redirect(url_for('load_configuration', config_name = result['name']))
+    #return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
   message = []
   message.append('Error uploading the file {0}'.format(filename))
-  return render_template('upload.html', filename=filename, message=message)
+  ##return render_template('upload.html', filename=filename, message=message)
+
+@app.route('/load/<config_name>', methods=['GET'])
+def load_configuration(config_name):
+  configObj = buildConfigObject();
+  pInstance = PipelineInstance.objects.filter(name=config_name).first();
+  if pInstance:
+    pipeline_config = None
+    return render_template('index.html',
+              pipeline_config = pipeline_config,
+              parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
+              jobsJson = allJobsInJSON(imageProcessingDB),
+              config = configObj,
+      )
+  return 'test'
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
 def config(imageProcessingDB_id):

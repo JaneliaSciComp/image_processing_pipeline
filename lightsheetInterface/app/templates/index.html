@@ -14,18 +14,7 @@
     {% endif %}
   {% endif %}
 
-  <!--
-      Rows to configure a new job
-  -->
-  {% if currentTemplate is defined and currentTemplate is not none %}
-    <div class="row lightsheet-row">
-      <h4 id ="job-heading">Configure Job for {{ currentTemplate }}</h4>
-    </div>
-  {% else %}
-    <div class="row lightsheet-row">
-      <h4 id ="job-heading">Configure Job</h4>
-    </div>
-  {% endif %}
+  {% include "pageTitle.html" ignore missing with context %}
 
   <!-- Row with elements to configure -->
   <div class="row">
