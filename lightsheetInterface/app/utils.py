@@ -14,7 +14,6 @@ from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
 from app.settings import Settings
 
-
 settings = Settings()
 
 # collect the information about existing job used by the job_status page
@@ -126,6 +125,11 @@ def buildConfigObject():
     sorted_steps = {}
     templates = Template.objects.all()
     allSteps = Step.objects.all().order_by('order')
+    allStepsDict = {}
+
+    for step in allSteps:
+      allStepsDict[step.name] = step
+
     for template in templates:
       steps = template.steps
       sorted_steps[template.name] = sorted(steps, key=operator.attrgetter('order'))
@@ -133,7 +137,8 @@ def buildConfigObject():
     templates = Template.objects.all().order_by('order')
     p = Parameter.objects.all()
     paramDict = getParameters(p)
-    config = {'steps': sorted_steps, 'stepsAll': allSteps, 'parameterDictionary': paramDict, 'templates': templates}
+
+    config = {'steps': sorted_steps, 'stepsAll': allSteps, 'stepsAllDict': allStepsDict, 'parameterDictionary': paramDict, 'templates': templates}
   except ServerSelectionTimeoutError:
     return 404
   return config

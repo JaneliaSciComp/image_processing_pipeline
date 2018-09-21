@@ -10,6 +10,7 @@ from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost
 from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
+from pprint import pprint
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
 settings = Settings()
@@ -117,7 +118,6 @@ def load_job(image_db):
   formData = None
   countJobs = 0
   jobData =  getJobStepData(imageProcessingDB_id, client) # get the data for all jobs
-  print(jobData)
   ableToReparameterize=True
   succededButLatterStepFailed=[]
   globalParameters=None
@@ -163,6 +163,7 @@ def load_job(image_db):
               editState = 'disabled'
               checkboxState = 'unchecked'
           if stepData:
+
             jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
             # Pipeline steps is passed to index.html for formatting the html based
             pipelineSteps[currentStep] = {
@@ -344,6 +345,7 @@ def upload_config(filename = None):
 def uploaded_configfile(filename = None):
   with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
     c = json.loads(file.read())
+
     result = createConfig(c)
     return redirect(url_for('load_configuration', config_name = result['name']))
     #return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
@@ -355,8 +357,25 @@ def uploaded_configfile(filename = None):
 def load_configuration(config_name):
   configObj = buildConfigObject();
   pInstance = PipelineInstance.objects.filter(name=config_name).first();
+  content = json.loads(pInstance.content)
+  pipelineSteps = {}
+  if 'steps' in content:
+    steps = content['steps']
+    for s in steps:
+      name = s['name']
+      jobs = parseJsonDataNoForms(s, name, configObj)
+      # Pipeline steps is passed to index.html for formatting the html based
+      pipelineSteps[name] = {
+        'stepName': name,
+        'stepDescription': 'TBA',
+        'inputJson': None,
+        'state': True,
+        'checkboxState': 'checked',
+        'jobs': jobs
+      }
   if pInstance:
     return render_template('index.html',
+              pipelineSteps=pipelineSteps,
               pipeline_config = config_name,
               parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
               jobsJson = allJobsInJSON(imageProcessingDB),

@@ -26,31 +26,39 @@
     <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="dataIo.customSubmit()" />
     <div class="row lightsheet-row">
       <div id="steps">
-        {% if config['steps'] is not none %}
-          {% if currentTemplate is defined and currentTemplate is not none %}
-            {% for step in config['steps'][currentTemplate] %}
-              {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-                {% set pipelineStep = pipelineSteps[step.name] %}
-                {% include "stepLoadJob.html" ignore missing with context %}
-              {% else %}
-                {% include "stepDefault.html" ignore missing with context %}
-              {% endif %}
-            {% endfor %}
-          {% elif currentStep is defined and currentStep is not none %}
-            {% for step in config['stepsAll'] %}
-              {% if step.name == currentStep %}
-                {% include "stepDefault.html" ignore missing with context %}
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            {% for step in config['stepsAll'] %}
-              {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-                {% set pipelineStep = pipelineSteps[step.name] %}
-                {% include "stepLoadJob.html" ignore missing with context %}
-              {% else %}
-                {% include "stepDefault.html" ignore missing with context %}
-              {% endif %}
-            {% endfor %}
+        {% if pipeline_config is defined %} <!-- load a pipeline configuration from the database -->
+          {% for key in pipelineSteps %}
+            {% set pipelineStep = pipelineSteps[key] %}
+            {% set step = config['stepsAllDict'][key] %}
+            {% include "stepLoadJob.html" ignore missing with context %}
+          {% endfor %}
+        {% else %}
+          {% if config['steps'] is not none %}
+            {% if currentTemplate is defined and currentTemplate is not none %}
+              {% for step in config['steps'][currentTemplate] %}
+                {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                  {% set pipelineStep = pipelineSteps[step.name] %}
+                  {% include "stepLoadJob.html" ignore missing with context %}
+                {% else %}
+                  {% include "stepDefault.html" ignore missing with context %}
+                {% endif %}
+              {% endfor %}
+            {% elif currentStep is defined and currentStep is not none %}
+              {% for step in config['stepsAll'] %}
+                {% if step.name == currentStep %}
+                  {% include "stepDefault.html" ignore missing with context %}
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              {% for step in config['stepsAll'] %}
+                {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                  {% set pipelineStep = pipelineSteps[step.name] %}
+                  {% include "stepLoadJob.html" ignore missing with context %}
+                {% else %}
+                  {% include "stepDefault.html" ignore missing with context %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
           {% endif %}
         {% endif %}
       </div>
