@@ -140,3 +140,10 @@ lightsheet.passEmptyField = function(obj){
     }
   }
 };
+
+$(document).ready(function(){
+  $('#pipeline-configs').on('change', function(event){
+    var pipeline_name = $(this).find(":selected").val();
+    window.location = window.origin + '/load/' + pipeline_name;
+  });
+});

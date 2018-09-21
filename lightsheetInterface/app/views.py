@@ -356,9 +356,8 @@ def load_configuration(config_name):
   configObj = buildConfigObject();
   pInstance = PipelineInstance.objects.filter(name=config_name).first();
   if pInstance:
-    pipeline_config = None
     return render_template('index.html',
-              pipeline_config = pipeline_config,
+              pipeline_config = config_name,
               parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
               jobsJson = allJobsInJSON(imageProcessingDB),
               config = configObj,
