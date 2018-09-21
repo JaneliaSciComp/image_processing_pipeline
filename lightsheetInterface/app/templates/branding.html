@@ -20,7 +20,7 @@
     <select class="form-control" style="max-width: 300px; margin-left: 5em;" id="pipeline-configs">
       {% if pConfig is defined %}
         {% for p in pConfig %}
-          <option>{{ p }}</option>
+          <option value={{ p.name }}>{{ p.description }}</option>
         {% endfor %}
       {% endif %}
     </select>

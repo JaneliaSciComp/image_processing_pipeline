@@ -100,6 +100,7 @@ class Configuration(Document):
 
 class PipelineInstance(Document):
   name = StringField(default=lambda: str(uuid.uuid4()), primary_key=True)
+  description = StringField()
   creation_date = DateTimeField()
   content = StringField()
 
@@ -166,6 +167,4 @@ admin.add_view(StepView(Step))
 admin.add_view(TemplateView(Template))
 admin.add_view(ExtendedParameterView(Parameter))
 admin.add_view(DependecyView(Dependency))
-admin.add_view(ConfigurationView(Configuration))
-admin.add_view(ConfigurationInstanceView(ConfigurationInstance))
 admin.add_view(PipelineInstanceView(PipelineInstance))

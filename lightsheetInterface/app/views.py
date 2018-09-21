@@ -367,7 +367,7 @@ def load_configuration(config_name):
       # Pipeline steps is passed to index.html for formatting the html based
       pipelineSteps[name] = {
         'stepName': name,
-        'stepDescription': 'TBA',
+        'stepDescription': configObj['stepsAllDict'][name].description,
         'inputJson': None,
         'state': True,
         'checkboxState': 'checked',

@@ -1,4 +1,5 @@
 {
+  "name": "My first configuration",
   "steps": [
     {
       "bindPaths": "/groups/lightsheet/lightsheet/testData/ExampleFromPhilipp/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected/Scripts/, false, /groups/lightsheet/lightsheet/testData/ExampleFromPhilipp/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039.corrected/Results/MultiFused/Mmu_E1_H2BeGFPxTmCherry_01_20170928_144039, false", 

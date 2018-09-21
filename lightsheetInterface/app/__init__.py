@@ -35,7 +35,7 @@ def get_configurations():
   configs = []
   instances = PipelineInstance.objects.all()
   for i in instances:
-    configs.append(i.name)
+    configs.append(i)
   return dict(pConfig=configs)
 
 @app.context_processor

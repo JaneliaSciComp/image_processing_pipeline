@@ -350,7 +350,11 @@ def createDBentries(content):
 
 def createConfig(content):
   pInstance = PipelineInstance()
-  pInstance.content = json.dumps(content)
+  jsonObj = json.dumps(content)
+  pInstance.content = jsonObj
+
+  if 'name' in content:
+    pInstance.description = content['name']
   pInstance.save()
 
   message = []
