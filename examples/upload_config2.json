@@ -1,0 +1,41 @@
+{
+  "name": "Example 2 One step configuration",
+  "steps": [
+    {
+      "name": "localAP", 
+      "parameters": {
+        "angleRange": 10.0, 
+        "averaging": 0.0, 
+        "cameras": [
+          0.0
+        ], 
+        "channels": [
+          0.0
+        ], 
+        "configRoot": "", 
+        "dataType": 1.0, 
+        "fullInterval": {
+          "end": 50.0, 
+          "every": 1.0, 
+          "start": 0.0
+        }, 
+        "intRange": 5.0, 
+        "offsantjeetRange": 10.0, 
+        "outputID": "_blending", 
+        "outputString": "", 
+        "readFactors": 1.0, 
+        "smoothing": [
+          1.0, 
+          20.0
+        ], 
+        "specimen": 0.0, 
+        "staticFlag": 0.0, 
+        "timepoints": {
+          "end": 50.0, 
+          "every": 1.0, 
+          "start": 0.0
+        }
+      } 
+    }
+  ]
+}
