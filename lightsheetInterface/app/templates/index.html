@@ -81,10 +81,7 @@
 
   <!-- template variables to be processed in JavaScript -->
   <script>
-     /*
-     * Custom behavior for the lightsheet landing page
-     */
-     {%  if jobsJson %}
+     {% if jobsJson %}
         var table_data = {{ jobsJson|safe }};
      {% else %}
         var table_data = null;

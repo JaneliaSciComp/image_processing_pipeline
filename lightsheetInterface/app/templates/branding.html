@@ -18,9 +18,15 @@
     <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
     <a class="navbar-brand" href="{{ url_for('login') }}" style="display: none;"> Logout </a>
     <select class="form-control" style="max-width: 300px; margin-left: 5em;" id="pipeline-configs">
+      <option value=""></option>
       {% if pConfig is defined %}
+        {% set current = request.path | replace("/load/", "", 1) %}
         {% for p in pConfig %}
-          <option value={{ p.name }}>{{ p.description }}</option>
+          {% if current == p.name %}
+            <option selected value={{ p.name }}>{{ p.description }}</option>
+          {% else %}
+            <option value={{ p.name }}>{{ p.description }}</option>
+          {% endif %}
         {% endfor %}
       {% endif %}
     </select>
