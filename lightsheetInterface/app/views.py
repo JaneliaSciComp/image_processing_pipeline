@@ -369,13 +369,13 @@ def load_configuration(config_name):
         'stepName': name,
         'stepDescription': configObj['stepsAllDict'][name].description,
         'inputJson': None,
-        'state': True,
-        'checkboxState': 'checked',
+        'state': False,
+        'checkboxState': 'unchecked',
         'jobs': jobs
       }
   if pInstance:
     return render_template('index.html',
-              pipelineSteps=pipelineSteps,
+              pipelineSteps = pipelineSteps,
               pipeline_config = config_name,
               parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
               jobsJson = allJobsInJSON(imageProcessingDB),
