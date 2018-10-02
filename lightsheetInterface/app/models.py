@@ -11,7 +11,7 @@ frequency = (('F', 'Frequent'), ('S','Sometimes'), ('R','Rare'))
 formats = (('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'), ('O', 'Option'), ('F', 'Flag'))
 dependency_type = (('V', 'Value'), ('D', 'Dimension'))
 templates = ( ('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal') )
-steptypes = ( ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet') )
+steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet') )
 
 class AppConfig(Document):
   name = StringField(max_length=200)
