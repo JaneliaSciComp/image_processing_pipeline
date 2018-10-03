@@ -115,8 +115,6 @@ def reformatDataToPost(postedData):
         if postedData[step][p][param] == 'true':
           checkboxesClean.append(param.split('-')[1].split('_')[0])
 
-      print('empty checkbox')
-      print(stepParamResult)
       if 'emptycheckbox' in stepParamResult.keys():
         stepParamResult.pop('emptycheckbox')
 
@@ -210,7 +208,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
       processedData=[]
       remainingStepNames=[];
-      allSteps = Step.objects.all()
+      allSteps = Step.objects.all().order_by('order')
       if allSteps:
         for step in allSteps:
           currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == step.name), None)
