@@ -58,7 +58,11 @@ dataIo.customSubmit = function(){
   // Submit empty values
   checked_boxes.each( function( index, element ){
     const step = this.id.replace('check-','');
-    var stepType = $(this.closest('.card-header')).find('.step-type')[0].innerText;
+    var stepType = $(this.closest('.card-header')).find('.step-type')[0];
+    if (stepType) {
+      stepType = stepType.innerText;
+    }
+
     data[step] = {};
 
     if (stepType){
