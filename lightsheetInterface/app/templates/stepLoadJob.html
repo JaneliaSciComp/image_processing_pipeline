@@ -17,6 +17,11 @@
                     {{ pipelineStep.checkboxState }}>
             {{ pipelineStep.stepDescription }}
          </label>
+         <label class="step-type">
+          {% if step.steptype is not none %}
+            {{ step.steptype }}
+          {% endif %}
+        </label>
       </h5>
    </div>
    <div id="collapse{{ pipelineStep.stepName }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">

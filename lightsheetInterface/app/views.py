@@ -353,35 +353,43 @@ def uploaded_configfile(filename = None):
   message.append('Error uploading the file {0}'.format(filename))
   ##return render_template('upload.html', filename=filename, message=message)
 
-@app.route('/load/<config_name>', methods=['GET'])
+@app.route('/load/<config_name>', methods=['GET', 'POST'])
 def load_configuration(config_name):
   configObj = buildConfigObject();
   pInstance = PipelineInstance.objects.filter(name=config_name).first();
-  content = json.loads(pInstance.content)
-  pipelineSteps = {}
-  if 'steps' in content:
-    steps = content['steps']
-    for s in steps:
-      name = s['name']
-      jobs = parseJsonDataNoForms(s, name, configObj)
-      # Pipeline steps is passed to index.html for formatting the html based
-      pipelineSteps[name] = {
-        'stepName': name,
-        'stepDescription': configObj['stepsAllDict'][name].description,
-        'inputJson': None,
-        'state': False,
-        'checkboxState': 'unchecked',
-        'jobs': jobs
-      }
   if pInstance:
+    content = json.loads(pInstance.content)
+    pipelineSteps = {}
+
+    if 'steps' in content:
+      steps = content['steps']
+
+      for s in steps:
+        name = s['name']
+        jobs = parseJsonDataNoForms(s, name, configObj)
+        # Pipeline steps is passed to index.html for formatting the html based
+        pipelineSteps[name] = {
+          'stepName': name,
+          'stepDescription': configObj['stepsAllDict'][name].description,
+          'inputJson': None,
+          'state': False,
+          'checkboxState': 'unchecked',
+          'jobs': jobs
+        }
+
+    if request.method == 'POST' and request.json:
+      print('stuff')
+      doThePost(request.json, None, imageProcessingDB, None)
+
     return render_template('index.html',
-              pipelineSteps = pipelineSteps,
-              pipeline_config = config_name,
-              parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
-              jobsJson = allJobsInJSON(imageProcessingDB),
-              config = configObj,
-      )
-  return 'test'
+      pipelineSteps = pipelineSteps,
+      pipeline_config = config_name,
+      parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
+      jobsJson = allJobsInJSON(imageProcessingDB),
+      config = configObj,
+    )
+
+  return 'No such configuration in the system.'
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
 def config(imageProcessingDB_id):

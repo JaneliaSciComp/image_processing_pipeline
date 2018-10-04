@@ -105,9 +105,6 @@
 
         dataIo.currentUrl = "{{ url_for('template', template_name='placeholder') }}";
         dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
-     {% else %}
-        var dataIo.currentTemplate = null;
-        var dataIo.currentUrl = null;
      {% endif %}
   </script>
 
