@@ -59,20 +59,20 @@
     </div>
     <!-- Select existing job -->
     <div class="form-group form-inline">
-      <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
-        <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
-          {% if parentJobInfo is not none %}
-            {% for currentJobInfo in parentJobInfo %}
-              <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
-                {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo %}
-                  {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
-                {% else %}
-                  job {{ loop.index }}
-                {% endif %}
-              </option>
-            {% endfor %}
-          {% endif %}
-      </select>
+      {% if parentJobInfo is not none %}
+        <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
+          <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
+              {% for currentJobInfo in parentJobInfo %}
+                <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
+                  {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo %}
+                    {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
+                  {% else %}
+                    job {{ loop.index }}
+                  {% endif %}
+                </option>
+              {% endfor %}
+        </select>
+      {% endif %}
     </div>
   </div>
 </div>

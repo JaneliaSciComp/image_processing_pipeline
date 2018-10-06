@@ -384,7 +384,7 @@ def load_configuration(config_name):
     return render_template('index.html',
       pipelineSteps = pipelineSteps,
       pipeline_config = config_name,
-      parentJobInfo = getJobInfoFromDB(imageProcessingDB, None, "parent"),
+      parentJobInfo = None,
       jobsJson = allJobsInJSON(imageProcessingDB),
       config = configObj,
     )
