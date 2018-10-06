@@ -4,7 +4,7 @@
   "description": "LightSheet Pipeline Configurator",
   "main": "flightplan.js",
   "dependencies": {
-    "bootstrap-select": "^1.13.1",
+    "bootstrap-select": "^1.13.2",
     "datatables.net": "^1.10.16",
     "datatables.net-bs4": "^1.10.16",
     "flightplan": "^0.6.17",

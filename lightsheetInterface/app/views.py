@@ -54,11 +54,9 @@ def step(step_name):
     doThePost(request.json, reparameterize, imageProcessingDB, template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)
-  parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id, "parent")
   jobs = allJobsInJSON(imageProcessingDB)
 
   return render_template('index.html',
-                       parentJobInfo = parentJobInfo, # used by job status
                        config = configObj,
                        jobsJson = jobs, # used by the job table
                        submissionStatus = None,
@@ -133,6 +131,7 @@ def load_job(image_db):
           matchNameIndex[jobData[i]['name']] = i
       # go through all steps and find those, which are used by the current job
       for currentStep in matchNameIndex.keys():
+        step = Step.objects(name=currentStep).first()
         editState = 'enabled'
         checkboxState = 'checked'
         if currentStep =="globalParameters":
@@ -146,7 +145,7 @@ def load_job(image_db):
           jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
           # Pipeline steps is passed to index.html for formatting the html based
           pipelineSteps[currentStep] = {
-            'stepName': step.name,
+            'stepName': currentStep,
             'stepDescription': step.description,
             'inputJson': None,
             'state': editState,
@@ -164,7 +163,6 @@ def load_job(image_db):
   #Return index.html with pipelineSteps and serviceData
   return render_template('index.html',
                        pipelineSteps=pipelineSteps,
-                       parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent"),
                        jobsJson = allJobsInJSON(imageProcessingDB),
                        config = configObj,
                        lightsheetDB_id = imageProcessingDB_id,

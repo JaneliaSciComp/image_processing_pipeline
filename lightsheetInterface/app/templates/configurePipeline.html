@@ -1,76 +1,62 @@
 <!-- Row with elements to configure -->
 <div class="row">
-  {% if config.templateNames is defined and config.templateNames is not none %}
     <div class="col-lg-4 col-md-5 col-sm-12">
-      <!-- Select a template -->
-      <div class="form-group form-inline">
-        <label class="lightsheet-label-configure">Template: </label>
-        <select class="form-control ip-dropdown" id="template-selector">
-        {% if currentTemplate is defined %}
-          {% if currentTemplate is none %}
-            <option value="" selected></option>
-          {% endif %}
-          {% for name in config.templateNames %}
-            {% if currentTemplate == name %}
-              <option value="{{ name }}" selected>{{ name }}</option>
-            {% else %}
-              <option value="{{ name }}" >{{ name }}</option>
+      {% if config.templateNames is defined and config.templateNames is not none %}
+        <!-- Select a template -->
+        <div class="form-group form-inline">
+          <label class="lightsheet-label-configure">Template: </label>
+          <select class="form-control ip-dropdown" id="template-selector">
+          {% if currentTemplate is defined %}
+            {% if currentTemplate is none %}
+              <option value="" selected></option>
             {% endif %}
-          {% endfor %}
-        {% else %}
-          {% for name in config.templateNames %}
-            <option value="{{ name }}" >{{ name }}</option>
-          {% endfor %}
-        {% endif %}
+            {% for name in config.templateNames %}
+              {% if currentTemplate == name %}
+                <option value="{{ name }}" selected>{{ name }}</option>
+              {% else %}
+                <option value="{{ name }}" >{{ name }}</option>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            {% for name in config.templateNames %}
+              <option value="{{ name }}" >{{ name }}</option>
+            {% endfor %}
+          {% endif %}
+          </select>
+        </div>
+      {% endif %}
+      <!-- Select a Step -->
+      <div class="form-group form-inline">
+        <label class="lightsheet-label-configure">Step: </label>
+        <select class="form-control ip-dropdown" id="step-selector">
+          {% if currentStep is defined %}
+            {% if currentStep is none %}
+              <option value="" selected></option>
+            {% endif %}
+            {% for name in config.stepNames %}
+              {% if currentStep == name %}
+                <option value="{{ name }}" selected>{{ name }}</option>
+              {% else %}
+                <option value="{{ name }}" >{{ name }}</option>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <option value="" selected></option>
+            {% for name in config.stepNames %}
+              <option value="{{ name }}" >{{ name }}</option>
+            {% endfor %}
+          {% endif %}
         </select>
       </div>
-  {% endif %}
-  <!-- Select a Step -->
-  <div class="form-group form-inline">
-    <label class="lightsheet-label-configure">Step: </label>
-    <select class="form-control ip-dropdown" id="step-selector">
-      {% if currentStep is defined %}
-        {% if currentStep is none %}
-          <option value="" selected></option>
-        {% endif %}
-        {% for name in config.stepNames %}
-          {% if currentStep == name %}
-            <option value="{{ name }}" selected>{{ name }}</option>
-          {% else %}
-            <option value="{{ name }}" >{{ name }}</option>
-          {% endif %}
-        {% endfor %}
-      {% else %}
-        <option value="" selected></option>
-        {% for name in config.stepNames %}
-          <option value="{{ name }}" >{{ name }}</option>
-        {% endfor %}
-      {% endif %}
-    </select>
-  </div>
-</div>
-  <div class="col-lg-6 col-md-5 col-sm-12">
-    <!-- Name field -->
-    <div class="form-group form-inline">
-      <label class="lightsheet-label-configure">Name: </label>
-      <input type="text" class="form-control lightsheet-input ip-namefield" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
     </div>
-    <!-- Select existing job -->
-    <div class="form-group form-inline">
-      {% if parentJobInfo is not none %}
-        <select class="form-control select-job" id="existing-job-selector" onchange="location = this.options[this.selectedIndex].value;">
-          <option value="{{ url_for('index') }}" selected>---Select Previous Run---</option>
-              {% for currentJobInfo in parentJobInfo %}
-                <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
-                  {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo %}
-                    {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
-                  {% else %}
-                    job {{ loop.index }}
-                  {% endif %}
-                </option>
-              {% endfor %}
+    <div class="col-lg-6 col-md-5 col-sm-12">
+      <div class="form-group form-inline">
+        <label class="lightsheet-label-configure">Job: </label>
+        <select class="selectpicker job-select" data-live-search="true" onchange="location = this.options[this.selectedIndex].value;">
+          {% for job in jobsJson %}
+            <option value="{{ url_for('load_job', image_db=job.id) }}">{{ job.creationDate }}_{{ job.selectedSteps['names'] }}</option>
+          {% endfor %}
         </select>
-      {% endif %}
+      </div>
     </div>
-  </div>
 </div>

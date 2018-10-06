@@ -263,3 +263,7 @@ select .template-dropdown {
     min-width: 2400px;
   }
 }
+
+.job-select {
+  min-width: 30em;
+}
