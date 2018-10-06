@@ -81,8 +81,8 @@
         {% else %}
           <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field value">
         {% endif %}
-          <input class="form-check-input" type="checkbox" id="emptycheckbox_{{step}}-{{param}}" {{ addAttribute }} value="false" onclick="lightsheet.passEmptyField(this)">
-          <label class="form-check-label" for="emptycheckbox_{{step}}-{{param}}">Empty Field</label>
+          <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ step }}-{{ param }}" {{ addAttribute }} value="false" onclick="lightsheet.passEmptyField(this)">
+          <label class="form-check-label" for="emptycheckbox_{{ step }}-{{ param }}">Empty Field</label>
         </div>
       {% endif %}
       {% if value.hint %}
@@ -91,7 +91,7 @@
                 <i class="fa fa-info-circle info-icon"></i>
             </div>
             <div class="input-group-sm mb-1 parameter-hint">
-              {{ value.hint | safe}}
+              {{ value.hint | safe }}
             </div>
           </div>
        {% endif %}

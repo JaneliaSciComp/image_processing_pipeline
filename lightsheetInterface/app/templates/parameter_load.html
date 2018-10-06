@@ -62,7 +62,7 @@
 </div>
 <script>
 $(document).ready(function(){
-  if ("{{needsToBeChecked}}"=="True"){
+  if ("{{ needsToBeChecked }}"=="True"){
     document.getElementById("emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}").checked=true;
     document.getElementById("emptycheckbox_{{ pipelineStep.stepName }}-{{ parameterValue.config }}").onchange();
   }

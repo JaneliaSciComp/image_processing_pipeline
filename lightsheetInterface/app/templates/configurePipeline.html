@@ -64,7 +64,7 @@
           {% if parentJobInfo is not none %}
             {% for currentJobInfo in parentJobInfo %}
               <option value={{ url_for('load_job', image_db=currentJobInfo._id) }} {{ currentJobInfo.selected }}>
-                {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo%}
+                {% if 'creationDate' in currentJobInfo and 'selectedStepNames' in currentJobInfo %}
                   {{ currentJobInfo.jobName + " " + currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames | safe + ")"}}
                 {% else %}
                   job {{ loop.index }}

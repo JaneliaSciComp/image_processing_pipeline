@@ -3,7 +3,7 @@
   <div class="lightsheet-heading">
     <h1>Image Processing Pipeline {{ version }}</h1>
   </div>
-{% endblock %}
+{% endblock branding %}
 {% block navbar %}
   <nav class="navbar navbar-light bg-light justify-content-start">
     <a class="navbar-brand navbar-brand-left" href="{{ url_for('index') }}"> Home </a>
@@ -33,4 +33,4 @@
   </nav>
 
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-{% endblock %}
+{% endblock navbar %}

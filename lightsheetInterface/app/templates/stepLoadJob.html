@@ -5,7 +5,7 @@
       <h5 class="mb-0">
          <label>
             <input
-                    id="check-{{pipelineStep.stepName}}"
+                    id="check-{{ pipelineStep.stepName }}"
                     type="checkbox"
                     class="btn btn-link step-name step-checkbox"
                     data-toggle="collapse"
@@ -62,7 +62,7 @@
             <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}" style="display: none;">
                <!-- For now, show json in sometimes panel -->
                <fieldset>
-            <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{  pipelineStep.stepName +"_text"}} name={{ pipelineStep.stepName }}>
+            <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{ pipelineStep.stepName +"_text"}} name={{ pipelineStep.stepName }}>
               {{ pipelineStep.inputJson }}
             </textarea>
                </fieldset>

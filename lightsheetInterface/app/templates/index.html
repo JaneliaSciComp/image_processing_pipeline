@@ -219,7 +219,7 @@
         if(dependenciesFound != null){
           for (var i=0; i< dependenciesFound.length; i++){//Loop over dependencies
               let dependencyFound = dependenciesFound[i]
-              var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{var}}, after parsing above, will be missing a closing bracket
+              var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
               if (isThisALoop != null){dependencyFound = isThisALoop[0];}
               let currentDependency="#"+dependencyFound.substr(1,dependencyFound.length-2);
               if($(currentDependency).prop('type')=="hidden"){
@@ -230,7 +230,7 @@
                 let updatedValue = currentValue;
                 for (var j=0; j< dependenciesFound.length; j++){//Need to loop through dependencies to ensure that all values are updated, not just the one that was just changed
                   loopedDependencyFound = dependenciesFound[j];
-                  var isThisALoop = loopedDependencyFound.substr(1,loopedDependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{var}}, after parsing above, will be missing a closing bracket
+                  var isThisALoop = loopedDependencyFound.substr(1,loopedDependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
                   if (isThisALoop != null){loopedDependencyFound = isThisALoop[0];}
                   let standardID=loopedDependencyFound.substr(1,loopedDependencyFound.length-2);
                   let dependencyToUpdate="#"+standardID; //Current one we are updating
@@ -281,4 +281,4 @@
     });
   });
 </script>
-{% endblock %}
+{% endblock content %}

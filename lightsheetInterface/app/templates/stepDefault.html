@@ -6,7 +6,7 @@
       <label>
         {% set state = False %}
         <input
-            id="check-{{step.name}}"
+            id="check-{{ step.name }}"
             type="checkbox"
             class="btn btn-link step-name step-checkbox"
             data-toggle="collapse"
@@ -32,7 +32,7 @@
       <!-- Tab panes -->
       <div class="tab-content">
         {% for panel in panels %}
-        <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{panel}}-{{ step.name }}">
+        <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
           {% for param in step.parameter %}
           {% set key=param.name %}
           {% if key in config.parameterDictionary[panel] %}
