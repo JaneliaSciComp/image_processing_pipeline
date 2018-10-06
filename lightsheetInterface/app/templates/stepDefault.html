@@ -4,23 +4,23 @@
   <div class="card-header" id="headingOne">
     <h5 class="mb-0">
       <label>
-         {%  set state = False %}
+        {% set state = False %}
         <input
-          id="check-{{step.name}}"
-          type="checkbox"
-          class="btn btn-link step-name step-checkbox"
-          data-toggle="collapse"
-          data-target="#collapse{{ step.name }}"
-          aria-expanded={{ state }}
-          aria-controls="collapse{{ step.name }}"
-          value={{ step.name + "_checkbox"}}
-          onclick="lightsheet.testAllCheckboxes()"
-	        {{ state }}>
+            id="check-{{step.name}}"
+            type="checkbox"
+            class="btn btn-link step-name step-checkbox"
+            data-toggle="collapse"
+            data-target="#collapse{{ step.name }}"
+            aria-expanded={{ state }}
+            aria-controls="collapse{{ step.name }}"
+            value={{ step.name + "_checkbox"}}
+        onclick="lightsheet.testAllCheckboxes()"
+        {{ state }}>
         {{ step.description }}
       </label>
       <label class="step-type">
         {% if step.steptype is not none %}
-          {{ step.steptype }}
+        {{ step.steptype }}
         {% endif %}
       </label>
     </h5>
@@ -28,41 +28,26 @@
   <div id="collapse{{ step.name }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
     <div class="card-body">
       {% include "tabnav.html" %}
+      {% set panels = ['frequent', 'sometimes', 'rare'] %}
       <!-- Tab panes -->
       <div class="tab-content">
-        <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ step.name }}">
+        {% for panel in panels %}
+        <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{panel}}-{{ step.name }}">
           {% for param in step.parameter %}
-            {% set key=param.name %}
-            {% if key in config.parameterDictionary.frequent %}
-              {% set value = config.parameterDictionary.frequent[key] %}
-              {% include "parameter.html" ignore missing with context %}
-            {% endif %}
+          {% set key=param.name %}
+          {% if key in config.parameterDictionary[panel] %}
+          {% set value = config.parameterDictionary[panel][key] %}
+          {% include "parameter.html" ignore missing with context %}
+          {% endif %}
           {% endfor %}
         </div>
-        <!-- sometimes panel -->
-        <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ step.name }}">
-          {% for param in step.parameter %}
-            {% set key=param.name %}
-            {% if key in config.parameterDictionary.sometimes %}
-              {% set value = config.parameterDictionary.sometimes[key] %}
-              {% include "parameter.html" ignore missing with context %}
-            {% endif %}
-          {% endfor %}
+        {% endfor %}
+        {% if 'GLOBALPARAMETERS' in step.name.upper() %}
+        <div class="col-md-12">
+          <input class="btn btn-info apply-button" type="button" value="Apply"
+                 title="Apply global parameters to other steps in the pipeline"
+                 onclick="dependency.applyGlobalParameter()"/>
         </div>
-        <!-- rare panel -->
-        <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ step.name }}">
-          {% for param in step.parameter %}
-            {% set key=param.name %}
-            {% if key in config.parameterDictionary.rare %}
-              {% set value = config.parameterDictionary.rare[key] %}
-              {% include "parameter.html" ignore missing with context %}
-            {% endif %}
-          {% endfor %}
-        </div>
-        {% if 'GLOBALPARAMETERS' in step.name.upper()  %}
-          <div class="col-md-12">
-            <input class="btn btn-info apply-button" type="button" value="Apply" title="Apply global parameters to other steps in the pipeline" onclick="dependency.applyGlobalParameter()" />
-          </div>
         {% endif %}
       </div>
     </div>
