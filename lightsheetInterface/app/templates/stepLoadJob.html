@@ -29,35 +29,19 @@
          {% include "tabnav.html" %}
          <!-- Tab panes -->
          <div class="tab-content">
-            <div role="tabpanel" class="tab-pane active lightsheet-tab" id="frequent-{{ pipelineStep.stepName }}">
-              {% for param in step.parameter %}
-                {% set parameterKey = param.name.split("_")[0] %}
-                {% if parameterKey in pipelineStep['jobs']['frequent'] %}
-                  {% set parameterValue=pipelineStep['jobs']['frequent'][parameterKey] %}
-                  {% include "parameter_load.html" ignore missing with context %}
-                {% endif %}
-              {% endfor %}
-            </div>
-            <!-- sometimes panel -->
-            <div role="tabpanel" class="tab-pane lightsheet-tab" id="sometimes-{{ pipelineStep.stepName }}">
-              {% for param in step.parameter %}
-                {% set parameterKey = param.name.split("_")[0] %}
-                {% if parameterKey in pipelineStep['jobs']['sometimes'] %}
-                  {% set parameterValue=pipelineStep['jobs']['sometimes'][parameterKey] %}
-                  {% include "parameter_load.html" ignore missing with context %}
-                {% endif %}
-              {% endfor %}
-            </div>
-            <!-- rare panel -->
-            <div role="tabpanel" class="tab-pane lightsheet-tab" id="rare-{{ pipelineStep.stepName }}">
-              {% for param in step.parameter %}
-                {% set parameterKey = param.name.split("_")[0] %}
-                {% if parameterKey in pipelineStep['jobs']['rare'] %}
-                  {% set parameterValue=pipelineStep['jobs']['rare'][parameterKey] %}
-                  {% include "parameter_load.html" ignore missing with context %}
-                {% endif %}
-              {% endfor %}
-            </div>
+            {% set panels = ['frequent', 'sometimes', 'rare'] %}
+            {% for panel in panels %}
+              <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ pipelineStep.stepName }}">
+                {% for param in step.parameter %}
+                  {% set parameterKey = param.name.split("_")[0] %}
+                  {% if parameterKey in pipelineStep['jobs'][panel] %}
+                    {% set parameterValue=pipelineStep['jobs'][panel][parameterKey] %}
+                    {% include "parameter_load.html" ignore missing with context %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endfor %}
+
             {% if 'GLOBALPARAMETERS' in step.name.upper()  %}
               <div class="col-md-12">
               <input class="btn btn-info apply-button" type="button" value="Apply" title="Apply global parameters to other steps in the pipeline" onclick="dependency.applyGlobalParameter()" />
