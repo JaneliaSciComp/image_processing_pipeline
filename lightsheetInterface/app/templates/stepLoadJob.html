@@ -58,15 +58,6 @@
                 {% endif %}
               {% endfor %}
             </div>
-            <!-- json panel -->
-            <div role="tabpanel" class="tab-pane lightsheet-tab collapse" id="json-{{ pipelineStep.stepName }}" style="display: none;">
-               <!-- For now, show json in sometimes panel -->
-               <fieldset>
-            <textarea {{ pipelineStep.state }} rows="20" cols="50" id={{ pipelineStep.stepName +"_text"}} name={{ pipelineStep.stepName }}>
-              {{ pipelineStep.inputJson }}
-            </textarea>
-               </fieldset>
-            </div>
             {% if 'GLOBALPARAMETERS' in step.name.upper()  %}
               <div class="col-md-12">
               <input class="btn btn-info apply-button" type="button" value="Apply" title="Apply global parameters to other steps in the pipeline" onclick="dependency.applyGlobalParameter()" />
