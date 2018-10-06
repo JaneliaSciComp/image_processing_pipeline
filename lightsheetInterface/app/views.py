@@ -49,10 +49,6 @@ def step(step_name):
   reparameterize = None
 
   lightsheetDB_id = None
-  currentStep = None
-  for step in configObj['stepsAll']:
-    if step.name == step_name:
-      currentStep =  step_name
 
   if request.method == 'POST' and request.json:
     doThePost(request.json, reparameterize, imageProcessingDB, template_name)
@@ -64,10 +60,10 @@ def step(step_name):
   return render_template('index.html',
                        parentJobInfo = parentJobInfo, # used by job status
                        config = configObj,
-                       jobsJson= jobs, # used by the job table
+                       jobsJson = jobs, # used by the job table
                        submissionStatus = None,
-                       currentStep=currentStep,
-                       currentTemplate=None
+                       currentStep = step_name,
+                       currentTemplate = None
   )
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
@@ -77,24 +73,17 @@ def template(template_name):
   reparameterize = request.args.get('reparameterize');
   if lightsheetDB_id == 'favicon.ico':
     lightsheetDB_id = None
-  parentJobInfo = None
-  currentTemplate = None
-
-  for template in configObj['templates']:
-    if template.name == template_name:
-      currentTemplate =  template_name
-      break;
 
   if request.method == 'POST' and request.json:
     doThePost(request.json, reparameterize, imageProcessingDB, template_name)
 
   updateDBStatesAndTimes(imageProcessingDB)
   return render_template('index.html',
-                       parentJobInfo = getJobInfoFromDB(imageProcessingDB, lightsheetDB_id, "parent"),
+                       parentJobInfo = None,
                        config = configObj,
                        jobsJson = allJobsInJSON(imageProcessingDB),
                        submissionStatus = None,
-                       currentTemplate=currentTemplate)
+                       currentTemplate=template_name)
 
 @app.route('/', methods=['GET'])
 def index():
@@ -108,19 +97,14 @@ def load_job(image_db):
   reparameterize = request.args.get('reparameterize');
 
   template_name = None
-
-  currentTemplate = None
  
   if imageProcessingDB_id == 'favicon.ico':
     imageProcessingDB_id = None
 
   pipelineSteps = {}
-  formData = None
-  countJobs = 0
   jobData =  getJobStepData(imageProcessingDB_id, client) # get the data for all jobs
   ableToReparameterize=True
   succededButLatterStepFailed=[]
-  globalParameters=None
 
   if jobData:
     globalParametersAndRemainingStepNames = list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)},{"remainingStepNames":1,"globalParameters":1}))
@@ -148,32 +132,27 @@ def load_job(image_db):
         if 'name' in jobData[i]:
           matchNameIndex[jobData[i]['name']] = i
       # go through all steps and find those, which are used by the current job
-      for step in configObj['stepsAll']:
-        currentStep = step.name
-        # If loading previous run parameters for specific step, then it should be checked sett editable
-        if currentStep in matchNameIndex.keys() or currentStep=="globalParameters":
-          editState = 'enabled'
-          checkboxState = 'checked'
-          stepData=None
-          if currentStep =="globalParameters":
-            continue
-          else:
-            stepData = jobData[matchNameIndex[currentStep]]
-            if (reparameterize and currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed):
-              editState = 'disabled'
-              checkboxState = 'unchecked'
-          if stepData:
-
-            jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
-            # Pipeline steps is passed to index.html for formatting the html based
-            pipelineSteps[currentStep] = {
-              'stepName': step.name,
-              'stepDescription': step.description,
-              'inputJson': None,
-              'state': editState,
-              'checkboxState': checkboxState,
-              'jobs': jobs
-            }
+      for currentStep in matchNameIndex.keys():
+        editState = 'enabled'
+        checkboxState = 'checked'
+        if currentStep =="globalParameters":
+          continue
+        else:
+          stepData = jobData[matchNameIndex[currentStep]]
+          if (reparameterize and currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed):
+            editState = 'disabled'
+            checkboxState = 'unchecked'
+        if stepData:
+          jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
+          # Pipeline steps is passed to index.html for formatting the html based
+          pipelineSteps[currentStep] = {
+            'stepName': step.name,
+            'stepDescription': step.description,
+            'inputJson': None,
+            'state': editState,
+            'checkboxState': checkboxState,
+            'jobs': jobs
+          }
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
 
@@ -218,35 +197,8 @@ def job_status():
     return render_template('job_status.html', 
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
-                           logged_in=True,
                            lightsheetDB_id=imageProcessingDB_id)
 
-def buildTemplateSteps(configObj):
-  for step in configObj['stepsAll']:
-        currentStep = step.name
-        # If loading previous run parameters for specific step, then it should be checked sett editable
-        if currentStep in matchNameIndex.keys() or currentStep=="globalParameters":
-          editState = 'enabled'
-          checkboxState = 'checked'
-          stepData=None
-          if currentStep =="globalParameters":
-            continue
-          else:
-            stepData = jobData[matchNameIndex[currentStep]]
-            if (reparameterize and currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed):
-              editState = 'disabled'
-              checkboxState = 'unchecked'
-          if stepData:
-            jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
-            # Pipeline steps is passed to index.html for formatting the html based
-            pipelineSteps[currentStep] = {
-              'stepName': step.name,
-              'stepDescription': step.description,
-              'inputJson': None,
-              'state': editState,
-              'checkboxState': checkboxState,
-              'jobs': jobs
-            }
 
 @app.route('/search')
 def search():

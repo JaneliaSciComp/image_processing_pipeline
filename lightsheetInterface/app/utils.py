@@ -138,10 +138,16 @@ def buildConfigObject():
     p = Parameter.objects.all()
     paramDict = getParameters(p)
 
-    config = {'steps': sorted_steps, 'stepsAll': allSteps, 'stepsAllDict': allStepsDict, 'parameterDictionary': paramDict, 'templates': templates}
+    config = {'steps': sorted_steps, 'stepsAllDict': allStepsDict, 'parameterDictionary': paramDict, 'stepNames': getStepNames(), 'templateNames': getTemplateNames()}
   except ServerSelectionTimeoutError:
     return 404
   return config
+
+def getStepNames():
+  return Step.objects.all().values_list('name')
+
+def getTemplateNames():
+  return Template.objects.all().values_list('name')
 
 # Header for post request
 def getHeaders(forQuery=False):

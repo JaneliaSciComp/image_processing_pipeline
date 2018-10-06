@@ -1,8 +1,7 @@
 <!-- Row with elements to configure -->
 <div class="row">
-  {% if config.templates is defined and config.templates is not none %}
+  {% if config.templateNames is defined and config.templateNames is not none %}
     <div class="col-lg-4 col-md-5 col-sm-12">
-
       <!-- Select a template -->
       <div class="form-group form-inline">
         <label class="lightsheet-label-configure">Template: </label>
@@ -11,46 +10,45 @@
           {% if currentTemplate is none %}
             <option value="" selected></option>
           {% endif %}
-          {% for tObj in config.templates %}
-            {% if currentTemplate == tObj.name %}
-              <option value="{{ tObj.name }}" selected>{{ tObj.name }}</option>
+          {% for name in config.templateNames %}
+            {% if currentTemplate == name %}
+              <option value="{{ name }}" selected>{{ name }}</option>
             {% else %}
-              <option value="{{ tObj.name }}" >{{ tObj.name }}</option>
+              <option value="{{ name }}" >{{ name }}</option>
             {% endif %}
           {% endfor %}
         {% else %}
-          {% for tObj in config.templates %}
-            <option value="{{ tObj.name }}" >{{ tObj.name }}</option>
+          {% for name in config.templateNames %}
+            <option value="{{ name }}" >{{ name }}</option>
           {% endfor %}
         {% endif %}
         </select>
       </div>
-
-      <!-- Select a Step -->
-      <div class="form-group form-inline">
-        <label class="lightsheet-label-configure">Step: </label>
-        <select class="form-control ip-dropdown" id="step-selector">
-        {% if currentStep is defined %}
-          {% if currentStep is none %}
-            <option value="" selected></option>
-          {% endif %}
-          {% for sObj in config.stepsAll %}
-            {% if currentStep == sObj.name %}
-              <option value="{{ sObj.name }}" selected>{{ sObj.name }}</option>
-            {% else %}
-              <option value="{{ sObj.name }}" >{{ sObj.name }}</option>
-            {% endif %}
-          {% endfor %}
-        {% else %}
-          <option value="" selected></option>
-          {% for sObj in config.stepsAll %}
-            <option value="{{ sObj.name }}" >{{ sObj.name }}</option>
-          {% endfor %}
-        {% endif %}
-        </select>
-      </div>
-    </div>
   {% endif %}
+  <!-- Select a Step -->
+  <div class="form-group form-inline">
+    <label class="lightsheet-label-configure">Step: </label>
+    <select class="form-control ip-dropdown" id="step-selector">
+      {% if currentStep is defined %}
+        {% if currentStep is none %}
+          <option value="" selected></option>
+        {% endif %}
+        {% for name in config.stepNames %}
+          {% if currentStep == name %}
+            <option value="{{ name }}" selected>{{ name }}</option>
+          {% else %}
+            <option value="{{ name }}" >{{ name }}</option>
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <option value="" selected></option>
+        {% for name in config.stepNames %}
+          <option value="{{ name }}" >{{ name }}</option>
+        {% endfor %}
+      {% endif %}
+    </select>
+  </div>
+</div>
   <div class="col-lg-6 col-md-5 col-sm-12">
     <!-- Name field -->
     <div class="form-group form-inline">
