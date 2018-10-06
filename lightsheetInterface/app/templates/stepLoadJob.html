@@ -35,8 +35,9 @@
                 {% for param in step.parameter %}
                   {% set parameterKey = param.name.split("_")[0] %}
                   {% if parameterKey in pipelineStep['jobs'][panel] %}
-                    {% set parameterValue=pipelineStep['jobs'][panel][parameterKey] %}
-                    {% include "parameter_load.html" ignore missing with context %}
+                    {% set value = pipelineStep['jobs'][panel][parameterKey] %}
+                    {% set meta = value.config %}
+                    {% include "parameter.html" ignore missing with context %}
                   {% endif %}
                 {% endfor %}
               </div>

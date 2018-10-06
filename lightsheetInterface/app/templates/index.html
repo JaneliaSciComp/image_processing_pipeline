@@ -53,10 +53,6 @@
                   {% set step = config['stepsAllDict'][pKey] %}
                   {% include "stepLoadJob.html" ignore missing with context %}
                 {% endfor %}
-              {% else %}
-                {% for step in config['stepsAll'] %}
-                  {% include "stepDefault.html" ignore missing with context %}
-                {% endfor %}
               {% endif %}
             {% endif %}
           {% endif %}
