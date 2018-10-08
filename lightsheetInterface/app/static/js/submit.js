@@ -28,7 +28,6 @@ dataIo.handleError = function(err){
 dataIo.customSubmit = function(){
   // Initialize object which will contain data to be posted
   var data = {};
-
   const jobField = $('#jobId');
   if (jobField && jobField.length > 0) {
     data['jobName'] = $('#jobId')[0].value;
@@ -99,6 +98,9 @@ dataIo.customSubmit = function(){
           }
           else if (val.value) {
             data[step][p][val.id] = val.value;
+          }
+          else {
+            data[step][p][val.id] = ''
           }
         }
       }
