@@ -198,8 +198,10 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       userDefinedJobName=[]
 
       # get the name of the job first
-      jobName = formJson['jobName']
-      del(formJson['jobName'])
+      jobName = ''
+      if 'jobName' in formJson.keys():
+        jobName = formJson['jobName']
+        del(formJson['jobName'])
 
       # delete the jobName entry from the dictionary so that the other entries are all steps
       jobSteps = list(formJson.keys())
