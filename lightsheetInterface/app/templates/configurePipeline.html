@@ -59,7 +59,6 @@
         <label class="lightsheet-label-configure">Job: </label>
         <select class="selectpicker job-select" data-live-search="true" onchange="location = this.options[this.selectedIndex].value;">
           {% for job in jobsJson %}
-            <option value="{{ url_for('load_job', image_db=job.id) }}">{{ job.creationDate }}_{{ job.selectedSteps['names'] }}</option>
           {% endfor %}
         </select>
       </div>

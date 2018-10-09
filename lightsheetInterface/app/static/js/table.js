@@ -63,13 +63,6 @@ $(document).ready(() => {
         },
       },
       {
-       title: 'Temp',
-        data: 'submissionAddress',
-        render(data,type,row,meta){
-          return data ? data: null
-        }
-      },
-      {
         title: 'Job ID (and Configuration Link)',
         className: 'job-id',
         data: 'id',

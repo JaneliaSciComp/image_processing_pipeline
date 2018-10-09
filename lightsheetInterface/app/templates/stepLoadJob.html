@@ -24,7 +24,7 @@
         </label>
       </h5>
    </div>
-   <div id="collapse{{ pipelineStep.stepName }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+   <div id="collapse{{ pipelineStep.stepName }}" class="collapse {{ pipelineStep.collapseOrShow }}" aria-labelledby="headingOne" data-parent="#accordion">
       <div class="card-body">
          {% include "tabnav.html" %}
          <!-- Tab panes -->
@@ -35,9 +35,8 @@
                 {% for param in step.parameter %}
                   {% set parameterKey = param.name.split("_")[0] %}
                   {% if parameterKey in pipelineStep['jobs'][panel] %}
-                    {% set value = pipelineStep['jobs'][panel][parameterKey] %}
-                    {% set meta = value.config %}
-                    {% include "parameter.html" ignore missing with context %}
+                    {% set parameterValue = pipelineStep['jobs'][panel][parameterKey] %}
+                    {% include "parameter_load.html" ignore missing with context %}
                   {% endif %}
                 {% endfor %}
               </div>

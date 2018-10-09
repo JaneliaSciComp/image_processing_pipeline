@@ -36,7 +36,7 @@
           {% if config['steps'] is not none %}
             {% if currentTemplate is defined and currentTemplate is not none %}
               {% for step in config['steps'][currentTemplate] %}
-                {% if pipelineSteps is defined and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
                   {% set pipelineStep = pipelineSteps[step.name] %}
                   {% include "stepLoadJob.html" ignore missing with context %}
                 {% else %}

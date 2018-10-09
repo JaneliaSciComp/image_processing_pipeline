@@ -162,15 +162,14 @@ UTC = timezone('UTC')
 
 
 # get step information about existing jobs from db
-def getJobStepData(_id, mongoClient):
-  result = getConfigurationsFromDB(_id, mongoClient, stepName=None)
+def getJobStepData(_id, imageProcessingDB):
+  result = getConfigurationsFromDB(_id, imageProcessingDB, stepName=None)
   if result != None and result != 404 and len(result) > 0 and 'steps' in result[0]:
     return result[0]['steps']
   return None
 
 # get the job parameter information from db
-def getConfigurationsFromDB(imageProcessingDB_id, client, globalParameter=None, stepName=None, stepParameter=None):
-  imageProcessingDB = client.lightsheet
+def getConfigurationsFromDB(imageProcessingDB_id, imageProcessingDB, globalParameter=None, stepName=None, stepParameter=None):
   output={}
   if globalParameter:
     globalParameterValue = list(imageProcessingDB.jobs.find({'_id':ObjectId(imageProcessingDB_id)},{'_id':0,globalParameter:1}))

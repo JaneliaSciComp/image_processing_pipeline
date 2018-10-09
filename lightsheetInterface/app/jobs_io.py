@@ -7,7 +7,8 @@ from pprint import pprint
 from enum import Enum
 from app import app
 from app.settings import Settings
-from app.utils import submitToJACS
+from app.utils import submitToJACS, getJobStepData
+from bson.objectid import ObjectId
 
 class ParameterTypes(Enum):
   checkbox = 1
@@ -189,9 +190,9 @@ def parseJsonDataNoForms(data, stepName, config):
 
 
 #If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id, submissionAddress = None, currentTemplate = None):
+def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id, submissionAddress = None, stepOrTemplateName = None):
   app.logger.info('Post json data: {0}'.format(formJson))
-  app.logger.info('Current template: {0}'.format(currentTemplate))
+  app.logger.info('Current Step Or Template: {0}'.format(stepOrTemplateName))
   settings = Settings()
 
   if formJson != '[]' and formJson != None:
@@ -222,6 +223,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "submissionAddress": submissionAddress,
+                        "stepOrTemplate": stepOrTemplateName,
                         "state": "NOT YET QUEUED",
                         "containerVersion":"placeholder",
                         "remainingStepNames":remainingStepNames,
@@ -231,7 +233,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       # Insert the data to the db
       if reparameterize:
         imageProcessingDB_id=ObjectId(imageProcessingDB_id)
-        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'submissionAddress', 'state', 'containerVersion', 'remainingStepNames')}
+        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'submissionAddress', 'stepOrTemplate', 'state', 'containerVersion', 'remainingStepNames')}
         imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
         for currentStepDictionary in processedData:
           imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
@@ -242,3 +244,68 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
         globalParametersPosted.pop("")
         imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
       submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
+
+def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, stepOrTemplateName, configObj):
+  submissionStatus = None
+  if stepOrTemplateName.find("Step: ", 0,6):
+    stepOrTemplateName = "/step/"+stepOrTemplateName[6:]
+  else:
+    stepOrTemplateName = "/template/"+stepOrTemplateName[10:]
+
+  pipelineSteps = {}
+  jobData =  getJobStepData(imageProcessingDB_id, imageProcessingDB) # get the data for all jobs
+  ableToReparameterize=True
+  succededButLatterStepFailed=[]
+
+  if jobData:
+    globalParametersAndRemainingStepNames = list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)},{"remainingStepNames":1,"globalParameters":1}))
+    if "globalParameters" in globalParametersAndRemainingStepNames[0]:
+      globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
+    if ("pause" in jobData[-1]["parameters"] and jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
+      ableToReparameterize=False
+    errorStepIndex = next((i for i,step in enumerate(jobData) if step["state"]=="ERROR"),None)
+    if errorStepIndex:
+      for i in range(errorStepIndex):
+        succededButLatterStepFailed.append(jobData[i]["name"])
+  if reparameterize=="true" and imageProcessingDB_id:
+    reparameterize=True
+    remainingStepNames=globalParametersAndRemainingStepNames[0]["remainingStepNames"]
+    if not ableToReparameterize:
+      abort(404)
+  else:
+    reparameterize=False
+
+  # match data on step name
+  matchNameIndex = {}
+  if type(jobData) is list:
+    if imageProcessingDB_id != None: # load data for an existing job
+      for i in range(len(jobData)):
+        if 'name' in jobData[i]:
+          matchNameIndex[jobData[i]['name']] = i
+      # go through all steps and find those, which are used by the current job
+      for currentStep in matchNameIndex.keys():
+        step = Step.objects(name=currentStep).first()
+        editState = 'enabled'
+        checkboxState = 'checked'
+        collapseOrShow = 'show'
+        stepData = jobData[matchNameIndex[currentStep]]
+        if (reparameterize and (currentStep not in remainingStepNames)) or (currentStep in succededButLatterStepFailed):
+          editState = 'disabled'
+          checkboxState = 'unchecked'
+          collapseOrShow = ''
+        if stepData:
+          jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
+          # Pipeline steps is passed to index.html for formatting the html based
+          pipelineSteps[currentStep] = {
+            'stepName': currentStep,
+            'stepDescription': step.description,
+            'inputJson': None,
+            'state': editState,
+            'checkboxState': checkboxState,
+            'collapseOrShow': collapseOrShow,
+            'jobs': jobs
+          }
+  elif type(jobData) is dict:
+    submissionStatus = 'Job cannot be loaded.'
+
+  return pipelineSteps, submissionStatus, stepOrTemplateName
