@@ -47,16 +47,20 @@ def step(step_name):
   configObj = buildConfigObject()
   stepOrTemplateName = "Step: " + step_name
   reparameterize = None
-
+  pipelineSteps = None
   lightsheetDB_id = None
 
   if request.method == 'POST' and request.json:
     doThePost(request.json, reparameterize, imageProcessingDB, None, None, stepOrTemplateName)
 
+  if lightsheetDB_id:
+    pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
+
   updateDBStatesAndTimes(imageProcessingDB)
   jobs = allJobsInJSON(imageProcessingDB)
 
   return render_template('index.html',
+                       pipelineSteps = pipelineSteps,
                        config = configObj,
                        jobsJson = jobs, # used by the job table
                        submissionStatus = None,
@@ -75,8 +79,6 @@ def template(template_name):
 
   submissionStatus = None;
   pipelineSteps = None;
-  if lightsheetDB_id:
-    pipelineSteps, submissionStatus, stepOrTemplateName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, stepOrTemplateName, configObj);
   
   if request.method == 'POST' and request.json:
     doThePost(request.json, reparameterize, imageProcessingDB, None, None, stepOrTemplateName)
@@ -94,89 +96,6 @@ def template(template_name):
 def index():
   return redirect(url_for('template', template_name = "LightSheet"))
 
-# @app.route('/job/<image_db>', methods=['GET', 'POST'])
-# def load_job(image_db):
-#   configObj = buildConfigObject()
-#   submissionStatus = None
-#   imageProcessingDB_id = image_db
-#   reparameterize = request.args.get('reparameterize');
-
-#   template_name = None
- 
-#   if imageProcessingDB_id == 'favicon.ico':
-#     imageProcessingDB_id = None
-
-#   pipelineSteps = {}
-#   jobData =  getJobStepData(imageProcessingDB_id, client) # get the data for all jobs
-#   ableToReparameterize=True
-#   succededButLatterStepFailed=[]
-
-#   if jobData:
-#     globalParametersAndRemainingStepNames = list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)},{"remainingStepNames":1,"globalParameters":1}))
-#     if "globalParameters" in globalParametersAndRemainingStepNames[0]:
-#       globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
-#     if ("pause" in jobData[-1]["parameters"] and jobData[-1]["parameters"]["pause"]==0 and jobData[-1]["state"]=="SUCCESSFUL") or any( (step["state"] in "RUNNING CREATED") for step in jobData):
-#       ableToReparameterize=False
-#     errorStepIndex = next((i for i,step in enumerate(jobData) if step["state"]=="ERROR"),None)
-#     if errorStepIndex:
-#       for i in range(errorStepIndex):
-#         succededButLatterStepFailed.append(jobData[i]["name"])
-#   if reparameterize=="true" and imageProcessingDB_id:
-#     reparameterize=True
-#     remainingStepNames=globalParametersAndRemainingStepNames[0]["remainingStepNames"]
-#     if not ableToReparameterize:
-#       abort(404)
-#   else:
-#     reparameterize=False
-
-#   # match data on step name
-#   matchNameIndex = {}
-#   if type(jobData) is list:
-#     if imageProcessingDB_id != None: # load data for an existing job
-#       for i in range(len(jobData)):
-#         if 'name' in jobData[i]:
-#           matchNameIndex[jobData[i]['name']] = i
-#       # go through all steps and find those, which are used by the current job
-#       for currentStep in matchNameIndex.keys():
-#         step = Step.objects(name=currentStep).first()
-#         editState = 'enabled'
-#         checkboxState = 'checked'
-#         if currentStep =="globalParameters":
-#           continue
-#         else:
-#           stepData = jobData[matchNameIndex[currentStep]]
-#           if (reparameterize and currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed):
-#             editState = 'disabled'
-#             checkboxState = 'unchecked'
-#         if stepData:
-#           jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
-#           # Pipeline steps is passed to index.html for formatting the html based
-#           pipelineSteps[currentStep] = {
-#             'stepName': currentStep,
-#             'stepDescription': step.description,
-#             'inputJson': None,
-#             'state': editState,
-#             'checkboxState': checkboxState,
-#             'jobs': jobs
-#           }
-#   elif type(jobData) is dict:
-#     submissionStatus = 'Job cannot be loaded.'
-
-#   if request.method == 'POST' and request.json:
-#     app.logger.info('POST request root route -- json {0}'.format(request.json))
-#     doThePost(request.json, reparameterize, imageProcessingDB, imageProcessingDB_id, request.base_url,template_name)
-
-#   updateDBStatesAndTimes(imageProcessingDB)
-#   #Return index.html with pipelineSteps and serviceData
-#   return render_template('index.html',
-#                        pipelineSteps=pipelineSteps,
-#                        jobsJson = allJobsInJSON(imageProcessingDB),
-#                        config = configObj,
-#                        lightsheetDB_id = imageProcessingDB_id,
-#                        submissionStatus = None,
-#                        currentTemplate=template_name)
-
-
 @app.route('/job_status', methods=['GET','POST'])
 def job_status():
     imageProcessingDB_id = request.args.get('lightsheetDB_id')
@@ -184,6 +103,8 @@ def job_status():
     updateDBStatesAndTimes(imageProcessingDB)
     parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent")
     childJobInfo=[]
+    jobType = []
+    stepOrTemplateName=[]
     if request.method == 'POST':
       pausedJobInformation=list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)}))
       pausedJobInformation=pausedJobInformation[0]
@@ -197,12 +118,14 @@ def job_status():
       submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, True)
       updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
-        childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
+        jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
-                           lightsheetDB_id=imageProcessingDB_id)
+                           lightsheetDB_id=imageProcessingDB_id,
+                           stepOrTemplateName = stepOrTemplateName,
+                           jobType = jobType)
 
 
 @app.route('/search')
@@ -353,7 +276,7 @@ def config(imageProcessingDB_id):
     globalParameter = request.args.get('globalParameter')
     stepName = request.args.get('stepName')
     stepParameter = request.args.get('stepParameter')
-    output=getConfigurationsFromDB(imageProcessingDB_id, client, globalParameter, stepName, stepParameter)
+    output=getConfigurationsFromDB(imageProcessingDB_id, imageProcessingDB, globalParameter, stepName, stepParameter)
     if output==404:
         abort(404)
     else:

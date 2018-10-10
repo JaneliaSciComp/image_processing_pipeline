@@ -7,7 +7,7 @@ from pprint import pprint
 from enum import Enum
 from app import app
 from app.settings import Settings
-from app.utils import submitToJACS, getJobStepData
+from app.utils import submitToJACS, getJobStepData, stepOrTemplateNamePathMaker
 from bson.objectid import ObjectId
 
 class ParameterTypes(Enum):
@@ -208,6 +208,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       jobSteps = list(formJson.keys())
 
       processedDataTemp = reformatDataToPost(formJson)
+      app.logger.info(processedDataTemp)
       globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
       processedData=[]
       remainingStepNames=[];
@@ -223,7 +224,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
                         "submissionAddress": submissionAddress,
-                        "stepOrTemplate": stepOrTemplateName,
+                        "stepOrTemplateName": stepOrTemplateName,
                         "state": "NOT YET QUEUED",
                         "containerVersion":"placeholder",
                         "remainingStepNames":remainingStepNames,
@@ -233,7 +234,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       # Insert the data to the db
       if reparameterize:
         imageProcessingDB_id=ObjectId(imageProcessingDB_id)
-        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'submissionAddress', 'stepOrTemplate', 'state', 'containerVersion', 'remainingStepNames')}
+        subDict = {k: dataToPostToDB[k] for k in ('jobName', 'submissionAddress', 'stepOrTemplateName', 'state', 'containerVersion', 'remainingStepNames')}
         imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": subDict})
         for currentStepDictionary in processedData:
           imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id,"steps.name": currentStepDictionary["name"]},{"$set": {"steps.$":currentStepDictionary}})
@@ -245,12 +246,8 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
         imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
       submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
 
-def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, stepOrTemplateName, configObj):
+def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, configObj):
   submissionStatus = None
-  if stepOrTemplateName.find("Step: ", 0,6):
-    stepOrTemplateName = "/step/"+stepOrTemplateName[6:]
-  else:
-    stepOrTemplateName = "/template/"+stepOrTemplateName[10:]
 
   pipelineSteps = {}
   jobData =  getJobStepData(imageProcessingDB_id, imageProcessingDB) # get the data for all jobs
@@ -308,4 +305,4 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
 
-  return pipelineSteps, submissionStatus, stepOrTemplateName
+  return pipelineSteps, submissionStatus

@@ -39,13 +39,19 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
     return parentJobInfo
   elif parentOrChild=="child" and _id:
       childJobInfo=[]
-      tempList  = list(imageProcessingDB.jobs.find({"_id":_id},{"steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
+      tempList  = list(imageProcessingDB.jobs.find({"_id":_id},{"stepOrTemplateName": 1, "steps.name":1, "steps.state":1, "steps.creationTime":1, "steps.endTime":1, "steps.elapsedTime":1, "steps.logAndErrorPath":1, "steps.parameters.pause":1}))
       tempList = tempList[0];
       for step in tempList["steps"]:
         stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
         if stepTemplate == None or stepTemplate.submit: #None implies a deprecated name
           childJobInfo.append(step)
-      return childJobInfo
+      if 'stepOrTemplateName' in tempList:
+        stepOrTemplateName = tempList["stepOrTemplateName"]
+        stepOrTemplateNamePath = stepOrTemplateNamePathMaker(stepOrTemplateName)
+      else:
+        stepOrTemplateName = ''
+        stepOrTemplateNamePath = ''
+      return stepOrTemplateName, stepOrTemplateNamePath, childJobInfo
   else:
     return 404
 
@@ -66,6 +72,14 @@ def mapJobsToDict(x):
     result['state'] = x['state'] if x['state'] is not None else ''
   if 'jacs_id' in x:
     result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
+  if 'stepOrTemplateName' in x:
+    if x['stepOrTemplateName'] is not None:
+      result['stepOrTemplateName']=stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
+      result["jobType"] = x['stepOrTemplateName']
+  else: 
+    result['stepOrTemplateName'] = ''
+    result["jobType"] = ''
+
   result['selectedSteps']={'names':'','states':'','submissionAddress':''};
   for i,step in enumerate(x["steps"]):
     stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
@@ -74,10 +88,8 @@ def mapJobsToDict(x):
       result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
       result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
       if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
-        result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESET' + ','
         result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
       elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state']=="SUCCESSFUL":
-        result['selectedSteps']['names'] = result['selectedSteps']['names'] + 'RESUME,RESET' + ','
         result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
 
   result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
@@ -86,7 +98,7 @@ def mapJobsToDict(x):
 
 # get job information used by jquery datatable
 def allJobsInJSON(imageProcessingDB):
-  parentJobInfo = imageProcessingDB.jobs.find({},{"_id":1,"jobName":1,"submissionAddress":1, "creationDate":1, "state":1, "jacs_id":1,"steps.state":1,"steps.name":1,"steps.parameters.pause":1})
+  parentJobInfo = imageProcessingDB.jobs.find({},{"_id":1,"jobName":1,"submissionAddress":1, "creationDate":1, "state":1, "jacs_id":1,"stepOrTemplateName":1,"steps.state":1,"steps.name":1,"steps.parameters.pause":1})
   return list(map(mapJobsToDict, parentJobInfo))
 
 # build object with meta information about parameters from the admin interface
@@ -400,3 +412,10 @@ def submitToJACS(imageProcessingDB, job_id, continueOrReparameterize):
     submissionStatus = e
     if not continueOrReparameterize:
       imageProcessingDB.jobs.remove({"_id":job_id})
+
+def stepOrTemplateNamePathMaker(stepOrTemplateName):
+  if stepOrTemplateName.find("Step: ", 0,6) != -1:
+    stepOrTemplateName = "/step/"+stepOrTemplateName[6:]
+  else:
+    stepOrTemplateName = "/template/"+stepOrTemplateName[10:]
+  return stepOrTemplateName

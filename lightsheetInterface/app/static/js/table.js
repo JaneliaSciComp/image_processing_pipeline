@@ -1,12 +1,6 @@
 /**
 * Custom table behavior
 */
-var ls_table = ls_table || {};
-ls_table.loadRow = function(){
-  var job_id = $(this).find('.job-id').text();
-  window.location = '?lightsheetDB_id=' + job_id;
-},
-
 
 /**
 * Generate jQuery datatables table
@@ -21,10 +15,11 @@ $(document).ready(() => {
       data: table_data,
       pageLength: 25,
       columns: [{
-        title: 'Name',
+        title: 'Name (Click To Load)',
         data: 'jobName',
         render(data, type, row, meta) {
-          return data ? data : null;
+          var baseUrl = window.location.origin
+          return data ? "<a href=\"" + baseUrl + row.stepOrTemplateName + "?lightsheetDB_id=" + row.id + "\">" + data + "</a>" : '';
         }
       },
       {
@@ -35,12 +30,18 @@ $(document).ready(() => {
         }
       },
       {
+        title: 'Job Type',
+        data: 'jobType',
+        render(data, type, row, meta) {
+          return data ? data : null;
+        }
+      },
+      {
         title: 'Steps',
         data: 'selectedSteps',
         render(data, type, row, meta) {
           names = data["names"].split(",");
           states = data["states"].split(",");
-          submissionAddress = data["submissionAddress"];
           for(var i=0;i<states.length; i++){
             if(states[i]=="RUNNING"){
               names[i] = "<font color=\"blue\">" + names[i] +"</font>";
@@ -52,7 +53,8 @@ $(document).ready(() => {
               names[i] = "<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>";
             }
             else if(states[i]=='RESET'){
-              names[i] = "<form action=\""+submissionAddress+"?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>";
+              var baseUrl = window.location.origin;
+              names[i] = "<form action=\""+baseUrl+ row.stepOrTemplateName + "?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>";
             }
             else if(states[i]!="NOT YET QUEUED"){
               names[i] = "<font color=\"red\">" + names[i] +"</font>";
@@ -97,5 +99,4 @@ $(document).ready(() => {
       ],
     });
   }
-  $('#job-table tbody tr').click(ls_table.loadRow);
 });
