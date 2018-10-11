@@ -32,14 +32,18 @@
       <!-- Tab panes -->
       <div class="tab-content">
         {% for panel in panels %}
-        <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+        {% if panel == 'frequent' %}
+          <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+        {% else %}
+          <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+        {% endif %}
           {% for param in step.parameter %}
-          {% set key=param.name %}
-          {% if key in config.parameterDictionary[panel] %}
-          {% set value = config.parameterDictionary[panel][key] %}
-          {% set meta = value %}
-          {% include "parameter.html" ignore missing with context %}
-          {% endif %}
+            {% set key = param.name %}
+            {% if key in config.parameterDictionary[panel] %}
+              {% set value = config.parameterDictionary[panel][key] %}
+              {% set meta = value %}
+              {% include "parameter.html" ignore missing with context %}
+            {% endif %}
           {% endfor %}
         </div>
         {% endfor %}

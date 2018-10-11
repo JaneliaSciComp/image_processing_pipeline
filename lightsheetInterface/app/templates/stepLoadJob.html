@@ -31,13 +31,18 @@
          <div class="tab-content">
             {% set panels = ['frequent', 'sometimes', 'rare'] %}
             {% for panel in panels %}
-              <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ pipelineStep.stepName }}">
+              {% if panel == 'frequent' %}
+                <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ pipelineStep.stepName }}">
+              {% else %}
+                <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ pipelineStep.stepName }}">
+              {% endif %}
                 {% for param in step.parameter %}
                   {% set parameterKey = param.name.split("_")[0] %}
                   {% if parameterKey in pipelineStep['jobs'][panel] %}
                     {% set value = pipelineStep['jobs'][panel][parameterKey] %}
                     {% set meta = value.config %}
-                    {% include "parameter.html" ignore missing with context %}
+                    {% set pData = value.data %}
+                    {% include "parameter_load.html" ignore missing with context %}
                   {% endif %}
                 {% endfor %}
               </div>
