@@ -1,0 +1,99 @@
+<!-- 
+  Contains the template for rendering a parameter, different types of parameter can exist
+-->
+{% set displayName = param.name %}
+{% set addAttribute = '' %}
+{% set labelClass = 'lightsheet-label' %}
+{% set spanClass = 'input-group-text lightsheet-input' %}
+<!-- Set some additional attributes to the input field based on which flags are set for the parameter in the model -->
+{% if param.mount == True %}
+  {% set addAttribute = addAttribute + ' mount' %}
+  {% set spanClass = spanClass + ' label-mount' %}
+{% endif %}
+
+{% if param.ignore == True %}
+  {% set addAttribute = addAttribute + ' ignore readonly' %}
+{% elif param.readonly == True %}
+  {% set addAttribute = addAttribute + ' readonly' %}
+{% endif %}
+
+<!-- Use display name instead of internal name if display name is not empty -->
+{% if param.displayName %}
+    {% set displayName = param.displayName %}
+{% endif %}
+
+{% if value.description is not none %}
+  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+{% else %}
+  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+{% endif %}
+  <div class="input-group-prepend lightsheet-area" title="{{ value.description }}">
+      <span class="{{ spanClass }}" value="">
+        {{ displayName| trimend }}
+      </span>
+      <div class="input-group-prepend lightsheet-fields">
+        {% if meta.formatting == 'F' %}
+          {% if value.boolean == true %}
+            <input type="checkbox" class="flag-parameter" {{ addAttribute }} step="any" checked id="{{ param.name }}">
+          {% else %}
+            <input type="checkbox" class="flag-parameter" {{ addAttribute }} disabled step="any" id="{{ param.name }}">
+          {% endif %}
+        {% elif meta.formatting == 'C' %}
+          {% include "multiselect-parameter.html" ignore missing with context %}
+        {% elif meta.type == 'Text' %}
+          <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ pData }}" id="{{ param.name }}">
+        {% elif meta.type == 'Number' %}
+          {% if meta.count == '1' %}
+            <input type="number" step="any" class="form-control lightsheet-number" value="{{ pData }}" {{ addAttribute }} id="{{ param.name }}">
+          {% elif meta.count == '2' %}
+            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[0] }}" id="{{ param.name }}-0">
+            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[1] }}" id="{{ param.name }}-1">
+          {% elif meta.count == '3' %}
+            {% if meta.formatting == 'R' %}
+              <div class="form-group form-inline">
+                <label class="{{ labelClass }}" for="{{ param.name }}-number1">From: </label>
+                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-start" {{ addAttribute }} value="{{ pData[0] }}">
+              </div>
+              <div class="form-group form-inline">
+                <label class="{{ labelClass }}" for="{{ param.name }}-number2">To: </label>
+                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-end" {{ addAttribute }} value="{{ pData[1] }}">
+              </div>
+              <div class="form-group form-inline">
+                <label class="{{ labelClass }}" for="{{ param.name }}-number3">Every:</label>
+                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-every" {{ addAttribute }} value="{{ pData[1] }}">
+              </div>
+            {% else %}
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[0] }}" id="{{ param.name }}-0">
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[1] }}" id="{{ param.name }}-1">
+              <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[2] }}" id="{{ param.name }}-2">
+            {% endif %}
+          {% elif meta.count == '4' %}
+            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[0] }}" id="{{ param.name }}-0">
+            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[1] }}" id="{{ param.name }}-1">
+            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[2] }}" id="{{ param.name }}-2">
+            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ pData[3] }}" id="{{ param.name }}-3">
+          {% endif %}
+        {% endif %}
+        {% if value.empty == True %}
+      {% if meta.type == 'Text' %}
+        <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty string as field value">
+      {% else %}
+        <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field value">
+      {% endif %}
+        <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ step }}-{{ param }}" {{ addAttribute }} value="false" onclick="lightsheet.passEmptyField(this)">
+        <label class="form-check-label" for="emptycheckbox_{{ step }}-{{ param }}">Empty Field</label>
+      </div>
+    {% endif %}
+    {% if value.hint %}
+        <div class="form-group form-inline hint-area">
+          <div class="input-group-sm mb-1">
+              <i class="fa fa-info-circle info-icon"></i>
+          </div>
+          <div class="input-group-sm mb-1 parameter-hint">
+            {{ value.hint | safe }}
+          </div>
+        </div>
+     {% endif %}
+      </div>
+    </div>
+  </div>
