@@ -31,15 +31,14 @@
       {% include "tabnav.html" %}
       {% set panels = ['frequent', 'sometimes', 'rare'] %}
       <!-- Tab panes -->
-      <div class="tab-content">
+        <div class="tab-content">
         {% for panel in panels %}
-        {% if panel == 'frequent' %}
-          <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
-        {% else %}
-          <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
-        {% endif %}
+          {% if panel == 'frequent' %}
+            <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+          {% else %}
+            <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+          {% endif %}
           {% for param in step.parameter %}
-<<<<<<< HEAD:lightsheetInterface/app/templates/stepLoad.html
           {% set key=param.name %}
           {% if key in config.parameterDictionary[panel] %}
           {% set value = config.parameterDictionary[panel][key] %}
@@ -68,14 +67,6 @@
           {% endif %}
           {% include "parameter.html" ignore missing with context %}
           {% endif %}
-=======
-            {% set key = param.name %}
-            {% if key in config.parameterDictionary[panel] %}
-              {% set value = config.parameterDictionary[panel][key] %}
-              {% set meta = value %}
-              {% include "parameter.html" ignore missing with context %}
-            {% endif %}
->>>>>>> edd70cf8a522ed25b10490d5b8b1f24652f3d452:lightsheetInterface/app/templates/stepDefault.html
           {% endfor %}
         </div>
         {% endfor %}
