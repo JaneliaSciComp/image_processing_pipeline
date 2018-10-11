@@ -197,6 +197,7 @@
   </script>
     <script>
   $(document).ready(function(){
+    lightsheet.testAllCheckboxes()
     $(':input[type=text]').each(function(){ //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
         let currentValue = $(this).val();
         let currentID = "#"+$(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st

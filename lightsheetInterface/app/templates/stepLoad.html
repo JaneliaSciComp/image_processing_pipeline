@@ -14,7 +14,8 @@
             aria-expanded={{ state }}
             aria-controls="collapse{{ step.name }}"
             value={{ step.name + "_checkbox"}}
-        onclick="lightsheet.testAllCheckboxes()"
+            onclick="lightsheet.testAllCheckboxes()"
+            {{ pipelineStep.checkboxState }}
         {{ state }}>
         {{ step.description }}
       </label>
@@ -25,7 +26,7 @@
       </label>
     </h5>
   </div>
-  <div id="collapse{{ step.name }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+  <div id="collapse{{ step.name }}" class="collapse {{ pipelineStep.collapseOrShow }}" aria-labelledby="headingOne" data-parent="#accordion">
     <div class="card-body">
       {% include "tabnav.html" %}
       {% set panels = ['frequent', 'sometimes', 'rare'] %}

@@ -282,12 +282,10 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
       # go through all steps and find those, which are used by the current job
       for currentStep in matchNameIndex.keys():
         step = Step.objects(name=currentStep).first()
-        editState = 'enabled'
         checkboxState = 'checked'
         collapseOrShow = 'show'
         stepData = jobData[matchNameIndex[currentStep]]
         if (reparameterize and (currentStep not in remainingStepNames)) or (currentStep in succededButLatterStepFailed):
-          editState = 'disabled'
           checkboxState = 'unchecked'
           collapseOrShow = ''
         if stepData:
@@ -297,7 +295,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
             'stepName': currentStep,
             'stepDescription': step.description,
             'inputJson': None,
-            'state': editState,
             'checkboxState': checkboxState,
             'collapseOrShow': collapseOrShow,
             'jobs': jobs
