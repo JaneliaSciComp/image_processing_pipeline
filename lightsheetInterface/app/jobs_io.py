@@ -1,5 +1,6 @@
 # Contains functons to load jobs and submit jobs
 import re, ipdb, json
+from flask import abort
 from logging.config import dictConfig
 from mongoengine.queryset.visitor import Q
 from app.models import AppConfig, Step, Parameter, Template
@@ -253,7 +254,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
   jobData =  getJobStepData(imageProcessingDB_id, imageProcessingDB) # get the data for all jobs
   ableToReparameterize=True
   succededButLatterStepFailed=[]
-
   if jobData:
     globalParametersAndRemainingStepNames = list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)},{"remainingStepNames":1,"globalParameters":1}))
     if "globalParameters" in globalParametersAndRemainingStepNames[0]:

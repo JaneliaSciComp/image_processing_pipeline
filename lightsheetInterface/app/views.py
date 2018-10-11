@@ -44,14 +44,18 @@ def favicon():
 
 @app.route('/step/<step_name>', methods=['GET','POST'])
 def step(step_name):
-  configObj = buildConfigObject()
   stepOrTemplateName = "Step: " + step_name
-  reparameterize = None
-  pipelineSteps = None
-  lightsheetDB_id = None
+  configObj = buildConfigObject()
+  lightsheetDB_id = request.args.get('lightsheetDB_id')
+  reparameterize = request.args.get('reparameterize');
+  if lightsheetDB_id == 'favicon.ico':
+    lightsheetDB_id = None
 
+  submissionStatus = None;
+  pipelineSteps = None;
+  
   if request.method == 'POST' and request.json:
-    doThePost(request.json, reparameterize, imageProcessingDB, None, None, stepOrTemplateName)
+    doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
 
   if lightsheetDB_id:
     pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
@@ -81,7 +85,10 @@ def template(template_name):
   pipelineSteps = None;
   
   if request.method == 'POST' and request.json:
-    doThePost(request.json, reparameterize, imageProcessingDB, None, None, stepOrTemplateName)
+    doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
+
+  if lightsheetDB_id:
+    pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
 
   updateDBStatesAndTimes(imageProcessingDB)
   return render_template('index.html',
@@ -258,7 +265,6 @@ def load_configuration(config_name):
         }
 
     if request.method == 'POST' and request.json:
-      print('stuff')
       doThePost(request.json, None, imageProcessingDB, None)
 
     return render_template('index.html',

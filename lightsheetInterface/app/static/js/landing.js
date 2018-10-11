@@ -123,20 +123,15 @@ lightsheet.stepsExistingJob = function(){
 
 // Disable input fields, when checkbox is checked, that those fields should be ignored
 lightsheet.passEmptyField = function(obj){
-  var fields = obj.parentNode.parentNode.getElementsByClassName('lightsheet-fields');
-  if (fields && fields.length > 0) {
-    var inputs = fields[0].getElementsByTagName('input');
-    if (obj.checked) {
-      for (var i = 0; i < inputs.length; i++) {
-        inputs[i].disabled = true;
-        obj.value = true;
-      }
+  var inputs = obj.parentNode.parentNode.getElementsByTagName('input');
+  for (var i=0; i< inputs.length-1; i++){
+    if (obj.checked){
+      inputs[i].disabled = true;
+      obj.value= true;
     }
-    else {
-      for (var i = 0; i < inputs.length; i++) {
+    else{
         inputs[i].disabled = false;
         obj.value = false;
-      }
     }
   }
 };

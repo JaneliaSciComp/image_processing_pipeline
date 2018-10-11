@@ -38,6 +38,28 @@
           {% if key in config.parameterDictionary[panel] %}
           {% set value = config.parameterDictionary[panel][key] %}
           {% set meta = value %}
+          {% if pipelineStep is not none %}
+            {% set key = param.name.split("_")[0] %}
+            {% set data = pipelineStep['jobs'][panel][key].data %}
+          {% else %}
+            {% if meta.formatting == 'C' and pipelineStep is none %}
+              {% set data = [param.number1] %}
+            {% elif meta.type == "Text" %}
+              {% set data = param.text1 %}
+            {% else %}
+              {% if meta.count == '1' %}
+                {% set data = param.number1 %}
+              {% elif meta.count == '2' %}
+                {% set data = [param.number1, param.number2] %}
+              {% elif meta.formatting == 'R' %}
+                {% set data = {'start': param.number1, 'end': param.number2, 'every': param.number3} %}
+              {% elif meta.count == '3' %}
+                {% set data = [param.number1, param.number2, param.number3] %}
+              {% elif meta.count == '4' %}
+                {% set data = [param.number1, param.number2, param.number3, param.number4] %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
           {% include "parameter.html" ignore missing with context %}
           {% endif %}
           {% endfor %}

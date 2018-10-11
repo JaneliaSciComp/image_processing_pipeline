@@ -5,6 +5,7 @@ from flask_mongoengine import MongoEngine
 from flask_admin import Admin
 from datetime import datetime
 
+
 app = Flask(__name__) #app variable, an object of class FLask
 app.config.from_pyfile('lightsheet-config.cfg')
 
