@@ -76,10 +76,12 @@ def mapJobsToDict(x):
     if x['stepOrTemplateName'] is not None:
       result['stepOrTemplateName']=stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
       result["jobType"] = x['stepOrTemplateName']
+    else:
+      result['stepOrTemplateName'] = '/load/previousjob' #default loading
+      result["jobType"] = ''
   else: 
     result['stepOrTemplateName'] = '/load/previousjob' #default loading
     result["jobType"] = ''
-
   result['selectedSteps']={'names':'','states':'','submissionAddress':''};
   for i,step in enumerate(x["steps"]):
     stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
