@@ -115,12 +115,14 @@ def job_status():
     if request.method == 'POST':
       pausedJobInformation=list(imageProcessingDB.jobs.find({"_id":ObjectId(imageProcessingDB_id)}))
       pausedJobInformation=pausedJobInformation[0]
-      pausedStates = [step['parameters']['pause'] for step in pausedJobInformation["steps"]]
+      pausedStates = [step['parameters']['pause'] if 'pause' in step['parameters'] else 0 for step in pausedJobInformation["steps"] ]
       pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
       pausedJobInformation["steps"][pausedStepIndex]["parameters"]["pause"] = 0
+      print(pausedStates)
       while pausedJobInformation["remainingStepNames"][0]!=pausedJobInformation["steps"][pausedStepIndex]["name"]:
         pausedJobInformation["remainingStepNames"].pop(0)
       pausedJobInformation["remainingStepNames"].pop(0) #Remove steps that have been completed/approved
+      print(pausedJobInformation["remainingStepNames"])
       imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)},{"$set": pausedJobInformation})
       submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, True)
       updateDBStatesAndTimes(imageProcessingDB)
@@ -243,30 +245,39 @@ def uploaded_configfile(filename = None):
 @app.route('/load/<config_name>', methods=['GET', 'POST'])
 def load_configuration(config_name):
   configObj = buildConfigObject();
+  lightsheetDB_id = request.args.get('lightsheetDB_id')
+  reparameterize = request.args.get('reparameterize');
+  submissionStatus = None
+  if lightsheetDB_id == 'favicon.ico':
+    lightsheetDB_id = None
+
   pInstance = PipelineInstance.objects.filter(name=config_name).first();
-  if pInstance:
-    content = json.loads(pInstance.content)
-    pipelineSteps = {}
+  if lightsheetDB_id or pInstance: #Then a previously submitted job is loaded
+    if lightsheetDB_id:
+      pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
+    else:
+      content = json.loads(pInstance.content)
+      pipelineSteps = {}
+      if 'steps' in content:
+        steps = content['steps']
 
-    if 'steps' in content:
-      steps = content['steps']
-
-      for s in steps:
-        name = s['name']
-        jobs = parseJsonDataNoForms(s, name, configObj)
-        # Pipeline steps is passed to index.html for formatting the html based
-        pipelineSteps[name] = {
-          'stepName': name,
-          'stepDescription': configObj['stepsAllDict'][name].description,
-          'inputJson': None,
-          'state': False,
-          'checkboxState': 'unchecked',
-          'jobs': jobs
-        }
+        for s in steps:
+          name = s['name']
+          jobs = parseJsonDataNoForms(s, name, configObj)
+          # Pipeline steps is passed to index.html for formatting the html based
+          pipelineSteps[name] = {
+            'stepName': name,
+            'stepDescription': configObj['stepsAllDict'][name].description,
+            'inputJson': None,
+            'state': False,
+            'checkboxState': 'unchecked',
+            'jobs': jobs
+          }
 
     if request.method == 'POST' and request.json:
-      doThePost(request.json, None, imageProcessingDB, None)
+      doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
 
+    updateDBStatesAndTimes(imageProcessingDB)
     return render_template('index.html',
       pipelineSteps = pipelineSteps,
       pipeline_config = config_name,
@@ -275,6 +286,7 @@ def load_configuration(config_name):
       config = configObj,
     )
 
+  updateDBStatesAndTimes(imageProcessingDB)
   return 'No such configuration in the system.'
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])

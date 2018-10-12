@@ -38,12 +38,18 @@
               {% endfor %}
             {% elif currentStep is defined and currentStep is not none %}
               {% set step = config['stepsAllDict'][currentStep] %}
-               {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-                  {% set pipelineStep = pipelineSteps[step.name] %}
-                {% else %} 
-                  {% set pipelineStep = none %}
-                {% endif %}
+              {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                {% set pipelineStep = pipelineSteps[step.name] %}
+              {% else %} 
+                {% set pipelineStep = none %}
+              {% endif %}
               {% include "stepLoad.html" ignore missing with context %}
+            {% else %}
+              {% for stepName in pipelineSteps %}
+                {% set pipelineStep = pipelineSteps[stepName] %}
+                {% set step = config['stepsAllDict'][stepName] %}
+                {% include "stepLoad.html" ignore missing with context %}
+              {% endfor %}
             {% endif %}
           {% endif %}
       </div>

@@ -40,24 +40,33 @@ $(document).ready(() => {
         title: 'Steps',
         data: 'selectedSteps',
         render(data, type, row, meta) {
-          names = data["names"].split(",");
+          namesProvided = data["names"].split(",");
           states = data["states"].split(",");
+          names = []; //Need this because we have states include RESET/RESUME which means there are more states than step names
+          namesIndex = 0; 
           for(var i=0;i<states.length; i++){
             if(states[i]=="RUNNING"){
-              names[i] = "<font color=\"blue\">" + names[i] +"</font>";
+              names.push("<font color=\"blue\">" + namesProvided[namesIndex] +"</font>");
+              namesIndex++;
             }
             else if(states[i]=="SUCCESSFUL"){
-              names[i] = "<font color=\"green\">" + names[i] +"</font>";
+              names.push("<font color=\"green\">" + namesProvided[namesIndex] +"</font>");
+              namesIndex++;
             }
             else if(states[i]=='RESUME' && i<states.length-1){
-              names[i] = "<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>";
+              names.push("<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>");
             }
             else if(states[i]=='RESET'){
               var baseUrl = window.location.origin;
-              names[i] = "<form action=\""+baseUrl+ row.stepOrTemplateName + "?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>";
+              names.push("<form action=\""+baseUrl+ row.stepOrTemplateName + "?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>");
             }
-            else if(states[i]!="NOT YET QUEUED"){
-              names[i] = "<font color=\"red\">" + names[i] +"</font>";
+            else if(states[i]=="NOT YET QUEUED"){
+              names.push("<font>" + namesProvided[namesIndex] +"</font>");
+              namesIndex++;
+            }
+            else{
+              names.push("<font color=\"red\">" + namesProvided[namesIndex] +"</font>");
+              namesIndex++;
             }
           }
           names=names.join(",");

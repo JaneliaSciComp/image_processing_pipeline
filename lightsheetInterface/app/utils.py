@@ -77,7 +77,7 @@ def mapJobsToDict(x):
       result['stepOrTemplateName']=stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
       result["jobType"] = x['stepOrTemplateName']
   else: 
-    result['stepOrTemplateName'] = ''
+    result['stepOrTemplateName'] = '/load/previousjob' #default loading
     result["jobType"] = ''
 
   result['selectedSteps']={'names':'','states':'','submissionAddress':''};

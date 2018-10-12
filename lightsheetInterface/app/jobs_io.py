@@ -10,6 +10,7 @@ from app import app
 from app.settings import Settings
 from app.utils import submitToJACS, getJobStepData, stepOrTemplateNamePathMaker
 from bson.objectid import ObjectId
+from collections import OrderedDict
 
 class ParameterTypes(Enum):
   checkbox = 1
@@ -250,7 +251,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
 def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, configObj):
   submissionStatus = None
 
-  pipelineSteps = {}
+  pipelineSteps = OrderedDict()
   jobData =  getJobStepData(imageProcessingDB_id, imageProcessingDB) # get the data for all jobs
   ableToReparameterize=True
   succededButLatterStepFailed=[]
@@ -278,27 +279,26 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
     if imageProcessingDB_id != None: # load data for an existing job
       for i in range(len(jobData)):
         if 'name' in jobData[i]:
-          matchNameIndex[jobData[i]['name']] = i
       # go through all steps and find those, which are used by the current job
-      for currentStep in matchNameIndex.keys():
-        step = Step.objects(name=currentStep).first()
-        checkboxState = 'checked'
-        collapseOrShow = 'show'
-        stepData = jobData[matchNameIndex[currentStep]]
-        if (reparameterize and (currentStep not in remainingStepNames)) or (currentStep in succededButLatterStepFailed):
-          checkboxState = 'unchecked'
-          collapseOrShow = ''
-        if stepData:
-          jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
-          # Pipeline steps is passed to index.html for formatting the html based
-          pipelineSteps[currentStep] = {
-            'stepName': currentStep,
-            'stepDescription': step.description,
-            'inputJson': None,
-            'checkboxState': checkboxState,
-            'collapseOrShow': collapseOrShow,
-            'jobs': jobs
-          }
+          currentStep = jobData[i]['name']
+          step = Step.objects(name=currentStep).first()
+          checkboxState = 'checked'
+          collapseOrShow = 'show'
+          stepData = jobData[i]
+          if (reparameterize and (currentStep not in remainingStepNames)) or (currentStep in succededButLatterStepFailed):
+            checkboxState = 'unchecked'
+            collapseOrShow = ''
+          if stepData:
+            jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
+            # Pipeline steps is passed to index.html for formatting the html based
+            pipelineSteps[currentStep] = {
+              'stepName': currentStep,
+              'stepDescription': step.description,
+              'inputJson': None,
+              'checkboxState': checkboxState,
+              'collapseOrShow': collapseOrShow,
+              'jobs': jobs
+            }
   elif type(jobData) is dict:
     submissionStatus = 'Job cannot be loaded.'
 
