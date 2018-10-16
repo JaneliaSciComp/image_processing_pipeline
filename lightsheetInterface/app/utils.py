@@ -1,8 +1,4 @@
 import numpy, datetime, glob, scipy, re, json, requests, os, ipdb, re, math, operator
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from mongoengine import ValidationError, NotUniqueError
 from wtforms import *
 from multiprocessing import Pool
