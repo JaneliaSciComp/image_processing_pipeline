@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
 from app.settings import Settings
+from collections import OrderedDict
 
 settings = Settings()
 
@@ -234,10 +235,10 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 
 # get latest status information about jobs from db
 def updateDBStatesAndTimes(imageProcessingDB):
-  allJobInfoFromDB = list(imageProcessingDB.jobs.find())
+  allJobInfoFromDB = list(imageProcessingDB.jobs.find({"$or": [{"state":"NOT YET QUEUED"},{"state":"RUNNING"}]}))
   for parentJobInfoFromDB in allJobInfoFromDB:
     if 'jacs_id' in parentJobInfoFromDB: # TODO handle case, when jacs_id is missing
-      if parentJobInfoFromDB["state"]: # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+      #if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
         if isinstance(parentJobInfoFromDB["jacs_id"],list):
           jacs_ids=parentJobInfoFromDB["jacs_id"]
         else:
@@ -365,7 +366,7 @@ def createDBentries(content):
 
 def createConfig(content):
   pInstance = PipelineInstance()
-  jsonObj = json.dumps(content)
+  jsonObj = json.dumps(OrderedDict(content))
   pInstance.content = jsonObj
 
   if 'name' in content:
@@ -396,7 +397,7 @@ def submitToJACS(imageProcessingDB, job_id, continueOrReparameterize):
     creationDate = job_id.generation_time
     creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
     if continueOrReparameterize:
-        imageProcessingDB.jobs.update_one({"_id": job_id},{"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"], "jacs_id": requestOutputJsonified["_id"] }})
+        imageProcessingDB.jobs.update_one({"_id": job_id},{"$set": {"state":"NOT YET QUEUED"},"$push": {"jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/'+requestOutputJsonified["_id"], "jacs_id": requestOutputJsonified["_id"] }})
     else:
         imageProcessingDB.jobs.update_one({"_id":job_id},{"$set": {"jacs_id":[requestOutputJsonified["_id"]], "configAddress":configAddress, "creationDate":creationDate[:-6]}})
 

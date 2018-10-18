@@ -234,7 +234,6 @@ def upload_config(filename = None):
 def uploaded_configfile(filename = None):
   with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
     c = json.loads(file.read())
-
     result = createConfig(c)
     return redirect(url_for('load_configuration', config_name = result['name']))
     #return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
@@ -257,7 +256,7 @@ def load_configuration(config_name):
       pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
     else:
       content = json.loads(pInstance.content)
-      pipelineSteps = {}
+      pipelineSteps = OrderedDict()
       if 'steps' in content:
         steps = content['steps']
 
@@ -300,8 +299,8 @@ def config(imageProcessingDB_id):
     else:
         return jsonify(output)
 
-@app.route('/downloadSettings/<unique_id>',methods=['GET','POST'])
-def downloadSettings(unique_id):
+@app.route('/download_settings/<unique_id>',methods=['GET','POST'])
+def download_settings(unique_id):
   unique_id = int(unique_id)
   if request.method == 'POST':
     stepOrTemplateName = request.args.get('stepOrTemplateName')
@@ -312,7 +311,7 @@ def downloadSettings(unique_id):
       del(postedJson['jobName'])
     reformattedData = reformatDataToPost(postedJson, False)
     reformattedData = { 'unique_id': unique_id,
-                        'jobName' : jobName,
+                        'name' : jobName,
                         'stepOrTemplateName': stepOrTemplateName,
                         'steps': reformattedData[0],
                       }
@@ -321,11 +320,11 @@ def downloadSettings(unique_id):
   else:
     output=list(imageProcessingDB.downloadSettings.find({"unique_id":unique_id},{"_id":0,"unique_id":0}))
     output=output[0]
-    jobName=output['jobName']
+    name=output['name']
     imageProcessingDB.downloadSettings.delete_one({"unique_id":unique_id})
     return Response(json.dumps(OrderedDict(output), indent=2, separators=(',', ': ')),
                     mimetype='application/json',
-                    headers={"Content-Disposition":"attachment;filename="+jobName+".json"})
+                    headers={"Content-Disposition":"attachment;filename="+name+".json"})
 
 @app.route('/test')
 def test():
