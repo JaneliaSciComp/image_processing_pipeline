@@ -25,7 +25,7 @@ dataIo.handleError = function(err){
 /*
  * Grab data and submit it when pressing the button
  */
-dataIo.customSubmit = function(){
+dataIo.grabData = function(){
   // Initialize object which will contain data to be posted
   var data = {};
   const jobField = $('#jobId');
@@ -107,7 +107,27 @@ dataIo.customSubmit = function(){
     });
     data[step]['bindPaths'] = bindPath.join(', ');
   });
+  return data;
+}
 
+dataIo.customSubmit = function(){
+  data = dataIo.grabData();
   dataIo.fetch(window.location, 'POST', data)
     .catch(dataIo.handleError);
 };
+
+dataIo.downloadSettings = function(event,stepOrTemplateName){
+  event.preventDefault();
+  data = dataIo.grabData();
+  var baseUrl = window.location.origin;
+  dataString = JSON.stringify(data)
+  var d = new Date();
+  var numMilliseconds = d.getTime().toString();
+  dataIo.fetch(baseUrl+'/downloadSettings/'+numMilliseconds+'?stepOrTemplateName='+stepOrTemplateName, 'POST', data)
+    .catch(dataIo.handleError); //Post to database
+  window.open(baseUrl+'/downloadSettings/'+numMilliseconds) //Download from database 
+  /*dataIo.fetch(baseUrl+'/downloadSettings/'+numMilliseconds, 'DELETE', data) //Delete from database
+    .catch(dataIo.handleError);*/
+  /*dataIo.fetch(baseUrl+'/downloadSettings/1539810304153', 'GET')
+    .catch(dataIo.handleError);*/
+}

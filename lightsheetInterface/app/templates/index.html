@@ -24,6 +24,14 @@
   <form action="" method="post">
     <!-- button to submit the forms -->
     <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="dataIo.customSubmit()" />
+    {% if currentTemplate is defined and currentTemplate is not none %}
+      {% set stepOrTemplateName = "Template: "+currentTemplate %}
+    {% elif currentStep is defined and currentStep is not none %}
+      {% set stepOrTemplateName = "Step: "+currentStep %}
+    {% else %}
+      {% set stepOrTemplateName = None %}
+    {% endif %}
+   <input type="submit" name="downloadSettings" class="btn btn-info submit-button" value="Download Settings" disabled onclick="dataIo.downloadSettings(event,'{{stepOrTemplateName}}')">
     <div class="row lightsheet-row">
       <div id="steps">
           {% if config['steps'] is not none %}

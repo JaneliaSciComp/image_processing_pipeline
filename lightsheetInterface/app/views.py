@@ -1,6 +1,6 @@
 # Contains routes and functions to pass content to the template layer
 import requests, json, os, math, bson, re, subprocess, ipdb, logging
-from flask import render_template, request, jsonify, abort, send_from_directory
+from flask import render_template, request, jsonify, abort, send_from_directory, Response
 from flask import send_from_directory, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
@@ -11,6 +11,7 @@ from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loa
 from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
 from pprint import pprint
+from collections import OrderedDict
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
 settings = Settings()
@@ -55,10 +56,10 @@ def step(step_name):
   pipelineSteps = None;
   
   if request.method == 'POST' and request.json:
-    doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
+    submissionStatus = doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
 
   if lightsheetDB_id:
-    pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
+    pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
 
   updateDBStatesAndTimes(imageProcessingDB)
   jobs = allJobsInJSON(imageProcessingDB)
@@ -69,8 +70,7 @@ def step(step_name):
                        jobsJson = jobs, # used by the job table
                        submissionStatus = None,
                        currentStep = step_name,
-                       currentTemplate = None
-  )
+                       currentTemplate = None)
 
 @app.route('/template/<template_name>', methods=['GET','POST'])
 def template(template_name):
@@ -85,10 +85,10 @@ def template(template_name):
   pipelineSteps = None;
   
   if request.method == 'POST' and request.json:
-    doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
+    submissionStatus = doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
 
   if lightsheetDB_id:
-    pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
+    pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
 
   updateDBStatesAndTimes(imageProcessingDB)
   return render_template('index.html',
@@ -105,6 +105,7 @@ def index():
 
 @app.route('/job_status', methods=['GET','POST'])
 def job_status():
+    submissionStatus=None;
     imageProcessingDB_id = request.args.get('lightsheetDB_id')
     #Mongo client
     updateDBStatesAndTimes(imageProcessingDB)
@@ -118,22 +119,21 @@ def job_status():
       pausedStates = [step['parameters']['pause'] if 'pause' in step['parameters'] else 0 for step in pausedJobInformation["steps"] ]
       pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
       pausedJobInformation["steps"][pausedStepIndex]["parameters"]["pause"] = 0
-      print(pausedStates)
       while pausedJobInformation["remainingStepNames"][0]!=pausedJobInformation["steps"][pausedStepIndex]["name"]:
         pausedJobInformation["remainingStepNames"].pop(0)
       pausedJobInformation["remainingStepNames"].pop(0) #Remove steps that have been completed/approved
-      print(pausedJobInformation["remainingStepNames"])
       imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)},{"$set": pausedJobInformation})
       submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, True)
       updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
-        jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
+      jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
     #Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html', 
                            parentJobInfo=reversed(parentJobInfo), #so in chronolgical order
                            childJobInfo=childJobInfo,
                            lightsheetDB_id=imageProcessingDB_id,
                            stepOrTemplateName = stepOrTemplateName,
+                           submissionStatus = submissionStatus,
                            jobType = jobType)
 
 
@@ -299,6 +299,33 @@ def config(imageProcessingDB_id):
         abort(404)
     else:
         return jsonify(output)
+
+@app.route('/downloadSettings/<unique_id>',methods=['GET','POST'])
+def downloadSettings(unique_id):
+  unique_id = int(unique_id)
+  if request.method == 'POST':
+    stepOrTemplateName = request.args.get('stepOrTemplateName')
+    postedJson = request.json
+    jobName = ''
+    if 'jobName' in postedJson.keys():
+      jobName = postedJson['jobName']
+      del(postedJson['jobName'])
+    reformattedData = reformatDataToPost(postedJson, False)
+    reformattedData = { 'unique_id': unique_id,
+                        'jobName' : jobName,
+                        'stepOrTemplateName': stepOrTemplateName,
+                        'steps': reformattedData[0],
+                      }
+    imageProcessingDB.downloadSettings.insert_one(reformattedData)
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
+  else:
+    output=list(imageProcessingDB.downloadSettings.find({"unique_id":unique_id},{"_id":0,"unique_id":0}))
+    output=output[0]
+    jobName=output['jobName']
+    imageProcessingDB.downloadSettings.delete_one({"unique_id":unique_id})
+    return Response(json.dumps(OrderedDict(output), indent=2, separators=(',', ': ')),
+                    mimetype='application/json',
+                    headers={"Content-Disposition":"attachment;filename="+jobName+".json"})
 
 @app.route('/test')
 def test():

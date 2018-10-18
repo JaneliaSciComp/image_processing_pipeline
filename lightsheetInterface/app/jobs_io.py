@@ -19,8 +19,8 @@ class ParameterTypes(Enum):
   option = 4
 
 # change data before job is resubmitted
-def reformatDataToPost(postedData):
-  result = []
+def reformatDataToPost(postedData, forSubmission=True):
+  tempReformattedData = []
   p = 'parameters'
   if postedData and postedData != {}:
     for step in postedData.keys():
@@ -34,8 +34,8 @@ def reformatDataToPost(postedData):
 
       if 'bindPaths' in postedData[step].keys():
         stepResult['bindPaths'] = postedData[step]['bindPaths']
-
-      stepResult['state'] = 'NOT YET QUEUED'
+      if forSubmission:
+        stepResult['state'] = 'NOT YET QUEUED'
       stepParamResult = {}
       sortedParameters = sorted(postedData[step][p].keys())
       checkboxes = []
@@ -135,8 +135,22 @@ def reformatDataToPost(postedData):
                  stepParamResult[param] = []
                  break;
       stepResult['parameters'] = stepParamResult
-      result.append(stepResult)
-  return result
+      tempReformattedData.append(OrderedDict(stepResult))
+
+      app.logger.info(tempReformattedData)
+      #globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
+      reformattedData=[]
+      remainingStepNames=[];
+      allSteps = Step.objects.all().order_by('order')
+      if allSteps:
+        for step in allSteps:
+          currentStepDictionary = next((dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
+          if currentStepDictionary:
+              if step.submit:
+                remainingStepNames.append(currentStepDictionary["name"])
+              reformattedData.append(currentStepDictionary)
+
+  return reformattedData, remainingStepNames
 
 # new parse data, don't create any flask forms
 def parseJsonDataNoForms(data, stepName, config):
@@ -209,19 +223,7 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       # delete the jobName entry from the dictionary so that the other entries are all steps
       jobSteps = list(formJson.keys())
 
-      processedDataTemp = reformatDataToPost(formJson)
-      app.logger.info(processedDataTemp)
-      globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
-      processedData=[]
-      remainingStepNames=[];
-      allSteps = Step.objects.all().order_by('order')
-      if allSteps:
-        for step in allSteps:
-          currentStepDictionary = next((dictionary for dictionary in processedDataTemp if dictionary["name"] == step.name), None)
-          if currentStepDictionary:
-              if step.submit:
-                remainingStepNames.append(currentStepDictionary["name"])
-              processedData.append(currentStepDictionary)
+      processedData, remainingStepNames = reformatDataToPost(formJson)
 
       # Prepare the db data
       dataToPostToDB = {"jobName": jobName,
@@ -243,13 +245,11 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
       else:
         imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
-      if globalParametersPosted:
-        globalParametersPosted.pop("")
-        imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id},{"$set": {"globalParameters":globalParametersPosted}})
       submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, reparameterize)
+      return submissionStatus
 
 def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, configObj):
-  submissionStatus = None
+  loadStatus = None
 
   pipelineSteps = OrderedDict()
   jobData =  getJobStepData(imageProcessingDB_id, imageProcessingDB) # get the data for all jobs
@@ -300,6 +300,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
               'jobs': jobs
             }
   elif type(jobData) is dict:
-    submissionStatus = 'Job cannot be loaded.'
+    loadStatus = 'Job cannot be loaded.'
 
-  return pipelineSteps, submissionStatus
+  return pipelineSteps, loadStatus

@@ -45,7 +45,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
         stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
         if stepTemplate == None or stepTemplate.submit: #None implies a deprecated name
           childJobInfo.append(step)
-      if 'stepOrTemplateName' in tempList:
+      if 'stepOrTemplateName' in tempList and tempList['stepOrTemplateName'] is not None:
         stepOrTemplateName = tempList["stepOrTemplateName"]
         stepOrTemplateNamePath = stepOrTemplateNamePathMaker(stepOrTemplateName)
       else:
@@ -414,6 +414,7 @@ def submitToJACS(imageProcessingDB, job_id, continueOrReparameterize):
     submissionStatus = e
     if not continueOrReparameterize:
       imageProcessingDB.jobs.remove({"_id":job_id})
+  return submissionStatus
 
 def stepOrTemplateNamePathMaker(stepOrTemplateName):
   if stepOrTemplateName.find("Step: ", 0,6) != -1:
