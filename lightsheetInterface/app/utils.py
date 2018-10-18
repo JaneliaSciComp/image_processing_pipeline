@@ -235,7 +235,7 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 
 # get latest status information about jobs from db
 def updateDBStatesAndTimes(imageProcessingDB):
-  allJobInfoFromDB = list(imageProcessingDB.jobs.find({"$or": [{"state":"NOT YET QUEUED"},{"state":"RUNNING"}]}))
+  allJobInfoFromDB = list(imageProcessingDB.jobs.find({"$or": [{"state":"NOT YET QUEUED"},{"state":"RUNNING"},{"state":"CREATED"}]}))
   for parentJobInfoFromDB in allJobInfoFromDB:
     if 'jacs_id' in parentJobInfoFromDB: # TODO handle case, when jacs_id is missing
       #if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
