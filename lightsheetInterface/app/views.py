@@ -283,6 +283,7 @@ def load_configuration(config_name):
       parentJobInfo = None,
       jobsJson = allJobsInJSON(imageProcessingDB),
       config = configObj,
+      currentTemplate = None
     )
 
   updateDBStatesAndTimes(imageProcessingDB)
