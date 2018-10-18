@@ -244,34 +244,34 @@ def uploaded_configfile(filename = None):
 @app.route('/load/<config_name>', methods=['GET', 'POST'])
 def load_configuration(config_name):
   configObj = buildConfigObject();
-  lightsheetDB_id = request.args.get('lightsheetDB_id')
-  reparameterize = request.args.get('reparameterize');
-  submissionStatus = None
-  if lightsheetDB_id == 'favicon.ico':
-    lightsheetDB_id = None
-
+  currentStep = None
+  currentTemplate = None
   pInstance = PipelineInstance.objects.filter(name=config_name).first();
-  if lightsheetDB_id or pInstance: #Then a previously submitted job is loaded
-    if lightsheetDB_id:
-      pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
-    else:
-      content = json.loads(pInstance.content)
-      pipelineSteps = OrderedDict()
-      if 'steps' in content:
-        steps = content['steps']
+  if pInstance: #Then a previously submitted job is loaded
+    content = json.loads(pInstance.content)
+    pipelineSteps = OrderedDict()
+    if 'steps' in content:
+      steps = content['steps']
 
-        for s in steps:
-          name = s['name']
-          jobs = parseJsonDataNoForms(s, name, configObj)
-          # Pipeline steps is passed to index.html for formatting the html based
-          pipelineSteps[name] = {
-            'stepName': name,
-            'stepDescription': configObj['stepsAllDict'][name].description,
-            'inputJson': None,
-            'state': False,
-            'checkboxState': 'unchecked',
-            'jobs': jobs
-          }
+      for s in steps:
+        name = s['name']
+        jobs = parseJsonDataNoForms(s, name, configObj)
+        # Pipeline steps is passed to index.html for formatting the html based
+        pipelineSteps[name] = {
+          'stepName': name,
+          'stepDescription': configObj['stepsAllDict'][name].description,
+          'inputJson': None,
+          'state': False,
+          'checkboxState': 'checked',
+          'collapseOrShow': 'show',
+          'jobs': jobs
+        }
+    if "stepOrTemplateName" in content:
+      stepOrTemplateName = content["stepOrTemplateName"]
+      if stepOrTemplateName.find("Step: ", 0,6) != -1:
+        currentStep = stepOrTemplateName[6:]
+      else:
+        currentTemplate = stepOrTemplateName[10:]
 
     if request.method == 'POST' and request.json:
       doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
@@ -283,7 +283,8 @@ def load_configuration(config_name):
       parentJobInfo = None,
       jobsJson = allJobsInJSON(imageProcessingDB),
       config = configObj,
-      currentTemplate = None
+      currentStep = currentStep,
+      currentTemplate = currentTemplate
     )
 
   updateDBStatesAndTimes(imageProcessingDB)
