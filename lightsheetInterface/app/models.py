@@ -39,6 +39,9 @@ class Parameter(Document):
   number3 = FloatField()
   number4 = FloatField()
   text1 = StringField(max_length=500)
+  text2 = StringField(max_length=500)
+  text3 = StringField(max_length=500)
+  text4 = StringField(max_length=500)
   boolean = BooleanField()
   
   def __unicode__(self):
