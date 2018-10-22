@@ -86,7 +86,7 @@ def mapJobsToDict(x):
       result['selectedSteps']['submissionAddress'] = result['submissionAddress']
       result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
       result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
-      if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
+      if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED"]:
         result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
       elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state']=="SUCCESSFUL":
         result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
@@ -235,7 +235,7 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 
 # get latest status information about jobs from db
 def updateDBStatesAndTimes(imageProcessingDB):
-  allJobInfoFromDB = list(imageProcessingDB.jobs.find({"$or": [{"state":"NOT YET QUEUED"},{"state":"RUNNING"},{"state":"CREATED"}]}))
+  allJobInfoFromDB = list(imageProcessingDB.jobs.find({"$or": [{"state":"NOT YET QUEUED"},{"state":"RUNNING"},{"state":"CREATED"},{"state":"QUEUED"}]}))
   for parentJobInfoFromDB in allJobInfoFromDB:
     if 'jacs_id' in parentJobInfoFromDB: # TODO handle case, when jacs_id is missing
       #if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:

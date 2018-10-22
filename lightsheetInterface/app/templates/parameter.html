@@ -40,6 +40,10 @@
           {% endif %}
         {% elif meta.formatting == 'C' %}
           {% include "multiselect-parameter.html" ignore missing with context %}
+        {% elif meta.formatting == 'B' %}
+          {% for currentData in data %}
+          <input type="radio" id="{{ param.name }}-{{loop.index}}" value="{{ currentData }}"> {{ currentData }}
+          {% endfor %}
         {% elif meta.type == 'Text' %}
           <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ data }}" id="{{ param.name }}">
         {% elif meta.type == 'Number' %}

@@ -49,6 +49,8 @@
               {% else %}
                 {% if meta.formatting == 'C' and pipelineStep is none %}
                   {% set data = [param.number1] %}
+                {% elif meta.formatting == 'B' %}
+                  {% set data= [param.text1, param.text2] %}
                 {% elif meta.type == "Text" %}
                   {% set data = param.text1 %}
                 {% else %}
