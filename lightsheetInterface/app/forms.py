@@ -1,17 +1,9 @@
-from wtforms import Form, StringField, validators, Field
-from flask_wtf import FlaskForm
+from flask_wtf import Form
+from wtforms.validators import DataRequired
+from wtforms import StringField, PasswordField
 
-# class MultipleNumberField(Field):
-#     widget = TextInput()
 
-#     def _value(self):
-#         if self.data:
-#             return u', '.join(self.data)
-#         else:
-#             return u''
-
-#     def process_formdata(self, valuelist):
-#         if valuelist:
-#             self.data = [x.strip() for x in valuelist[0].split(',')]
-#         else:
-#             self.data = []
+class LoginForm(Form):
+    username = StringField('username',
+                           validators=[DataRequired('Username is required')])
+    password = PasswordField('password')
