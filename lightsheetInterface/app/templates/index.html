@@ -221,10 +221,15 @@
               let dependencyFound = dependenciesFound[i]
               var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
               if (isThisALoop != null){dependencyFound = isThisALoop[0];}
-              let currentDependency="#"+dependencyFound.substr(1,dependencyFound.length-2);
+              let dependencySubstring = dependencyFound.substr(1,dependencyFound.length-2);
+              let currentDependency="#"+dependencySubstring;
               if($(currentDependency).prop('type')=="hidden"){
                 temp="select_"+dependencyFound.substr(1,dependencyFound.length-2);
                 currentDependency='[data-id="'+temp+'"]'; //multiselect checkbox still acts weird... cant get it to react when clicked or anything
+              }
+              else if( $('input[name='+dependencySubstring+']').prop('type') ){
+                //Radiobutton
+                currentDependency = 'input[name='+dependencySubstring+']'
               }
               $(currentDependency).bind("focus click keyup change checked",function(){
                 let updatedValue = currentValue;
@@ -243,6 +248,10 @@
                     dependencyToUpdate = "select_"+standardID;
                     dependencyToUpdateValue = $('[data-id="'+dependencyToUpdate+'"]').prop('title');
                     if (dependencyToUpdateValue == "Nothing selected" || dependencyToUpdateValue==undefined){dependencyToUpdateValue = null;}
+                  }
+                  else if( $('input[name='+standardID+']').val() ){
+                    //radiobutton
+                    dependencyToUpdateValue = $('input[name='+standardID+']:checked').val()
                   }
                   else{//dependencyToUpdateValue takes on the value of the dependency
                     dependencyToUpdateValue = $(dependencyToUpdate).val();
