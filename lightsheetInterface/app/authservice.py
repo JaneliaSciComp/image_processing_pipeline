@@ -2,7 +2,7 @@ import base64
 import json, requests
 from datetime import datetime
 
-from flask_login import login_user, UserMixin
+from flask_login import login_user, UserMixin, logout_user
 
 from app import login_manager, app
 
@@ -68,6 +68,9 @@ class AuthenticationService(object):
             return self._create_user(token=token)
         except:
             return None
+
+    def logout(self):
+        logout_user()
 
     def _create_user(self, token=None, username=None):
         return User(token=token, username=username)

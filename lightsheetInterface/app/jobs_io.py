@@ -258,8 +258,7 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
         else:
             imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
-        submissionStatus = submitToJACS(config_server_url, imageProcessingDB, imageProcessingDB_id,
-                                        current_user.username, reparameterize)
+        submissionStatus = submitToJACS(config_server_url, imageProcessingDB, imageProcessingDB_id, reparameterize)
         return submissionStatus
 
 

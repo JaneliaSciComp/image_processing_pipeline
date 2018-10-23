@@ -47,6 +47,14 @@ def favicon():
                                'favicon.ico')
 
 
+@app.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    auth_service = create_auth_service()
+    auth_service.logout()
+    return redirect(url_for('.index'))
+
+
 @app.route('/step/<step_name>', methods=['GET', 'POST'])
 @login_required
 def step(step_name):
@@ -136,8 +144,7 @@ def job_status():
             pausedJobInformation["remainingStepNames"].pop(0)
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
-        submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id,
-                                        current_user.username, True)
+        submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
         updateDBStatesAndTimes(imageProcessingDB)
         if imageProcessingDB_id is not None:
             jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,

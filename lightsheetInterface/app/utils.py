@@ -447,11 +447,10 @@ def createConfig(content):
     return result
 
 
-def submitToJACS(config_server_url, imageProcessingDB, job_id, job_owner, continueOrReparameterize):
+def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparameterize):
     job_id = ObjectId(job_id)
     configAddress = config_server_url + "config/{}".format(job_id)
     postBody = {
-        'ownerKey': 'user:{}'.format(job_owner),
         'processingLocation': 'LSF_JAVA',
         'args': ['-configAddress', configAddress]
     }
