@@ -1,4 +1,8 @@
+import os
+
 import dateutil, socket, json
+
+import config
 
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
@@ -8,19 +12,39 @@ from flask_admin import Admin
 from datetime import datetime
 
 
-app = Flask(__name__)  # app variable, an object of class FLask
-app.config.from_pyfile('lightsheet-config.cfg')
+def _create_ui_app(cfg):
+    ui_app = Flask(__name__)  # app variable, an object of class FLask
+    ui_app.config.from_object(cfg)
+    env_config_file = _get_env_config_file()
+    if env_config_file:
+        ui_app.config.from_pyfile(env_config_file)
+    return ui_app
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-if app.config['LOGIN_PAGE']:
-    login_manager.login_view = app.config['LOGIN_PAGE']
+
+def _create_login_manager(ui_app):
+    ui_lm = LoginManager()
+    ui_lm.init_app(ui_app)
+    if app.config['LOGIN_PAGE']:
+        ui_lm.login_view = app.config['LOGIN_PAGE']
+    return ui_lm
+
+
+def _get_env_config_file():
+    env_var = 'LIGHTSHEET_INTERFACE_SETTINGS'
+    if env_var in os.environ:
+        env_config_file = os.environ.get(env_var)
+        return env_config_file if os.path.isfile(env_config_file) else None
+    else:
+        return None
+
+app = _create_ui_app(config)
+login_manager = _create_login_manager(app)
 
 admin = Admin(app)
 db = MongoEngine(app)
 toolbar = DebugToolbarExtension(app)
 
-from app import views, models  # app package from which views will be imported
+from app import views, models
 from app.models import PipelineInstance
 
 

@@ -61,8 +61,8 @@ def step(step_name):
     pipelineSteps = None
 
     if request.method == 'POST' and request.json:
-        submissionStatus = doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
-                                     stepOrTemplateName)
+        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
+                                     None, stepOrTemplateName)
 
     if lightsheetDB_id:
         pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
@@ -92,7 +92,7 @@ def template(template_name):
     pipelineSteps = None;
 
     if request.method == 'POST' and request.json:
-        submissionStatus = doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
+        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
                                      stepOrTemplateName)
 
     if lightsheetDB_id:
@@ -135,7 +135,7 @@ def job_status():
             pausedJobInformation["remainingStepNames"].pop(0)
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
-        submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, current_user.username, True)
+        submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, current_user.username, True)
         updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
         jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
@@ -302,7 +302,7 @@ def load_configuration(config_name):
                 currentTemplate = stepOrTemplateName[10:]
 
         if request.method == 'POST' and request.json:
-            doThePost(request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
+            doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
 
         updateDBStatesAndTimes(imageProcessingDB)
         return render_template('index.html',

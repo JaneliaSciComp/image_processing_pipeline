@@ -1,3 +1,3 @@
 #!/bin/bash
 source 'env/bin/activate'
-python run.py
+python manage.py runserver

@@ -1,16 +1,13 @@
-# Contains functons to load jobs and submit jobs
-import re, ipdb, json
+# Contains functions to load jobs and submit jobs
+import re, json
 from flask import abort
-from logging.config import dictConfig
 
 from flask_login import current_user
 from mongoengine.queryset.visitor import Q
-from app.models import AppConfig, Step, Parameter, Template
-from pprint import pprint
+from app.models import Step, Parameter
 from enum import Enum
 from app import app
-from app.settings import Settings
-from app.utils import submitToJACS, getJobStepData, stepOrTemplateNamePathMaker
+from app.utils import submitToJACS, getJobStepData
 from bson.objectid import ObjectId
 from collections import OrderedDict
 
@@ -51,7 +48,7 @@ def reformatDataToPost(postedData, forSubmission=True):
                 range = False
 
                 q = Parameter.objects.filter(Q(formatting='F') & (
-                            Q(name=parameterKey.split('-')[0]) | Q(name=parameterKey.split('-')[0] + '_' + step)))
+                        Q(name=parameterKey.split('-')[0]) | Q(name=parameterKey.split('-')[0] + '_' + step)))
                 if (len(q) != 0):  # this parameter is a range parameter
                     paramType = ParameterTypes.flag
 
@@ -59,7 +56,7 @@ def reformatDataToPost(postedData, forSubmission=True):
                 if '-' in parameterKey:  # check, whether this is a range parameter
                     splitRest = parameterKey.split('-')
                     q = Parameter.objects.filter(Q(formatting='R') & (
-                                Q(name=parameterKey.split('-')[0]) | Q(name=parameterKey.split('-')[0] + '_' + step)))
+                            Q(name=parameterKey.split('-')[0]) | Q(name=parameterKey.split('-')[0] + '_' + step)))
                     if (len(q) != 0):  # this parameter is a range parameter
                         paramType = ParameterTypes.rangeParam
                         range = True
@@ -217,11 +214,10 @@ def parseJsonDataNoForms(data, stepName, config):
 
 
 # If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id, submissionAddress=None,
-              stepOrTemplateName=None):
+def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
+              submissionAddress=None, stepOrTemplateName=None):
     app.logger.info('Post json data: {0}'.format(formJson))
     app.logger.info('Current Step Or Template: {0}'.format(stepOrTemplateName))
-    settings = Settings()
 
     if formJson != '[]' and formJson != None:
         userDefinedJobName = []
@@ -252,7 +248,8 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
         if reparameterize:
             imageProcessingDB_id = ObjectId(imageProcessingDB_id)
             subDict = {k: dataToPostToDB[k] for k in (
-            'jobName', 'submissionAddress', 'stepOrTemplateName', 'state', 'containerVersion', 'remainingStepNames')}
+                'jobName', 'submissionAddress', 'stepOrTemplateName', 'state', 'containerVersion',
+                'remainingStepNames')}
             imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id}, {"$set": subDict})
             for currentStepDictionary in processedData:
                 imageProcessingDB.jobs.update_one(
@@ -261,7 +258,8 @@ def doThePost(formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
         else:
             imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 
-        submissionStatus = submitToJACS(imageProcessingDB, imageProcessingDB_id, current_user.username, reparameterize)
+        submissionStatus = submitToJACS(config_server_url, imageProcessingDB, imageProcessingDB_id,
+                                        current_user.username, reparameterize)
         return submissionStatus
 
 

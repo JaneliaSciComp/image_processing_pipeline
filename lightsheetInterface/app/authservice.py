@@ -35,6 +35,12 @@ class User(UserMixin):
         exp = datetime.fromtimestamp(self._user_fields['exp'])
         return exp > datetime.now()
 
+    def get_expiration(self):
+        if self._user_fields:
+            return datetime.fromtimestamp(self._user_fields['exp'])
+        else:
+            return datetime.now()
+
 
 class AuthenticationService(object):
     def __init__(self, auth_url):
@@ -52,7 +58,9 @@ class AuthenticationService(object):
             return False
         else:
             auth = authResponse.json()
-            login_user(self._create_user(token=auth['token'], username=auth['user_name']))
+            u = self._create_user(token=auth['token'], username=auth['user_name'])
+            expiration_time = u.get_expiration() - datetime.now()
+            login_user(u, duration=expiration_time)
             return True
 
     def validate_user_token(self, token):

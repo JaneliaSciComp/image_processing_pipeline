@@ -1,4 +1,6 @@
 import datetime, json, requests, operator
+
+from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
 from wtforms import *
 from datetime import datetime
@@ -192,9 +194,9 @@ def getTemplateNames():
 # Header for post request
 def getHeaders(forQuery=False):
     if forQuery:
-        return {'content-type': 'application/json', 'USERNAME': settings.username}
+        return {'content-type': 'application/json', 'USERNAME': current_user.username}
     else:
-        return {'content-type': 'application/json', 'USERNAME': settings.username, 'RUNASUSER': 'lightsheet'}
+        return {'content-type': 'application/json', 'USERNAME': current_user.username, 'RUNASUSER': 'lightsheet'}
 
 
 # Timezone for timings
@@ -436,15 +438,13 @@ def createConfig(content):
     return result
 
 
-def submitToJACS(imageProcessingDB, job_id, job_owner, continueOrReparameterize):
+def submitToJACS(config_server_url, imageProcessingDB, job_id, job_owner, continueOrReparameterize):
     job_id = ObjectId(job_id)
-    configAddress = settings.serverInfo['fullAddress'] + "/config/" + str(job_id)
+    configAddress = config_server_url + "config/{}".format(job_id)
     postBody = {
-        "processingLocation": "LSF_JAVA",
-        "args": ["-configAddress", configAddress],
-        "resources": {
-            "gridAccountId": job_owner
-        }
+        'ownerKey': 'user:{}'.format(job_owner),
+        'processingLocation': 'LSF_JAVA',
+        'args': ['-configAddress', configAddress]
     }
     try:
         postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
