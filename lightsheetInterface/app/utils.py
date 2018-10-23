@@ -116,9 +116,16 @@ def getParameters(parameter):
         param.count = '3'
       else:
         param.count = '4'
-    else:
+    elif param.text1:
       param.type = 'Text'
-      param.count = '1'
+      if not param.text2:
+        param.count = '1'
+      elif not param.text3:
+        param.count = '2'
+      elif not param.text4:
+        param.count = '3'
+      else:
+        param.count = '4'
 
     if param.frequency == 'F':
       frequent[param.name] = param
