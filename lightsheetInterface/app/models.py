@@ -42,7 +42,6 @@ class Parameter(Document):
   text2 = StringField(max_length=500)
   text3 = StringField(max_length=500)
   text4 = StringField(max_length=500)
-
   boolean = BooleanField()
   
   def __unicode__(self):

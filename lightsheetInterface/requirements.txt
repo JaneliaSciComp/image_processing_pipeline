@@ -9,3 +9,5 @@ Flask-DebugToolbar==0.10.1
 Flask-DebugToolbar-Mongo==0.1
 ipdb==0.11
 uwsgi
+pytz==2018.5
+python-dateutil==2.7.3
