@@ -91,7 +91,11 @@ dataIo.grabData = function(){
           data[step][p][val.id] = '';
         }
         else {
-          if (val.type == 'checkbox') { // For checkbox parameters, only add value if it's true
+          if (val.type== 'radio' ){
+            radioButtonValue = $('#collapse' + step).find('input[name=\"'+val.name+'\"]:checked').val();
+            data[step][p][val.name]  = radioButtonValue;
+          }
+          else if (val.type == 'checkbox') { // For checkbox parameters, only add value if it's true
             if (val.value !== undefined && val.value !== false && val.value !== 'false'){
               data[step][p][val.id] = 'True';
             }

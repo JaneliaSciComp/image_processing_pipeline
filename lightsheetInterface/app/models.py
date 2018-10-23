@@ -8,7 +8,9 @@ import datetime, uuid
 
 types = (('', None), ('S', 'Step'), ('D', 'Directory'))
 frequency = (('F', 'Frequent'), ('S', 'Sometimes'), ('R', 'Rare'))
-formats = (('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'), ('O', 'Option'), ('F', 'Flag'))
+formats = (
+    ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'), ('O', 'Option'), ('F', 'Flag'),
+    ('B', 'Radio Button'))
 dependency_type = (('V', 'Value'), ('D', 'Dimension'))
 templates = (('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal'))
 steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet'))
@@ -92,6 +94,9 @@ class ConfigurationInstance(Document):
     number3 = FloatField()
     number4 = FloatField()
     text1 = StringField(max_length=500)
+    text2 = StringField(max_length=500)
+    text3 = StringField(max_length=500)
+    text4 = StringField(max_length=500)
     boolean = BooleanField()
 
     def __unicode__(self):
@@ -178,10 +183,11 @@ class CKTextAreaField(TextAreaField):
 
 class ExtendedParameterView(ModelView):
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1",
-                    "boolean", "readonly", "ignore", "mount", "empty", "frequency", "formatting", "order", "hint"]
+    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1", "text2",
+                    "text3", "text4", "boolean", "readonly", "ignore", "mount", "empty", "frequency", "formatting",
+                    "order", "hint"]
     column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1",
-                      "boolean", "mount", "frequency", "formatting", "ignore"]
+                      "text2", "text3", "text4", "boolean", "mount", "frequency", "formatting", "ignore"]
     form_overrides = {
         'hint': CKTextAreaField
     }

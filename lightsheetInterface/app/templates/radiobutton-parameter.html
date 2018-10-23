@@ -1,0 +1,28 @@
+{% if data is not string %} 
+	{% set data = data[0] %}
+{% endif %}
+{% if value.text1 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.text1 }}" {% if value.text1 == data %} checked {% endif %}> {{ value.text1 }}
+{% endif %}
+{% if value.text2 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.text2 }}" {% if value.text2 == data %} checked {% endif %}> {{ value.text2 }}
+{% endif %}
+{% if value.text3 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.text3 }}" {% if value.text3 == data %} checked {% endif %}> {{ value.text3 }}
+{% endif %}
+{% if value.text4 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.text4 }}" {% if value.text4 == data %} checked {% endif %}> {{ value.text4 }}
+{% endif %}
+{% if value.number1 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.number1 }}" {% if value.number1 == data %} checked {% endif %}> {{ value.number1 }}
+{% endif %}
+{% if value.number2 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.number2 }}" {% if value.number2 == data %} checked {% endif %}> {{ value.number1 }}
+{% endif %}
+{% if value.number3 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.number3 }}" {% if value.number3 == data %} checked {% endif %}> {{ value.number1 }}
+{% endif %}
+{% if value.number4 %}
+  <input type="radio" name="{{ param.name }}" value="{{ value.number4 }}" {% if value.number4 == data %} checked {% endif %}> {{ value.number1 }}
+{% endif %}
+

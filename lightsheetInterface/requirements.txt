@@ -12,3 +12,5 @@ ipdb==0.11
 python-dateutil==2.7.3
 pytz==2018.5
 uwsgi
+pytz==2018.5
+python-dateutil==2.7.3

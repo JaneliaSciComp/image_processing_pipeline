@@ -2,7 +2,6 @@ import datetime, json, requests, operator
 
 from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
-from wtforms import *
 from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
@@ -10,7 +9,6 @@ from pymongo.errors import ServerSelectionTimeoutError
 from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
 from app.settings import Settings
 from collections import OrderedDict
-
 
 settings = Settings()
 
@@ -74,6 +72,7 @@ def mapJobsToDict(x):
         result['submissionAddress'] = x['submissionAddress'] if x['submissionAddress'] is not None else ''
     else:
         result['submissionAddress'] = ''
+
     if 'creationDate' in x:
         result['creationDate'] = x['creationDate'] if x['creationDate'] is not None else ''
     if 'state' in x:
@@ -90,6 +89,7 @@ def mapJobsToDict(x):
     else:
         result['stepOrTemplateName'] = '/load/previousjob'  # default loading
         result["jobType"] = ''
+
     result['selectedSteps'] = {'names': '', 'states': '', 'submissionAddress': ''};
     for i, step in enumerate(x["steps"]):
         stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
@@ -97,7 +97,7 @@ def mapJobsToDict(x):
             result['selectedSteps']['submissionAddress'] = result['submissionAddress']
             result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
             result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
-            if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED"]:
+            if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED"]:
                 result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
             elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state'] == "SUCCESSFUL":
                 result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
@@ -131,13 +131,13 @@ def getParameters(parameter):
                 param.count = '3'
             else:
                 param.count = '4'
-        else:
+        elif param.text1:
             param.type = 'Text'
-            if param.text2 == None:
+            if not param.text2:
                 param.count = '1'
-            elif param.text3 == None:
+            elif not param.text3:
                 param.count = '2'
-            elif param.text4 == None:
+            elif not param.text4:
                 param.count = '3'
             else:
                 param.count = '4'
@@ -194,9 +194,18 @@ def getTemplateNames():
 # Header for post request
 def getHeaders(forQuery=False):
     if forQuery:
-        return {'content-type': 'application/json', 'USERNAME': current_user.username}
+        return {
+            'content-type': 'application/json',
+            'USERNAME': current_user.username
+        }
     else:
-        return {'content-type': 'application/json', 'USERNAME': current_user.username, 'RUNASUSER': 'lightsheet'}
+        # for now runasuser is the same as the authenticated user
+        # but maybe in the future the feature will be supported
+        return {
+            'content-type': 'application/json',
+            'USERNAME': current_user.username,
+            'RUNASUSER': current_user.username
+        }
 
 
 # Timezone for timings
@@ -275,8 +284,8 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 
 # get latest status information about jobs from db
 def updateDBStatesAndTimes(imageProcessingDB):
-    allJobInfoFromDB = list(
-        imageProcessingDB.jobs.find({"$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}]}))
+    allJobInfoFromDB = list(imageProcessingDB.jobs.find(
+        {"$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}, {"state": "QUEUED"}]}))
     for parentJobInfoFromDB in allJobInfoFromDB:
         if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
             # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:

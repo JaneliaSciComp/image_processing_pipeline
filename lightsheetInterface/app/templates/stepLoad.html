@@ -49,6 +49,24 @@
               {% else %}
                 {% if meta.formatting == 'C' and pipelineStep is none %}
                   {% set data = [param.number1] %}
+                {% elif meta.formatting == 'B' %}{#Radio Button#}
+                  {% if param.text4 %}
+                    {% set data = [param.text1, param.text2, param.text3, param.text4] %}
+                  {% elif param.text3 %}
+                    {% set data = [param.text1, param.text2, param.text3] %}
+                  {% elif param.text2 %}
+                    {% set data = [param.text1, param.text2] %}
+                  {% elif param.text1 %}
+                    {% set data = [param.text1] %}
+                  {% elif param.number4 %}
+                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
+                  {% elif param.number3 %}
+                    {% set data = [param.number1, param.number2, param.number3] %}
+                  {% elif param.number2 %}
+                    {% set data = [param.number1, param.number2] %}
+                  {% elif param.number1 %}
+                    {% set data = [param.number1] %}
+                  {% endif %}
                 {% elif meta.type == "Text" %}
                   {% set data = param.text1 %}
                 {% else %}

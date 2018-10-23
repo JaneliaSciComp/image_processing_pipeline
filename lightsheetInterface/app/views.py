@@ -92,7 +92,8 @@ def template(template_name):
     pipelineSteps = None;
 
     if request.method == 'POST' and request.json:
-        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
+        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
+                                     None,
                                      stepOrTemplateName)
 
     if lightsheetDB_id:
@@ -135,18 +136,23 @@ def job_status():
             pausedJobInformation["remainingStepNames"].pop(0)
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
-        submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, current_user.username, True)
+        submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id,
+                                        current_user.username, True)
         updateDBStatesAndTimes(imageProcessingDB)
-    if imageProcessingDB_id is not None:
-        jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
-    # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
-    return render_template('job_status.html',
-                           parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
-                           childJobInfo=childJobInfo,
-                           lightsheetDB_id=imageProcessingDB_id,
-                           stepOrTemplateName=stepOrTemplateName,
-                           submissionStatus=submissionStatus,
-                           jobType=jobType)
+        if imageProcessingDB_id is not None:
+            jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,
+                                                                         "child")
+            if not stepOrTemplateName:
+                stepOrTemplateName = "load/previousjob"
+
+        # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
+        return render_template('job_status.html',
+                               parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
+                               childJobInfo=childJobInfo,
+                               lightsheetDB_id=imageProcessingDB_id,
+                               stepOrTemplateName=stepOrTemplateName,
+                               submissionStatus=submissionStatus,
+                               jobType=jobType)
 
 
 @app.route('/search')
@@ -271,35 +277,43 @@ def uploaded_configfile(filename=None):
 
 @app.route('/load/<config_name>', methods=['GET', 'POST'])
 def load_configuration(config_name):
-    configObj = buildConfigObject();
+    configObj = buildConfigObject()
+    lightsheetDB_id = request.args.get('lightsheetDB_id')
+    reparameterize = None
+    if lightsheetDB_id == 'favicon.ico':
+        lightsheetDB_id = None
     currentStep = None
     currentTemplate = None
-    pInstance = PipelineInstance.objects.filter(name=config_name).first();
-    if pInstance:  # Then a previously submitted job is loaded
-        content = json.loads(pInstance.content)
-        pipelineSteps = OrderedDict()
-        if 'steps' in content:
-            steps = content['steps']
+    pInstance = PipelineInstance.objects.filter(name=config_name).first()
+    if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
+        if lightsheetDB_id:
+            pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
+                                                                 configObj);
+        else:
+            content = json.loads(pInstance.content)
+            pipelineSteps = OrderedDict()
+            if 'steps' in content:
+                steps = content['steps']
 
-            for s in steps:
-                name = s['name']
-                jobs = parseJsonDataNoForms(s, name, configObj)
-                # Pipeline steps is passed to index.html for formatting the html based
-                pipelineSteps[name] = {
-                    'stepName': name,
-                    'stepDescription': configObj['stepsAllDict'][name].description,
-                    'inputJson': None,
-                    'state': False,
-                    'checkboxState': 'checked',
-                    'collapseOrShow': 'show',
-                    'jobs': jobs
-                }
-        if "stepOrTemplateName" in content:
-            stepOrTemplateName = content["stepOrTemplateName"]
-            if stepOrTemplateName.find("Step: ", 0, 6) != -1:
-                currentStep = stepOrTemplateName[6:]
-            else:
-                currentTemplate = stepOrTemplateName[10:]
+                for s in steps:
+                    name = s['name']
+                    jobs = parseJsonDataNoForms(s, name, configObj)
+                    # Pipeline steps is passed to index.html for formatting the html based
+                    pipelineSteps[name] = {
+                        'stepName': name,
+                        'stepDescription': configObj['stepsAllDict'][name].description,
+                        'inputJson': None,
+                        'state': False,
+                        'checkboxState': 'checked',
+                        'collapseOrShow': 'show',
+                        'jobs': jobs
+                    }
+            if "stepOrTemplateName" in content:
+                stepOrTemplateName = content["stepOrTemplateName"]
+                if stepOrTemplateName.find("Step: ", 0, 6) != -1:
+                    currentStep = stepOrTemplateName[6:]
+                else:
+                    currentTemplate = stepOrTemplateName[10:]
 
         if request.method == 'POST' and request.json:
             doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
@@ -315,8 +329,8 @@ def load_configuration(config_name):
                                currentTemplate=currentTemplate
                                )
 
-    updateDBStatesAndTimes(imageProcessingDB)
-    return 'No such configuration in the system.'
+        updateDBStatesAndTimes(imageProcessingDB)
+        return 'No such configuration in the system.'
 
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
