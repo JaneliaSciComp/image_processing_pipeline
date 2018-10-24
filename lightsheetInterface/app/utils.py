@@ -44,7 +44,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
                                                      "steps.creationTime": 1, "steps.endTime": 1,
                                                      "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
                                                      "steps.parameters.pause": 1}))
-        tempList = tempList[0];
+        tempList = tempList[0]
         for step in tempList["steps"]:
             stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
             if stepTemplate == None or stepTemplate.submit:  # None implies a deprecated name
@@ -90,7 +90,7 @@ def mapJobsToDict(x):
         result['stepOrTemplateName'] = '/load/previousjob'  # default loading
         result["jobType"] = ''
 
-    result['selectedSteps'] = {'names': '', 'states': '', 'submissionAddress': ''};
+    result['selectedSteps'] = {'names': '', 'states': '', 'submissionAddress': ''}
     for i, step in enumerate(x["steps"]):
         stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
         if stepTemplate == None or stepTemplate.submit:  # None implies a deprecated name
@@ -104,7 +104,7 @@ def mapJobsToDict(x):
 
     result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
     result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
-    return result;
+    return result
 
 
 # get job information used by jquery datatable
@@ -196,15 +196,15 @@ def getHeaders(forQuery=False):
     if forQuery:
         return {
             'content-type': 'application/json',
-            'USERNAME': current_user.username
+            'USERNAME': current_user.username if current_user.is_authenticated else ""
         }
     else:
         # for now runasuser is the same as the authenticated user
         # but maybe in the future the feature will be supported
         return {
             'content-type': 'application/json',
-            'USERNAME': current_user.username,
-            'RUNASUSER': current_user.username
+            'USERNAME': current_user.username if current_user.is_authenticated else "",
+            'RUNASUSER': current_user.username if current_user.is_authenticated else ""
         }
 
 
@@ -269,13 +269,13 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
             step = currentJobSteps[0]["steps"][currentStepIndex]
             output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"] + step["name"] + ','
             if ("pause" in step["parameters"]):
-                pauseState = step["parameters"]["pause"];
+                pauseState = step["parameters"]["pause"]
         currentStepIndex = currentStepIndex + 1
     if output["currentJACSJobStepNames"]:
         output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"][:-1]
         configOutputPath = imageProcessingDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'configOutputPath': 1})
         if configOutputPath[0]:
-            output["configOutputPath"] = configOutputPath[0];
+            output["configOutputPath"] = configOutputPath[0]
     if currentJobSteps:
         return output
     else:
@@ -284,64 +284,65 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 
 # get latest status information about jobs from db
 def updateDBStatesAndTimes(imageProcessingDB):
-    allJobInfoFromDB = list(imageProcessingDB.jobs.find(
-        {"$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}, {"state": "QUEUED"}]}))
-    for parentJobInfoFromDB in allJobInfoFromDB:
-        if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
-            # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
-            if isinstance(parentJobInfoFromDB["jacs_id"], list):
-                jacs_ids = parentJobInfoFromDB["jacs_id"]
-            else:
-                jacs_ids = [parentJobInfoFromDB["jacs_id"]]
+    if current_user.is_authenticated:
+        allJobInfoFromDB = list(imageProcessingDB.jobs.find(
+            {"$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}, {"state": "QUEUED"}]}))
+        for parentJobInfoFromDB in allJobInfoFromDB:
+            if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
+                # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+                if isinstance(parentJobInfoFromDB["jacs_id"], list):
+                    jacs_ids = parentJobInfoFromDB["jacs_id"]
+                else:
+                    jacs_ids = [parentJobInfoFromDB["jacs_id"]]
 
-            for jacs_id in jacs_ids:
-                parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS + '/services/',
-                                                     params={'service-id': jacs_id},
-                                                     headers=getHeaders(True)).json()
-                if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
-                    parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
-                    imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"]},
-                                                      {"$set": {"state": parentJobInfoFromJACS["state"]}})
-                    allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS + '/services/',
-                                                           params={'parent-id': jacs_id},
-                                                           headers=getHeaders(True)).json()
-                    allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
-                    if allChildJobInfoFromJACS:
-                        for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-                            if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB[
-                                "state"]:  # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
-                                currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if
-                                                                    step["args"][1] == currentChildJobInfoFromDB[
-                                                                        "name"]), None)
-                                if currentChildJobInfoFromJACS:
-                                    creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
-                                    outputPath = "N/A"
-                                    if "outputPath" in currentChildJobInfoFromJACS:
-                                        outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
+                for jacs_id in jacs_ids:
+                    parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS + '/services/',
+                                                         params={'service-id': jacs_id},
+                                                         headers=getHeaders(True)).json()
+                    if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
+                        parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
+                        imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"]},
+                                                          {"$set": {"state": parentJobInfoFromJACS["state"]}})
+                        allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS + '/services/',
+                                                               params={'parent-id': jacs_id},
+                                                               headers=getHeaders(True)).json()
+                        allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
+                        if allChildJobInfoFromJACS:
+                            for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
+                                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB[
+                                    "state"]:  # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+                                    currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if
+                                                                        step["args"][1] == currentChildJobInfoFromDB[
+                                                                            "name"]), None)
+                                    if currentChildJobInfoFromJACS:
+                                        creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
+                                        outputPath = "N/A"
+                                        if "outputPath" in currentChildJobInfoFromJACS:
+                                            outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
 
-                                    imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"],
-                                                                       "steps.name": currentChildJobInfoFromDB["name"]},
-                                                                      {"$set": {
-                                                                          "steps.$.state": currentChildJobInfoFromJACS[
-                                                                              "state"],
-                                                                          "steps.$.creationTime": creationTime.strftime(
-                                                                              "%Y-%m-%d %H:%M:%S"),
-                                                                          "steps.$.elapsedTime": str(
-                                                                              datetime.now(eastern) - creationTime),
-                                                                          "steps.$.logAndErrorPath": outputPath
-                                                                          }})
-
-                                    if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR',
-                                                                                'SUCCESSFUL']:
-                                        endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
                                         imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"],
-                                                                           "steps.name": currentChildJobInfoFromDB[
-                                                                               "name"]},
-                                                                          {"$set": {"steps.$.endTime": endTime.strftime(
-                                                                              "%Y-%m-%d %H:%M:%S"),
-                                                                                    "steps.$.elapsedTime": str(
-                                                                                        endTime - creationTime)
-                                                                                    }})
+                                                                           "steps.name": currentChildJobInfoFromDB["name"]},
+                                                                          {"$set": {
+                                                                              "steps.$.state": currentChildJobInfoFromJACS[
+                                                                                  "state"],
+                                                                              "steps.$.creationTime": creationTime.strftime(
+                                                                                  "%Y-%m-%d %H:%M:%S"),
+                                                                              "steps.$.elapsedTime": str(
+                                                                                  datetime.now(eastern) - creationTime),
+                                                                              "steps.$.logAndErrorPath": outputPath
+                                                                              }})
+
+                                        if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR',
+                                                                                    'SUCCESSFUL']:
+                                            endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
+                                            imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"],
+                                                                               "steps.name": currentChildJobInfoFromDB[
+                                                                                   "name"]},
+                                                                              {"$set": {"steps.$.endTime": endTime.strftime(
+                                                                                  "%Y-%m-%d %H:%M:%S"),
+                                                                                        "steps.$.elapsedTime": str(
+                                                                                            endTime - creationTime)
+                                                                                        }})
 
 
 def convertJACStime(t):

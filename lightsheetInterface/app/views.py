@@ -61,7 +61,7 @@ def step(step_name):
     stepOrTemplateName = "Step: " + step_name
     configObj = buildConfigObject()
     lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = request.args.get('reparameterize');
+    reparameterize = request.args.get('reparameterize')
     if lightsheetDB_id == 'favicon.ico':
         lightsheetDB_id = None
 
@@ -73,7 +73,7 @@ def step(step_name):
                                      None, stepOrTemplateName)
 
     if lightsheetDB_id:
-        pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
+        pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
@@ -92,12 +92,12 @@ def template(template_name):
     stepOrTemplateName = "Template: " + template_name
     configObj = buildConfigObject()
     lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = request.args.get('reparameterize');
+    reparameterize = request.args.get('reparameterize')
     if lightsheetDB_id == 'favicon.ico':
         lightsheetDB_id = None
 
-    submissionStatus = None;
-    pipelineSteps = None;
+    submissionStatus = None
+    pipelineSteps = None
 
     if request.method == 'POST' and request.json:
         submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
@@ -105,7 +105,7 @@ def template(template_name):
                                      stepOrTemplateName)
 
     if lightsheetDB_id:
-        pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj);
+        pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
     updateDBStatesAndTimes(imageProcessingDB)
     return render_template('index.html',
@@ -125,7 +125,7 @@ def index():
 @app.route('/job_status', methods=['GET', 'POST'])
 @login_required
 def job_status():
-    submissionStatus = None;
+    submissionStatus = None
     imageProcessingDB_id = request.args.get('lightsheetDB_id')
     # Mongo client
     updateDBStatesAndTimes(imageProcessingDB)
@@ -146,20 +146,19 @@ def job_status():
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
         submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
         updateDBStatesAndTimes(imageProcessingDB)
-        if imageProcessingDB_id is not None:
-            jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id,
-                                                                         "child")
-            if not stepOrTemplateName:
-                stepOrTemplateName = "load/previousjob"
+    if imageProcessingDB_id is not None:
+        jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
+        if not stepOrTemplateName:
+            stepOrTemplateName = "load/previousjob"
 
-        # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
-        return render_template('job_status.html',
-                               parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
-                               childJobInfo=childJobInfo,
-                               lightsheetDB_id=imageProcessingDB_id,
-                               stepOrTemplateName=stepOrTemplateName,
-                               submissionStatus=submissionStatus,
-                               jobType=jobType)
+    # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
+    return render_template('job_status.html',
+                           parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
+                           childJobInfo=childJobInfo,
+                           lightsheetDB_id=imageProcessingDB_id,
+                           stepOrTemplateName=stepOrTemplateName,
+                           submissionStatus=submissionStatus,
+                           jobType=jobType)
 
 
 @app.route('/search')
@@ -295,7 +294,7 @@ def load_configuration(config_name):
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
             pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
-                                                                 configObj);
+                                                                 configObj)
         else:
             content = json.loads(pInstance.content)
             pipelineSteps = OrderedDict()
@@ -396,7 +395,7 @@ def createDependencyResults(dependencies):
 
 @app.context_processor
 def add_value_dependency_object():
-    dep = Dependency.objects.filter(dependency_type='V');
+    dep = Dependency.objects.filter(dependency_type='V')
     result = []
     if dep is not None:
         result = createDependencyResults(dep)
@@ -405,7 +404,7 @@ def add_value_dependency_object():
 
 @app.context_processor
 def add_dimension_dependency_object():
-    dep = Dependency.objects.filter(dependency_type='D');
+    dep = Dependency.objects.filter(dependency_type='D')
     result = []
     if dep is not None:
         result = createDependencyResults(dep)

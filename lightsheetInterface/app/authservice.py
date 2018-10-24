@@ -22,7 +22,7 @@ class User(UserMixin):
         token_components = token.split('.')
         user_token_comp = token_components[1]
         user_token_comp += "=" * ((4 - len(user_token_comp) % 4) % 4)
-        user_fields = json.loads(base64.b64decode(user_token_comp))
+        user_fields = json.loads(base64.b64decode(user_token_comp).decode('UTF-8'))
         self._token = token
         self.username = username if username is not None else user_fields.get('user_name')
         self._user_fields = user_fields
