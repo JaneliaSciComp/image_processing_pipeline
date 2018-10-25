@@ -36,6 +36,8 @@ client = MongoClient(mongosettings)
 # imageProcessingDB is the database containing lightsheet job information and parameters
 imageProcessingDB = client.lightsheet
 
+#All step names for current config
+allStepNames = []
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -77,7 +79,8 @@ def step(step_name):
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
-
+    global allStepNames
+    allStepNames = step_name
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            config=configObj,
@@ -98,7 +101,6 @@ def template(template_name):
 
     submissionStatus = None
     pipelineSteps = None
-
     if request.method == 'POST' and request.json:
         submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
                                      None,
@@ -107,6 +109,10 @@ def template(template_name):
     if lightsheetDB_id:
         pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
+    global allStepNames
+    allStepNames = []
+    for step in configObj["steps"][template_name]:
+        allStepNames.append(step.name)
     updateDBStatesAndTimes(imageProcessingDB)
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
@@ -285,16 +291,20 @@ def uploaded_configfile(filename=None):
 def load_configuration(config_name):
     configObj = buildConfigObject()
     lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = None
+    reparameterize = request.args.get('reparameterize')
     if lightsheetDB_id == 'favicon.ico':
         lightsheetDB_id = None
     currentStep = None
     currentTemplate = None
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
+    global allStepNames
+    allStepNames = []
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
             pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
                                                                  configObj)
+            for stepName in pipelineSteps:
+                allStepNames.append(stepName)
         else:
             content = json.loads(pInstance.content)
             pipelineSteps = OrderedDict()
@@ -302,6 +312,7 @@ def load_configuration(config_name):
                 steps = content['steps']
 
                 for s in steps:
+                    allStepNames.append(name)
                     name = s['name']
                     jobs = parseJsonDataNoForms(s, name, configObj)
                     # Pipeline steps is passed to index.html for formatting the html based
@@ -318,8 +329,12 @@ def load_configuration(config_name):
                 stepOrTemplateName = content["stepOrTemplateName"]
                 if stepOrTemplateName.find("Step: ", 0, 6) != -1:
                     currentStep = stepOrTemplateName[6:]
+                    allStepName=currentStep
                 else:
                     currentTemplate = stepOrTemplateName[10:]
+                    allStepName = []
+                    for step in configObj["steps"][currentTemplate]:
+                        allStepNames.append(step.name)
 
         if request.method == 'POST' and request.json:
             doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
@@ -382,14 +397,15 @@ def download_settings(unique_id):
 def createDependencyResults(dependencies):
     result = []
     for d in dependencies:
-        # need to check here, if simple value transfer (for string or float values) or if it's a nested field
-        obj = {}
-        obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
-        obj['output'] = d.outputField.name if d.outputField and d.outputField.name is not None else ''
-        obj['pattern'] = d.pattern if d.pattern is not None else ''
-        obj['step'] = d.outputStep.name if d.outputStep is not None else ''
-        obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
-        result.append(obj)
+        if d.outputStep is not None and d.outputStep.name in allStepNames:
+            # need to check here, if simple value transfer (for string or float values) or if it's a nested field
+            obj = {}
+            obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
+            obj['output'] = d.outputField.name if d.outputField and d.outputField.name is not None else ''
+            obj['pattern'] = d.pattern if d.pattern is not None else ''
+            obj['step'] = d.outputStep.name if d.outputStep is not None else ''
+            obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
+            result.append(obj)
     return result
 
 

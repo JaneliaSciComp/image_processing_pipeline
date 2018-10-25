@@ -6,8 +6,13 @@ var dependency = dependency || {};
 // use template entries from model to apply global parameters
 dependency.applyGlobalParameter = function(){
   if (value_dependencies) {
+    lightsheetStepNames = ['clusterPT','clusterMF','localAP','clusterTF','localEC','clusterCS','clusterFR']
     for (var t = 0; t < value_dependencies.length; t++) {
-      var globalId = Mustache.render("globalParameters-{{input}}", value_dependencies[t]);
+      var globalStepName = Mustache.render("{{input}}", value_dependencies[t]).split("_");
+      globalStepName = globalStepName[globalStepName.length-1]+"-";
+      var outputStepName = Mustache.render("{{output}}", value_dependencies[t]).split("_")
+      outputStepName = outputStepName[outputStepName.length-1];
+      var globalId = Mustache.render(globalStepName+"{{input}}", value_dependencies[t]);
       var stepId = Mustache.render("{{step}}-{{output}}", value_dependencies[t]);
       var globalElem = document.getElementById(globalId);
       var stepElem = document.getElementById(stepId);
@@ -17,16 +22,21 @@ dependency.applyGlobalParameter = function(){
         var variables = pattern.match(/[^\{\]]+(?=\})/g);
         for (var i=0; i<variables.length; i++){
           var currentVariableId;
-          currentVariableId = "globalParameters-"+variables[i];
+          loopVariable = false;
+          if(variables[i].slice(-1)=="}"){ //Hacky way to get loop variable
+            variables[i]=variables[i].slice(0,-1);
+            loopVariable = true;
+          }
+          currentVariableId = globalStepName+variables[i];
           needToFormat=false;
-          if (currentVariableId.includes("_string")){
+          if (currentVariableId.includes("_string") && lightsheetStepNames.indexOf(outputStepName)>0 ){ //Specific to lightsheet
             needToFormat=true;
             currentVariableId=currentVariableId.replace("_string","");
           }
-          if (currentVariableId.includes("cameras") || currentVariableId.includes("channels")){
-            currentVariableValue = getCheckboxVal(currentVariableId);
+          if (currentVariableId.includes("cameras") || currentVariableId.includes("channels") && lightsheetStepNames.indexOf(outputStepName)>0){//Specific to lightsheet
+            currentVariableValue = getCheckboxVal(globalStepName, currentVariableId);
           }
-          else{
+          else{//More generic handling of global params, ie, not specific to Lightsheet
             var globalElem = document.getElementById(currentVariableId);
             var globalInputs = globalElem.getElementsByTagName('input');
             var currentVariableValue = globalInputs[0].value;
@@ -51,11 +61,23 @@ dependency.applyGlobalParameter = function(){
             }
             currentVariableValue = currentVariableValueFormatted.slice(0,-1); //Remove trailing "_"
           }
-          pattern = pattern.replace("{"+variables[i]+"}",currentVariableValue);
+          if (loopVariable){
+            currentVariableValueSplit = currentVariableValue.split(" ");//Split on space
+            loopedPattern = ""
+            for (var loopVariableIndex=0; loopVariableIndex<currentVariableValueSplit.length; loopVariableIndex++){
+                loopedPattern = loopedPattern + pattern.replace("{{"+variables[i]+"}}",currentVariableValueSplit[loopVariableIndex]) + " ";
+            }
+            pattern = loopedPattern.slice(0,-1);
+          }
+          else{
+            pattern = pattern.replace("{"+variables[i]+"}",currentVariableValue);
+          }
         }
         pattern = pattern.replace("//","/");
         var stepInputs = stepElem.getElementsByTagName('input');
         stepInputs[0].value = pattern;
+        var stepInputForChanging = Mustache.render("#{{output}}", value_dependencies[t]);
+        $(stepInputForChanging).change();
       }
       else {
         // We're dealing with array or range parameters
@@ -136,7 +158,7 @@ dependency.addParameter = function(element){
   }
 }
 
-getCheckboxVal = function(checkbox_id){
-  var stepCheckbox = $('select[id=select_' + checkbox_id.replace("globalParameters-","") +']');
+getCheckboxVal = function(globalStepName, checkbox_id){
+  var stepCheckbox = $('select[id=select_' + checkbox_id.replace(globalStepName,"") +']');
   return stepCheckbox.val();
 }

@@ -40,7 +40,7 @@
           {% endif %}
           {% for param in step.parameter %}
             {% set key=param.name %}
-            {% if key in config.parameterDictionary[panel] %}
+              {% if key in config.parameterDictionary[panel] %}
               {% set value = config.parameterDictionary[panel][key] %}
               {% set meta = value %}
               {% set keyForProvidedStep = param.name.split("_")[0] %}
@@ -67,7 +67,7 @@
                   {% elif param.number1 %}
                     {% set data = [param.number1] %}
                   {% endif %}
-                {% elif meta.type == "Text" %}
+                {% elif meta.type == "Text" or meta.formatting=='A' %}
                   {% set data = param.text1 %}
                 {% else %}
                   {% if meta.count == '1' %}

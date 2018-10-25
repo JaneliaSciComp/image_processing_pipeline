@@ -42,7 +42,7 @@
           {% include "multiselect-parameter.html" ignore missing with context %}
         {% elif meta.formatting == 'B' %}
           {% include "radiobutton-parameter.html" ignore missing with context %}
-        {% elif meta.type == 'Text' %}
+        {% elif meta.type == 'Text' or meta.formatting== 'A' %}
           <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ data }}" id="{{ param.name }}">
         {% elif meta.type == 'Number' %}
           {% if meta.count == '1' %}
