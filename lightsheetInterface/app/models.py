@@ -61,7 +61,8 @@ class Step(Document):
     template = ListField(StringField(max_length=200, choices=templates))
     order = IntField(required=True)
     steptype = StringField(max_length=200, choices=steptypes)
-
+    codeLocation = StringField(max_length=200)
+    entryPointForSpark = StringField(max_length=200)
     def __unicode__(self):
         return self.name
 

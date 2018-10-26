@@ -120,7 +120,7 @@ dataIo.customSubmit = function(){
     .catch(dataIo.handleError);
 };
 
-dataIo.downloadSettings = function(event,stepOrTemplateName){
+dataIo.downloadSettings = async function(event,stepOrTemplateName){
   event.preventDefault();
   data = dataIo.grabData();
   var baseUrl = window.location.origin;
@@ -129,9 +129,14 @@ dataIo.downloadSettings = function(event,stepOrTemplateName){
   var numMilliseconds = d.getTime().toString();
   dataIo.fetch(baseUrl+'/download_settings/'+numMilliseconds+'?stepOrTemplateName='+stepOrTemplateName, 'POST', data)
     .catch(dataIo.handleError); //Post to database
+  await sleep(250)//Hacky way to wait for post to finish
   window.open(baseUrl+'/download_settings/'+numMilliseconds) //Download from database 
   /*dataIo.fetch(baseUrl+'/downloadSettings/'+numMilliseconds, 'DELETE', data) //Delete from database
     .catch(dataIo.handleError);*/
   /*dataIo.fetch(baseUrl+'/downloadSettings/1539810304153', 'GET')
     .catch(dataIo.handleError);*/
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

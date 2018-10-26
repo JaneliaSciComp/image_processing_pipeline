@@ -125,14 +125,17 @@ lightsheet.stepsExistingJob = function(){
 lightsheet.passEmptyField = function(obj){
   var inputs = obj.parentNode.parentNode.getElementsByTagName('input');
   for (var i=0; i< inputs.length-1; i++){
-    if (obj.checked){
-      inputs[i].disabled = true;
-      obj.value= true;
-    }
-    else{
+      if (obj.checked){
+        inputs[i].disabled=false;
+        inputs[i].click();
+        inputs[i].disabled = true;
+        obj.value= true;
+      }
+      else{
         inputs[i].disabled = false;
+        inputs[i].click();
         obj.value = false;
-    }
+      }
   }
 };
 

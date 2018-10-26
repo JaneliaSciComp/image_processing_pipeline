@@ -58,7 +58,6 @@ def logout():
 
 
 @app.route('/step/<step_name>', methods=['GET', 'POST'])
-@login_required
 def step(step_name):
     stepOrTemplateName = "Step: " + step_name
     configObj = buildConfigObject()
@@ -312,8 +311,8 @@ def load_configuration(config_name):
                 steps = content['steps']
 
                 for s in steps:
-                    allStepNames.append(name)
                     name = s['name']
+                    allStepNames.append(name)
                     jobs = parseJsonDataNoForms(s, name, configObj)
                     # Pipeline steps is passed to index.html for formatting the html based
                     pipelineSteps[name] = {

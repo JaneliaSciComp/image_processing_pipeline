@@ -226,6 +226,8 @@
               var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
               if (isThisALoop != null){dependencyFound = isThisALoop[0];}
               let dependencySubstring = dependencyFound.substr(1,dependencyFound.length-2);
+              stepName = dependencySubstring.split("_");
+              stepName = stepName[stepName.length-1];
               let currentDependency="#"+dependencySubstring;
               if($(currentDependency).prop('type')=="hidden"){
                 temp="select_"+dependencyFound.substr(1,dependencyFound.length-2);
@@ -253,18 +255,19 @@
                     dependencyToUpdateValue = $('[data-id="'+dependencyToUpdate+'"]').prop('title');
                     if (dependencyToUpdateValue == "Nothing selected" || dependencyToUpdateValue==undefined){dependencyToUpdateValue = null;}
                   }
-                  else if( $('input[name='+standardID+']').val() ){
-                    //radiobutton
-                    dependencyToUpdateValue = $('input[name='+standardID+']:checked').val()
+                  else if( $('input[name='+standardID+']').val() ) {
+                      //radiobutton
+                      dependencyToUpdateValue = $('input[name=' + standardID + ']:checked').val()
                   }
-                  else{//dependencyToUpdateValue takes on the value of the dependency
+                  else if (!($('input[id=emptycheckbox_'+stepName+'-'+standardID+']').prop('checked'))){//If it has an empty checkbox that is checked, then keep it empty. Otherwise, take the value
+                      //dependencyToUpdateValue takes on the value of the dependency
                     dependencyToUpdateValue = $(dependencyToUpdate).val();
                   }
 
                   if (standardID.match("^--") || standardID.match("^-")){ //If it starts or ends with a - or --
                       var lastIndex=standardID.lastIndexOf("_");
                       let flagName = standardID.substr(0,lastIndex);
-                      if(dependencyToUpdateValue != null){ 
+                      if(dependencyToUpdateValue != null){
                         if (isThisALoop!=null){//Then this needs to loop
                           let splitString = dependencyToUpdateValue.split(" ");
                           dependencyToUpdateValue = "";

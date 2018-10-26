@@ -42,8 +42,6 @@
           {% include "multiselect-parameter.html" ignore missing with context %}
         {% elif meta.formatting == 'B' %}
           {% include "radiobutton-parameter.html" ignore missing with context %}
-        {% elif meta.type == 'Text' or meta.formatting== 'A' %}
-          <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ data }}" id="{{ param.name }}">
         {% elif meta.type == 'Number' %}
           {% if meta.count == '1' %}
             <input type="number" step="any" class="form-control lightsheet-number" value="{{ data }}" {{ addAttribute }} id="{{ param.name }}">
@@ -75,6 +73,8 @@
             <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[2] }}" id="{{ param.name }}-2">
             <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[3] }}" id="{{ param.name }}-3">
           {% endif %}
+          {% elif meta.type == 'Text' or meta.formatting== 'A' or meta.formatting ==''%}
+          <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ data }}" id="{{ param.name }}">
         {% endif %}
         {% if value.empty == True %}
       {% if meta.type == 'Text' %}

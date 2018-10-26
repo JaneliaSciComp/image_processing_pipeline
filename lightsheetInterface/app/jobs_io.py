@@ -28,11 +28,9 @@ def reformatDataToPost(postedData, forSubmission=True):
             # first part: get the parameter values into lists
             stepResult = {}
             stepResult['name'] = step
-
             # add some optional paramters
             if 'type' in postedData[step].keys():
                 stepResult['type'] = postedData[step]['type']
-
             if 'bindPaths' in postedData[step].keys():
                 stepResult['bindPaths'] = postedData[step]['bindPaths']
             if forSubmission:
@@ -153,10 +151,12 @@ def reformatDataToPost(postedData, forSubmission=True):
                     currentStepDictionary = next(
                         (dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
                     if currentStepDictionary:
+                        currentStepDictionary["codeLocation"]=step.codeLocation
+                        if step.steptype == "Sparks":
+                            currentStepDictionary["entryPointForSpark"] = step.entryPointForSpark
                         if step.submit:
                             remainingStepNames.append(currentStepDictionary["name"])
                         reformattedData.append(currentStepDictionary)
-
     return reformattedData, remainingStepNames
 
 
@@ -243,6 +243,10 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
             "remainingStepNames": remainingStepNames,
             "steps": processedData
         }
+
+        #for step in processedData:
+            #if step["type"] != "Lightsheet"
+
 
         # Insert the data to the db
         if reparameterize:

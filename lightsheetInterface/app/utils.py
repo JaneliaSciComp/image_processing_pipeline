@@ -447,41 +447,53 @@ def createConfig(content):
     result['name'] = pInstance.name
     return result
 
-
 def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparameterize):
     job_id = ObjectId(job_id)
     configAddress = config_server_url + "config/{}".format(job_id)
-    postBody = {
-        'processingLocation': 'LSF_JAVA',
-        'args': ['-configAddress', configAddress]
-    }
-    try:
-        postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
-        requestOutput = requests.post(postUrl,
-                                      headers=getHeaders(),
-                                      data=json.dumps(postBody))
-        requestOutputJsonified = requestOutput.json()
-        creationDate = job_id.generation_time
-        creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-        if continueOrReparameterize:
-            imageProcessingDB.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
-                "jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/' + requestOutputJsonified["_id"],
-                "jacs_id": requestOutputJsonified["_id"]}})
-        else:
-            imageProcessingDB.jobs.update_one({"_id": job_id}, {
-                "$set": {"jacs_id": [requestOutputJsonified["_id"]], "configAddress": configAddress,
-                         "creationDate": creationDate[:-6]}})
 
-        # JACS service states
-        # if any are not Canceled, timeout, error, or successful then
-        # updateLightsheetDatabaseStatus
-        updateDBStatesAndTimes(imageProcessingDB)
-        submissionStatus = "success"
-    except requests.exceptions.RequestException as e:
-        print('Exception occured')
-        submissionStatus = e
-        if not continueOrReparameterize:
-            imageProcessingDB.jobs.remove({"_id": job_id})
+    jobInfoFromDatabase = list(imageProcessingDB.jobs.find({"_id":job_id}))
+    jobInfoFromDatabase=jobInfoFromDatabase[0]
+    if jobInfoFromDatabase[0]['type'] == "Lightsheet":
+        postBody = {
+            'processingLocation': 'LSF_JAVA',
+            'args': ['-configAddress', configAddress]
+        }
+    else:
+        for step in jobInfoFromDatabase:
+            {
+                "stepName":step["name"],
+                "serviceName": "sparkAppProcessor" if step["type"]=="Sparks" else "runSingularityContainer",
+
+
+            }
+    submissionStatus = "test"
+    # try:
+    #     postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
+    #     requestOutput = requests.post(postUrl,
+    #                                   headers=getHeaders(),
+    #                                   data=json.dumps(postBody))
+    #     requestOutputJsonified = requestOutput.json()
+    #     creationDate = job_id.generation_time
+    #     creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
+    #     if continueOrReparameterize:
+    #         imageProcessingDB.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
+    #             "jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/' + requestOutputJsonified["_id"],
+    #             "jacs_id": requestOutputJsonified["_id"]}})
+    #     else:
+    #         imageProcessingDB.jobs.update_one({"_id": job_id}, {
+    #             "$set": {"jacs_id": [requestOutputJsonified["_id"]], "configAddress": configAddress,
+    #                      "creationDate": creationDate[:-6]}})
+    #
+    #     # JACS service states
+    #     # if any are not Canceled, timeout, error, or successful then
+    #     # updateLightsheetDatabaseStatus
+    #     updateDBStatesAndTimes(imageProcessingDB)
+    #     submissionStatus = "success"
+    # except requests.exceptions.RequestException as e:
+    #     print('Exception occured')
+    #     submissionStatus = e
+    #     if not continueOrReparameterize:
+    #         imageProcessingDB.jobs.remove({"_id": job_id})
     return submissionStatus
 
 
