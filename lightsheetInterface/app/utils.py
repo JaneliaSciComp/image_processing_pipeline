@@ -453,47 +453,77 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
 
     jobInfoFromDatabase = list(imageProcessingDB.jobs.find({"_id":job_id}))
     jobInfoFromDatabase=jobInfoFromDatabase[0]
-    if jobInfoFromDatabase[0]['type'] == "Lightsheet":
-        postBody = {
+    remainingSteps = []
+    remainingStepNames  = jobInfoFromDatabase["remainingStepNames"]
+    for step in jobInfoFromDatabase["steps"]:
+        if step["name"] in remainingStepNames:
+            remainingSteps.append(step)
+
+    postBody = {"ownerKey": "user:"+current_user.username if current_user.is_authenticated else ""}
+    if remainingSteps[0]['type'] == "Lightsheet":
+        postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
+        postBody.append({
             'processingLocation': 'LSF_JAVA',
             'args': ['-configAddress', configAddress]
-        }
+        })
     else:
-        for step in jobInfoFromDatabase:
-            {
-                "stepName":step["name"],
-                "serviceName": "sparkAppProcessor" if step["type"]=="Sparks" else "runSingularityContainer",
+        pipelineServices = []
+        postUrl = settings.devOrProductionJACS + '/async-services/pipeline'
+        for step in remainingSteps:
+            if step["type"]=="Sparks":
+                stepPostBody={
+                    "stepName":step["name"],
+                    "serviceName": "sparkAppProcessor",
+                    "serviceProcessingLocation": 'LSF_JAVA',
+                    "serviceArgs":[
+                        "-appLocation", step["codeLocation"],
+                        "-appEntryPoint", step["entryPointForSpark"],
+                        "-appArgs", step["parameters"]["-appArgs"]
+                    ]}
+                if "-numNodes" in step["parameters"]:
+                    stepPostBody["serviceResources"]= { "spark.numNodes": str(int(step["parameters"]["-numNodes"])) }
+            else: #Singularity
+                stepPostBody={
+                    "stepName":step["name"],
+                    "serviceName": "runSingularityContainer",
+                    "serviceProcessingLocation": 'LSF_JAVA',
+                    "serviceArgs":[
+                        "-containerLocation", step["codeLocation"],
+                        "-singularityRuntime","/usr/bin/singularity",
+                        "-bindPaths",step["bindPaths"]
+                        #TODO NEED TO FINISH THIS !!!!#
+                    ]
+                }
+            pipelineServices.append(stepPostBody)
+            postBody["dictionaryArgs"]={"pipelineConfig": {"pipelineServices": pipelineServices}}
 
+    try:
+        requestOutput = requests.post(postUrl,
+                                      headers=getHeaders(),
+                                      data=json.dumps(postBody))
+        requestOutputJsonified = requestOutput.json()
+        creationDate = job_id.generation_time
+        creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
+        if continueOrReparameterize:
+            imageProcessingDB.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
+                "jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/' + requestOutputJsonified["_id"],
+                "jacs_id": requestOutputJsonified["_id"]}})
+        else:
+            imageProcessingDB.jobs.update_one({"_id": job_id}, {
+                "$set": {"jacs_id": [requestOutputJsonified["_id"]], "configAddress": configAddress,
+                         "creationDate": creationDate[:-6]}})
 
-            }
-    submissionStatus = "test"
-    # try:
-    #     postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
-    #     requestOutput = requests.post(postUrl,
-    #                                   headers=getHeaders(),
-    #                                   data=json.dumps(postBody))
-    #     requestOutputJsonified = requestOutput.json()
-    #     creationDate = job_id.generation_time
-    #     creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
-    #     if continueOrReparameterize:
-    #         imageProcessingDB.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
-    #             "jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/' + requestOutputJsonified["_id"],
-    #             "jacs_id": requestOutputJsonified["_id"]}})
-    #     else:
-    #         imageProcessingDB.jobs.update_one({"_id": job_id}, {
-    #             "$set": {"jacs_id": [requestOutputJsonified["_id"]], "configAddress": configAddress,
-    #                      "creationDate": creationDate[:-6]}})
-    #
-    #     # JACS service states
-    #     # if any are not Canceled, timeout, error, or successful then
-    #     # updateLightsheetDatabaseStatus
-    #     updateDBStatesAndTimes(imageProcessingDB)
-    #     submissionStatus = "success"
-    # except requests.exceptions.RequestException as e:
-    #     print('Exception occured')
-    #     submissionStatus = e
-    #     if not continueOrReparameterize:
-    #         imageProcessingDB.jobs.remove({"_id": job_id})
+        # JACS service states
+        # if any are not Canceled, timeout, error, or successful then
+        # updateLightsheetDatabaseStatus
+        updateDBStatesAndTimes(imageProcessingDB)
+        submissionStatus = "success"
+        print("success")
+    except requests.exceptions.RequestException as e:
+        print('Exception occured')
+        submissionStatus = e
+        if not continueOrReparameterize:
+            imageProcessingDB.jobs.remove({"_id": job_id})
     return submissionStatus
 
 

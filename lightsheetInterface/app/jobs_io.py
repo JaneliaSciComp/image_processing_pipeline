@@ -152,7 +152,7 @@ def reformatDataToPost(postedData, forSubmission=True):
                         (dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
                     if currentStepDictionary:
                         currentStepDictionary["codeLocation"]=step.codeLocation
-                        if step.steptype == "Sparks":
+                        if step.steptype == "Sp":
                             currentStepDictionary["entryPointForSpark"] = step.entryPointForSpark
                         if step.submit:
                             remainingStepNames.append(currentStepDictionary["name"])
@@ -236,6 +236,7 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
         # Prepare the db data
         dataToPostToDB = {
             "jobName": jobName,
+            "user":current_user.username,
             "submissionAddress": submissionAddress,
             "stepOrTemplateName": stepOrTemplateName,
             "state": "NOT YET QUEUED",

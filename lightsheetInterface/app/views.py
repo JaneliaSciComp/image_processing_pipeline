@@ -49,7 +49,7 @@ def favicon():
                                'favicon.ico')
 
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['GET','POST'])
 @login_required
 def logout():
     auth_service = create_auth_service()
@@ -58,6 +58,7 @@ def logout():
 
 
 @app.route('/step/<step_name>', methods=['GET', 'POST'])
+@login_required
 def step(step_name):
     stepOrTemplateName = "Step: " + step_name
     configObj = buildConfigObject()
@@ -90,6 +91,7 @@ def step(step_name):
 
 
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
+@login_required
 def template(template_name):
     stepOrTemplateName = "Template: " + template_name
     configObj = buildConfigObject()
@@ -123,6 +125,7 @@ def template(template_name):
 
 
 @app.route('/', methods=['GET'])
+@login_required
 def index():
     return redirect(url_for('template', template_name="LightSheet"))
 
@@ -167,6 +170,7 @@ def job_status():
 
 
 @app.route('/search')
+@login_required
 def search():
     return render_template('search.html')
 
@@ -205,6 +209,7 @@ def login():
 
 
 @app.route('/upload', methods=['GET', 'POST'])
+@login_required
 def upload():
     if request.method == 'GET':
         return render_template('upload.html')
@@ -234,6 +239,7 @@ def upload():
 
 
 @app.route('/upload/<filename>', methods=['GET', 'POST'])
+@login_required
 def uploaded_file(filename=None):
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
@@ -246,6 +252,7 @@ def uploaded_file(filename=None):
 
 
 @app.route('/upload_config', methods=['GET', 'POST'])
+@login_required
 def upload_config(filename=None):
     if request.method == 'GET':
         return render_template('upload_config.html')
@@ -275,6 +282,7 @@ def upload_config(filename=None):
 
 
 @app.route('/upload_conf/<filename>', methods=['GET', 'POST'])
+@login_required
 def uploaded_configfile(filename=None):
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
@@ -287,6 +295,7 @@ def uploaded_configfile(filename=None):
 
 
 @app.route('/load/<config_name>', methods=['GET', 'POST'])
+@login_required
 def load_configuration(config_name):
     configObj = buildConfigObject()
     lightsheetDB_id = request.args.get('lightsheetDB_id')
@@ -354,6 +363,7 @@ def load_configuration(config_name):
 
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
+@login_required
 def config(imageProcessingDB_id):
     globalParameter = request.args.get('globalParameter')
     stepName = request.args.get('stepName')
@@ -366,6 +376,7 @@ def config(imageProcessingDB_id):
 
 
 @app.route('/download_settings/<unique_id>', methods=['GET', 'POST'])
+@login_required
 def download_settings(unique_id):
     unique_id = int(unique_id)
     if request.method == 'POST':
