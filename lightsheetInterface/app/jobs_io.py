@@ -151,7 +151,7 @@ def reformatDataToPost(postedData, forSubmission=True):
                     currentStepDictionary = next(
                         (dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
                     if currentStepDictionary:
-                        currentStepDictionary["codeLocation"]=step.codeLocation
+                        currentStepDictionary["codeLocation"]= step.codeLocation if step.codeLocation else ""
                         if step.steptype == "Sp":
                             currentStepDictionary["entryPointForSpark"] = step.entryPointForSpark
                         if step.submit:
@@ -236,7 +236,7 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
         # Prepare the db data
         dataToPostToDB = {
             "jobName": jobName,
-            "user":current_user.username,
+            "username":current_user.username,
             "submissionAddress": submissionAddress,
             "stepOrTemplateName": stepOrTemplateName,
             "state": "NOT YET QUEUED",
@@ -247,7 +247,6 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
 
         #for step in processedData:
             #if step["type"] != "Lightsheet"
-
 
         # Insert the data to the db
         if reparameterize:
@@ -307,8 +306,7 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                     checkboxState = 'checked'
                     collapseOrShow = 'show'
                     stepData = jobData[i]
-                    if (reparameterize and (currentStep not in remainingStepNames)) or (
-                            currentStep in succededButLatterStepFailed):
+                    if (reparameterize and (currentStep not in remainingStepNames)) or (currentStep in succededButLatterStepFailed):
                         checkboxState = 'unchecked'
                         collapseOrShow = ''
                     if stepData:

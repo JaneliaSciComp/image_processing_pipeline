@@ -6,11 +6,11 @@ var dependency = dependency || {};
 // use template entries from model to apply global parameters
 dependency.applyGlobalParameter = function(){
   if (value_dependencies) {
-    lightsheetStepNames = ['clusterPT','clusterMF','localAP','clusterTF','localEC','clusterCS','clusterFR']
+    lightsheetStepNames = ['clusterPT','clusterMF','localAP','clusterTF','localEC','clusterCS','clusterFR'];
     for (var t = 0; t < value_dependencies.length; t++) {
       var globalStepName = Mustache.render("{{input}}", value_dependencies[t]).split("_");
       globalStepName = globalStepName[globalStepName.length-1]+"-";
-      var outputStepName = Mustache.render("{{output}}", value_dependencies[t]).split("_")
+      var outputStepName = Mustache.render("{{output}}", value_dependencies[t]).split("_");
       outputStepName = outputStepName[outputStepName.length-1];
       var globalId = Mustache.render(globalStepName+"{{input}}", value_dependencies[t]);
       var stepId = Mustache.render("{{step}}-{{output}}", value_dependencies[t]);
@@ -63,7 +63,7 @@ dependency.applyGlobalParameter = function(){
           }
           if (loopVariable){
             currentVariableValueSplit = currentVariableValue.split(" ");//Split on space
-            loopedPattern = ""
+            loopedPattern = "";
             for (var loopVariableIndex=0; loopVariableIndex<currentVariableValueSplit.length; loopVariableIndex++){
                 loopedPattern = loopedPattern + pattern.replace("{{"+variables[i]+"}}",currentVariableValueSplit[loopVariableIndex]) + " ";
             }
@@ -143,7 +143,7 @@ dependency.applyGlobalParameter = function(){
       }
     }
   }
-}
+};
 
 dependency.addParameter = function(element){
   var selectedElements = element.parentElement.getElementsByTagName('button')[0].getElementsByClassName('filter-option-inner-inner')[0].innerHTML;
@@ -156,9 +156,9 @@ dependency.addParameter = function(element){
   else {
     outputField.value = JSON.parse(result);
   }
-}
+};
 
 getCheckboxVal = function(globalStepName, checkbox_id){
   var stepCheckbox = $('select[id=select_' + checkbox_id.replace(globalStepName,"") +']');
   return stepCheckbox.val();
-}
+};

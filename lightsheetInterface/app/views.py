@@ -363,7 +363,6 @@ def load_configuration(config_name):
 
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
-@login_required
 def config(imageProcessingDB_id):
     globalParameter = request.args.get('globalParameter')
     stepName = request.args.get('stepName')

@@ -14,16 +14,17 @@
             <option class="status-error" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
               {{ currentJobInfo.selected }}>  {{   currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
-          {% endif %}
-          {% if currentJobInfo.state == "SUCCESSFUL" %}
+          {% elif currentJobInfo.state == "SUCCESSFUL" %}
             <option class="status-successful" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
               {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
-          {% endif %}
-          {% if currentJobInfo.state == "RUNNING" %}
+          {% elif currentJobInfo.state == "RUNNING" %}
             <option class="status-running" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
               {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
             </option>
+          {% else %}
+            <option class="status-other" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
+              {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + "(" + currentJobInfo.selectedStepNames + ")"}}
           {% endif %}
         {% endfor %}
       {% endif %}
@@ -43,6 +44,8 @@
       <thead>
       <tbody>
         <!-- Status of child processes-->
+        {% set baseURL = request.url_root %}
+        {% set baseURL = baseURL[:-1] %}
         {% if childJobInfo is not none %}
           {% for currentChildJob in childJobInfo %}
             <tr>
@@ -63,13 +66,13 @@
                 {% if loop.index<childJobInfo|length %}
                   <form action={{"/job_status?lightsheetDB_id="+lightsheetDB_id }} method="post" style="display:inline;"> <button> RESUME </button> </form>
                 {% endif %}
-                <form action={{ request.url_root }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                <form action={{ baseURL }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
                 </td>
               </tr>
             {% elif currentChildJob.state not in ["SUCCESSFUL","RUNNING","NOT YET QUEUED","CREATED"] %}
               <tr>
                 <td align="center" colspan=6>
-                <form action={{ request.url_root }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                <form action={{ baseURL }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
                 </td>
               </tr>
             {% endif %}

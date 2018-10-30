@@ -45,7 +45,11 @@
               {% set meta = value %}
               {% set keyForProvidedStep = param.name.split("_")[0] %}
               {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
-                {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
+                {% if param.text1 and '{' in param.text1 and '}' in param.text1 and not param.text2 %} {#Then is dependency, TODO: do this in a better way#}
+                  {% set data = param.text1 %}
+                {% else %}
+                  {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
+                {% endif %}
               {% else %}
                 {% if meta.formatting == 'C' and pipelineStep is none %}
                   {% set data = [param.number1] %}

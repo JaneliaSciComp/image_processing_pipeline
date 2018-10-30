@@ -72,16 +72,18 @@
   <!--
       Rows to select an existing job
   -->
+{% if jobsJson %}
   <div class="row lightsheet-row" style="margin-top: 2em;">
     <h4>Previous Jobs</h4>
   </div>
+{% endif %}
+
   <div class="row lightsheet-row">
     <table class="table table-striped table-hover" id='job-table' />
   </div>
 
   <script src="{{ url_for('static', filename='js/table.js')}}"></script>
   <script src="{{ url_for('static', filename='js/submit.js') }}"></script>
-
   <!-- template variables to be processed in JavaScript -->
   <script>
      {% if jobsJson %}
@@ -222,7 +224,7 @@
         var dependenciesFound = currentValue.match(/{([^}]+)}/g);
         if(dependenciesFound != null){
           for (var i=0; i< dependenciesFound.length; i++){//Loop over dependencies
-              let dependencyFound = dependenciesFound[i]
+              let dependencyFound = dependenciesFound[i];
               var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
               if (isThisALoop != null){dependencyFound = isThisALoop[0];}
               let dependencySubstring = dependencyFound.substr(1,dependencyFound.length-2);

@@ -60,7 +60,7 @@ $(document).ready(() => {
               var baseUrl = window.location.origin;
               names.push("<form action=\""+baseUrl+ row.stepOrTemplateName + "?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>");
             }
-            else if(states[i]=="NOT YET QUEUED"){
+            else if(states[i]=="NOT YET QUEUED" || states[i]=="CREATED"){
               names.push("<font>" + namesProvided[namesIndex] +"</font>");
               namesIndex++;
             }

@@ -20,7 +20,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
         _id = ObjectId(_id)
 
     if parentOrChild == "parent":
-        parentJobInfo = list(imageProcessingDB.jobs.find({}, {"configAddress": 1, "state": 1, "jobName": 1,
+        parentJobInfo = list(imageProcessingDB.jobs.find({"username": current_user.username}, {"configAddress": 1, "state": 1, "jobName": 1,
                                                               "creationDate": 1, "jacs_id": 1, "steps.name": 1,
                                                               "steps.state": 1}))
         for currentJobInfo in parentJobInfo:
@@ -39,7 +39,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
         return parentJobInfo
     elif parentOrChild == "child" and _id:
         childJobInfo = []
-        tempList = list(imageProcessingDB.jobs.find({"_id": _id},
+        tempList = list(imageProcessingDB.jobs.find({"username": current_user.username, "_id": _id},
                                                     {"stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
                                                      "steps.creationTime": 1, "steps.endTime": 1,
                                                      "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
@@ -66,6 +66,8 @@ def mapJobsToDict(x):
     result = {}
     if '_id' in x:
         result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
+    if 'username' in x:
+        result['username'] = x['username'] if x['username'] is not None else ''
     if 'jobName' in x:
         result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
     if 'submissionAddress' in x:
@@ -109,7 +111,7 @@ def mapJobsToDict(x):
 
 # get job information used by jquery datatable
 def allJobsInJSON(imageProcessingDB):
-    parentJobInfo = imageProcessingDB.jobs.find({}, {"_id": 1, "jobName": 1, "submissionAddress": 1, "creationDate": 1,
+    parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username}, {"_id": 1, "jobName": 1, "submissionAddress": 1, "creationDate": 1,
                                                      "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
                                                      "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
     return list(map(mapJobsToDict, parentJobInfo))
@@ -286,7 +288,8 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 def updateDBStatesAndTimes(imageProcessingDB):
     if current_user.is_authenticated:
         allJobInfoFromDB = list(imageProcessingDB.jobs.find(
-            {"$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}, {"state": "QUEUED"}]}))
+                            {"username": current_user.username,
+                            "$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}, {"state": "QUEUED"}]}))
         for parentJobInfoFromDB in allJobInfoFromDB:
             if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
                 # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
@@ -309,12 +312,10 @@ def updateDBStatesAndTimes(imageProcessingDB):
                         allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
                         if allChildJobInfoFromJACS:
                             for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-                                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB[
-                                    "state"]:  # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
+                                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"]:  # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
                                     currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if
-                                                                        step["args"][1] == currentChildJobInfoFromDB[
-                                                                            "name"]), None)
-                                    if currentChildJobInfoFromJACS:
+                                                                        (currentChildJobInfoFromDB["name"] in step["description"]) ), None)
+                                if currentChildJobInfoFromJACS:
                                         creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
                                         outputPath = "N/A"
                                         if "outputPath" in currentChildJobInfoFromJACS:
@@ -323,25 +324,18 @@ def updateDBStatesAndTimes(imageProcessingDB):
                                         imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"],
                                                                            "steps.name": currentChildJobInfoFromDB["name"]},
                                                                           {"$set": {
-                                                                              "steps.$.state": currentChildJobInfoFromJACS[
-                                                                                  "state"],
-                                                                              "steps.$.creationTime": creationTime.strftime(
-                                                                                  "%Y-%m-%d %H:%M:%S"),
-                                                                              "steps.$.elapsedTime": str(
-                                                                                  datetime.now(eastern) - creationTime),
+                                                                              "steps.$.state": currentChildJobInfoFromJACS["state"],
+                                                                              "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                                              "steps.$.elapsedTime": str(datetime.now(eastern) - creationTime),
                                                                               "steps.$.logAndErrorPath": outputPath
                                                                               }})
 
-                                        if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR',
-                                                                                    'SUCCESSFUL']:
+                                        if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR','SUCCESSFUL']:
                                             endTime = convertJACStime(currentChildJobInfoFromJACS["modificationDate"])
                                             imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"],
-                                                                               "steps.name": currentChildJobInfoFromDB[
-                                                                                   "name"]},
-                                                                              {"$set": {"steps.$.endTime": endTime.strftime(
-                                                                                  "%Y-%m-%d %H:%M:%S"),
-                                                                                        "steps.$.elapsedTime": str(
-                                                                                            endTime - creationTime)
+                                                                               "steps.name": currentChildJobInfoFromDB["name"]},
+                                                                              {"$set": {"steps.$.endTime": endTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                                                                        "steps.$.elapsedTime": str(endTime - creationTime)
                                                                                         }})
 
 
@@ -460,12 +454,10 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
             remainingSteps.append(step)
 
     postBody = {"ownerKey": "user:"+current_user.username if current_user.is_authenticated else ""}
-    if remainingSteps[0]['type'] == "Lightsheet":
+    if remainingSteps[0]['type'] == "LightSheet":
         postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
-        postBody.append({
-            'processingLocation': 'LSF_JAVA',
-            'args': ['-configAddress', configAddress]
-        })
+        postBody['processingLocation']= 'LSF_JAVA'
+        postBody['args']= ['-configAddress', configAddress]
     else:
         pipelineServices = []
         postUrl = settings.devOrProductionJACS + '/async-services/pipeline'
@@ -481,7 +473,7 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
                         "-appArgs", step["parameters"]["-appArgs"]
                     ]}
                 if "-numNodes" in step["parameters"]:
-                    stepPostBody["serviceResources"]= { "spark.numNodes": str(int(step["parameters"]["-numNodes"])) }
+                    stepPostBody["serviceResources"]= { "sparkNumNodes": str(int(step["parameters"]["-numNodes"])) }
             else: #Singularity
                 stepPostBody={
                     "stepName":step["name"],
@@ -496,7 +488,7 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
                 }
             pipelineServices.append(stepPostBody)
             postBody["dictionaryArgs"]={"pipelineConfig": {"pipelineServices": pipelineServices}}
-
+    print(postBody)
     try:
         requestOutput = requests.post(postUrl,
                                       headers=getHeaders(),

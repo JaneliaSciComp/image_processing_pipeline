@@ -113,6 +113,9 @@ fieldset {
   background-color: rgba(0,0,255,0.3)
 }
 
+.status-other {
+  background-color: rgba(0,0,0,0)
+}
 .pika-datepicker {
   width: 10.8em;
 }
