@@ -5,16 +5,28 @@
 /**
 * Generate jQuery datatables table
 */
+
 $(document).ready(() => {
   let table = null;
   if (table_data) {
       table = $('#job-table').DataTable({
-      order: [[ 1, "desc" ]],
+      order: [[ 2, "desc" ]],
       responsive: true,
       autoWidth: false,
       data: table_data,
       pageLength: 25,
-      columns: [{
+      columns: [
+      { title: 'Delete',
+        data:   'id',
+        render: function ( data, type, row ) {
+          if ( type === 'display' ) {
+              return '<input type="checkbox" id = deleteCheckbox_' + data + ' class="editor-active" onclick="lightsheet.toggleDeleteButton()">';
+          }
+          return data;
+      },
+      className: "dt-body-center"
+      },
+      {
         title: 'Name (Click To Load)',
         data: 'jobName',
         render(data, type, row, meta) {
@@ -43,7 +55,7 @@ $(document).ready(() => {
           namesProvided = data["names"].split(",");
           states = data["states"].split(",");
           names = []; //Need this because we have states include RESET/RESUME which means there are more states than step names
-          namesIndex = 0; 
+          namesIndex = 0;
           for(var i=0;i<states.length; i++){
             if(states[i]=="RUNNING"){
               names.push("<font color=\"blue\">" + namesProvided[namesIndex] +"</font>");

@@ -20,6 +20,45 @@ lightsheet.testAllCheckboxes = function(){
   }
 };
 
+lightsheet.toggleDeleteButton = function(){
+  deleteCheckboxes = document.querySelectorAll("[id*='deleteCheckbox_']");
+  disableDeleteButton = true;
+  for(var i=0; i< deleteCheckboxes.length; i++){
+        if (deleteCheckboxes[i].checked){
+          disableDeleteButton = false;
+          break;
+        }
+  }
+  deleteButton = document.getElementById("deleteEntries");
+  deleteButton.disabled = disableDeleteButton;
+};
+
+lightsheet.deleteEntries = function(){
+  var result= confirm('Are you sure you would like to delete from the database?');
+  if(result) {
+      deleteCheckboxes = document.querySelectorAll("[id*='deleteCheckbox_']");
+      job_ids_to_delete=[];
+      for(var i=0; i< deleteCheckboxes.length; i++){
+          //Get ids to delete and
+          if (deleteCheckboxes[i].checked) {
+              id = deleteCheckboxes[i].id;
+              splitted = id.split("_");
+              job_id = splitted[1];
+              job_ids_to_delete.push(job_id)
+          }
+      }
+      var baseUrl = window.location.origin;
+      dataIo.fetch(baseUrl+'/delete_entries/', 'POST', job_ids_to_delete)
+      var urlParams = new URLSearchParams(window.location.search)
+      if (job_ids_to_delete.indexOf(urlParams.get('lightsheetDB_id'))>=0) {//Then it was deleted and we need to reload an earlier verison of the page
+          replaceURL = window.location.href.split('?')[0];
+      }
+      else {
+        replaceURL = window.location.href;
+      }
+      window.location.replace(replaceURL)
+  }
+}
 /*
  * Do checkbox test once when loading the page
 */

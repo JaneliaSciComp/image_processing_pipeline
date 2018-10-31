@@ -289,7 +289,7 @@ def updateDBStatesAndTimes(imageProcessingDB):
     if current_user.is_authenticated:
         allJobInfoFromDB = list(imageProcessingDB.jobs.find(
                             {"username": current_user.username,
-                            "$or": [{"state": "NOT YET QUEUED"}, {"state": "RUNNING"}, {"state": "CREATED"}, {"state": "QUEUED"}]}))
+                             "state": {"$in": ["NOT YET QUEUED","RUNNING", "CREATED","QUEUED"]}}))
         for parentJobInfoFromDB in allJobInfoFromDB:
             if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
                 # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
@@ -488,7 +488,6 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
                 }
             pipelineServices.append(stepPostBody)
             postBody["dictionaryArgs"]={"pipelineConfig": {"pipelineServices": pipelineServices}}
-    print(postBody)
     try:
         requestOutput = requests.post(postUrl,
                                       headers=getHeaders(),

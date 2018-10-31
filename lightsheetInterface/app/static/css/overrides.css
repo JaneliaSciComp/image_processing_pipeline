@@ -132,6 +132,10 @@ fieldset {
   margin-top: 1em;
 }
 
+.delete-button {
+  margin-top: 1em;
+}
+
 .apply-button {
   float: right;
   margin-bottom: 12px;

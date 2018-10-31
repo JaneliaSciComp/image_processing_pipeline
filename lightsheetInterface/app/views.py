@@ -386,7 +386,8 @@ def download_settings(unique_id):
             jobName = postedJson['jobName']
             del (postedJson['jobName'])
         reformattedData = reformatDataToPost(postedJson, False)
-        reformattedData = {'unique_id': unique_id,
+        reformattedData = {'username': current_user.username,
+                           'unique_id': unique_id,
                            'name': jobName,
                            'stepOrTemplateName': stepOrTemplateName,
                            'steps': reformattedData[0],
@@ -394,13 +395,24 @@ def download_settings(unique_id):
         imageProcessingDB.downloadSettings.insert_one(reformattedData)
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
     else:
-        output = list(imageProcessingDB.downloadSettings.find({"unique_id": unique_id}, {"_id": 0, "unique_id": 0}))
+        output = list(imageProcessingDB.downloadSettings.find({"unique_id": unique_id, 'username': current_user.username}, {"_id": 0, "unique_id": 0, "username":0}))
         output = output[0]
         name = output['name']
-        imageProcessingDB.downloadSettings.delete_one({"unique_id": unique_id})
+        imageProcessingDB.downloadSettings.delete_many({'username': current_user.username})
+        #imageProcessingDB.downloadSettings.delete_one({"unique_id": unique_id})
         return Response(json.dumps(OrderedDict(output), indent=2, separators=(',', ': ')),
                         mimetype='application/json',
                         headers={"Content-Disposition": "attachment;filename=" + name + ".json"})
+
+@app.route('/delete_entries/', methods=['POST'])
+@login_required
+def delete_entries():
+    ids_to_delete=request.json
+    for i, id_to_delete in enumerate(ids_to_delete):
+        ids_to_delete[i]=ObjectId(id_to_delete)
+    imageProcessingDB.jobs.delete_many({"username": current_user.username, "_id" : {"$in": ids_to_delete}})
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
 
 
 def createDependencyResults(dependencies):
