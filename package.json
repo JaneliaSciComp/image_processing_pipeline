@@ -1,0 +1,26 @@
+{
+  "name": "lightsheet-pipeline",
+  "version": "1.0.0",
+  "description": "Image Processing Pipeline Webapp",
+  "main": "flightplan.js",
+  "directories": {
+    "example": "examples"
+  },
+  "dependencies": {
+    "flightplan": "^0.6.19"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaneliaSciComp/lightsheet-pipeline.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JaneliaSciComp/lightsheet-pipeline/issues"
+  },
+  "homepage": "https://github.com/JaneliaSciComp/lightsheet-pipeline#readme"
+}
