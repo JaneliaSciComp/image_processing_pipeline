@@ -1,5 +1,14 @@
 {% extends "branding.html" %}
 {% block content %}
+{% if posted=="true" %}
+<div class="alert" style="background-color:#4CAF50">
+  <strong>Thank you for submitting a job! </strong>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+{% endif %}
+
   <div class="row lightsheet-row">
     <h3>Job Status</h3>
   </div>
@@ -55,19 +64,19 @@
               <td>{{ currentChildJob.endTime }}</td>
               <td>{{ currentChildJob.elapsedTime }}</td>
               {% if "logAndErrorPath" in currentChildJob %}
-               <td><a href= {{"http://c03u14.int.janelia.org:9881/jacsstorage/agent_api/v1/agent_storage/storage_path"+currentChildJob.logAndErrorPath +"/sge_error/" }}>Download Error Directory</a></td>
+               <td><a href= {{devOrProductionJACS+":8080/job/"+currentChildJob._id}} target="_blank">Monitor Step</a></td>
               {% else %}
                 <td></td>
               {% endif %}
             </tr>
             {% if currentChildJob.parameters.pause and currentChildJob.state=="SUCCESSFUL"%}
               <tr>
-                <td align="center" colspan=6>
                 {% if loop.index<childJobInfo|length %}
+                  <td align="center" colspan=6>
                   <form action={{"/job_status?lightsheetDB_id="+lightsheetDB_id }} method="post" style="display:inline;"> <button> RESUME </button> </form>
+                  <form action={{ baseURL }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                  </td>
                 {% endif %}
-                <form action={{ baseURL }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
-                </td>
               </tr>
             {% elif currentChildJob.state not in ["SUCCESSFUL","RUNNING","NOT YET QUEUED","CREATED"] %}
               <tr>

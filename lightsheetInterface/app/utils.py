@@ -43,7 +43,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
                                                     {"stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
                                                      "steps.creationTime": 1, "steps.endTime": 1,
                                                      "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
-                                                     "steps.parameters.pause": 1}))
+                                                     "steps.parameters.pause": 1, "steps._id":1}))
         tempList = tempList[0]
         for step in tempList["steps"]:
             stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
@@ -99,7 +99,7 @@ def mapJobsToDict(x):
             result['selectedSteps']['submissionAddress'] = result['submissionAddress']
             result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
             result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
-            if step['state'] not in ["SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED"]:
+            if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED"]:
                 result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
             elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state'] == "SUCCESSFUL":
                 result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
@@ -299,35 +299,36 @@ def updateDBStatesAndTimes(imageProcessingDB):
                     jacs_ids = [parentJobInfoFromDB["jacs_id"]]
 
                 for jacs_id in jacs_ids:
-                    parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS + '/services/',
+                    parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS + ':9000/api/rest-v2/services/',
                                                          params={'service-id': jacs_id},
                                                          headers=getHeaders(True)).json()
                     if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
                         parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
                         imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"]},
                                                           {"$set": {"state": parentJobInfoFromJACS["state"]}})
-                        allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS + '/services/',
+                        allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS + ':9000/api/rest-v2/services/',
                                                                params={'parent-id': jacs_id},
                                                                headers=getHeaders(True)).json()
                         allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
                         if allChildJobInfoFromJACS:
                             for currentChildJobInfoFromDB in parentJobInfoFromDB["steps"]:
-                                if "state" in currentChildJobInfoFromDB and currentChildJobInfoFromDB["state"]:  # not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']: #need to update step
-                                    currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if
-                                                                        (currentChildJobInfoFromDB["name"] in step["description"]) ), None)
+                                currentChildJobInfoFromJACS = next((step for step in allChildJobInfoFromJACS if
+                                                                    (currentChildJobInfoFromDB["name"] in step["description"]) ), None)
+                                if currentChildJobInfoFromDB["state"]=="NOT YET QUEUED" and jacs_id!=jacs_ids[-1]: #NOT YET QUEUED jobs were just submitted so only want to check based on currently running job
+                                        currentChildJobInfoFromJACS = False
                                 if currentChildJobInfoFromJACS:
                                         creationTime = convertJACStime(currentChildJobInfoFromJACS["processStartTime"])
                                         outputPath = "N/A"
                                         if "outputPath" in currentChildJobInfoFromJACS:
                                             outputPath = currentChildJobInfoFromJACS["outputPath"][:-11]
-
                                         imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"],
                                                                            "steps.name": currentChildJobInfoFromDB["name"]},
                                                                           {"$set": {
                                                                               "steps.$.state": currentChildJobInfoFromJACS["state"],
                                                                               "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
                                                                               "steps.$.elapsedTime": str(datetime.now(eastern) - creationTime),
-                                                                              "steps.$.logAndErrorPath": outputPath
+                                                                              "steps.$.logAndErrorPath": outputPath,
+                                                                              "steps.$._id": currentChildJobInfoFromJACS["_id"]
                                                                               }})
 
                                         if currentChildJobInfoFromJACS["state"] in ['CANCELED', 'TIMEOUT', 'ERROR','SUCCESSFUL']:
@@ -455,12 +456,12 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
 
     postBody = {"ownerKey": "user:"+current_user.username if current_user.is_authenticated else ""}
     if remainingSteps[0]['type'] == "LightSheet":
-        postUrl = settings.devOrProductionJACS + '/async-services/lightsheetPipeline'
+        postUrl = settings.devOrProductionJACS + ':9000/api/rest-v2/async-services/lightsheetPipeline'
         postBody['processingLocation']= 'LSF_JAVA'
         postBody['args']= ['-configAddress', configAddress]
     else:
         pipelineServices = []
-        postUrl = settings.devOrProductionJACS + '/async-services/pipeline'
+        postUrl = settings.devOrProductionJACS + ':9000/api/rest-v2/async-services/pipeline'
         for step in remainingSteps:
             if step["type"]=="Sparks":
                 stepPostBody={

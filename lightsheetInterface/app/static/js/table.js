@@ -66,7 +66,7 @@ $(document).ready(() => {
               namesIndex++;
             }
             else if(states[i]=='RESUME' && i<states.length-1){
-              names.push("<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>");
+              names.push("<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button onclick=\"dataIo.thankYouMessage()\"> RESUME </button> </form>");
             }
             else if(states[i]=='RESET'){
               var baseUrl = window.location.origin;
@@ -90,7 +90,7 @@ $(document).ready(() => {
         className: 'job-id',
         data: 'id',
         render(data, type, row, meta) {
-          return data ? "<a href=\"/config/" + data +  "\">" + data + "</a>": '';
+          return data ? "<a href=\"/config/" + data +  "\" target=\"_blank\">" + data + "</a>": '';
         }
       },
       {
@@ -107,12 +107,12 @@ $(document).ready(() => {
           var jacsLinks="";
           if(data && data.constructor === Array){
             for(var i=0; i<data.length; i++){
-              jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data[i] +  "\">" + data[i] + "</a>,";
+              jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data[i] +  "\" target=\"_blank\">" + data[i] + "</a>,";
             }
             jacsLinks=jacsLinks.slice(0,-1);
           }
           else{
-            jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data +  "\">" + data + "</a>";
+            jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data +  "\" target=\"_blank\">" + data + "</a>";
           }
           return jacsLinks;
         }

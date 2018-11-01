@@ -115,7 +115,7 @@ dataIo.grabData = function(){
 }
 
 dataIo.customSubmit = function(){
-  data = dataIo.grabData();
+    data = dataIo.grabData();
   dataIo.fetch(window.location, 'POST', data)
     .catch(dataIo.handleError);
 };

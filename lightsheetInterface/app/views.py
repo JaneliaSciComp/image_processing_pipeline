@@ -1,5 +1,5 @@
 # Contains routes and functions to pass content to the template layer
-import requests, json, os, math, bson, re, subprocess, ipdb, logging
+import requests, json, os, math, bson, re, subprocess, ipdb, logging, time
 from flask import render_template, request, jsonify, abort, send_from_directory, Response
 from flask import send_from_directory, redirect, url_for, jsonify
 from flask_login import login_required, current_user
@@ -69,11 +69,14 @@ def step(step_name):
 
     submissionStatus = None
     pipelineSteps = None
-
-    if request.method == 'POST' and request.json:
-        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
-                                     None, stepOrTemplateName)
-
+    posted="false"
+    if request.method == 'POST':
+        posted="true"
+        if request.json:
+            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
+                                         None, stepOrTemplateName)
+        else:
+            time.sleep(0.25)
     if lightsheetDB_id:
         pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
@@ -87,7 +90,8 @@ def step(step_name):
                            jobsJson=jobs,  # used by the job table
                            submissionStatus=None,
                            currentStep=step_name,
-                           currentTemplate=None)
+                           currentTemplate=None,
+                           posted=posted)
 
 
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
@@ -102,11 +106,15 @@ def template(template_name):
 
     submissionStatus = None
     pipelineSteps = None
-    if request.method == 'POST' and request.json:
-        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
-                                     None,
-                                     stepOrTemplateName)
-
+    posted="false"
+    if request.method == 'POST':
+        posted="true"
+        if request.json:
+            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
+                                         None,
+                                         stepOrTemplateName)
+        else:
+            time.sleep(0.25)
     if lightsheetDB_id:
         pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
@@ -121,7 +129,8 @@ def template(template_name):
                            config=configObj,
                            jobsJson=allJobsInJSON(imageProcessingDB),
                            submissionStatus=submissionStatus,
-                           currentTemplate=template_name)
+                           currentTemplate=template_name,
+                           posted=posted)
 
 
 @app.route('/', methods=['GET'])
@@ -141,7 +150,9 @@ def job_status():
     childJobInfo = []
     jobType = []
     stepOrTemplateName = []
+    posted="false"
     if request.method == 'POST':
+        posted="true"
         pausedJobInformation = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)}))
         pausedJobInformation = pausedJobInformation[0]
         pausedStates = [step['parameters']['pause'] if 'pause' in step['parameters'] else 0 for step in
@@ -153,12 +164,12 @@ def job_status():
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
         submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
+        time.sleep(0.25)
         updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
         jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
         if not stepOrTemplateName:
             stepOrTemplateName = "load/previousjob"
-
     # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html',
                            parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
@@ -166,7 +177,9 @@ def job_status():
                            lightsheetDB_id=imageProcessingDB_id,
                            stepOrTemplateName=stepOrTemplateName,
                            submissionStatus=submissionStatus,
-                           jobType=jobType)
+                           jobType=jobType,
+                           posted=posted,
+                           devOrProductionJACS=settings.devOrProductionJACS)
 
 
 @app.route('/search')
@@ -343,9 +356,14 @@ def load_configuration(config_name):
                     allStepName = []
                     for step in configObj["steps"][currentTemplate]:
                         allStepNames.append(step.name)
+        posted="false"
+        if request.method == 'POST':
+            posted="true"
+            if request.json:
+                doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
+            else:
+                time.sleep(0.25)
 
-        if request.method == 'POST' and request.json:
-            doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
 
         updateDBStatesAndTimes(imageProcessingDB)
         return render_template('index.html',
@@ -355,7 +373,8 @@ def load_configuration(config_name):
                                jobsJson=allJobsInJSON(imageProcessingDB),
                                config=configObj,
                                currentStep=currentStep,
-                               currentTemplate=currentTemplate
+                               currentTemplate=currentTemplate,
+                               posted=posted
                                )
 
         updateDBStatesAndTimes(imageProcessingDB)

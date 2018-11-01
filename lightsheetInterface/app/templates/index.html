@@ -1,23 +1,16 @@
 {% extends "branding.html" %}
 {% block content %}
-  {% if submissionStatus is defined and submissionStatus is not none %}
-    {% if submissionStatus == "success" %}
-      <div class="alert success">
-        <span class="closebtn">&times;</span> 
-        <strong>Job submission successful!</strong>
-      </div>
-    {% else %}
-      <div class="alert">
-        <span class="closebtn">&times;</span> 
-        <strong>Submission failed with error:</strong> {{ submissionStatus }}.
-      </div>
-    {% endif %}
-  {% endif %}
-
   {% include "pageTitle.html" ignore missing with context %}
 
   {% include "configurePipeline.html" ignore missing with context %}
-
+{% if posted=="true" %}
+    <div class="alert" style="background-color:#4CAF50">
+        <strong>Thank you for submitting a job! </strong>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endif %}
   <!--
     Accordeon control which contains the steps
   -->

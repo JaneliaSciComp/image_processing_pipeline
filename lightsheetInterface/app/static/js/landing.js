@@ -56,6 +56,7 @@ lightsheet.deleteEntries = function(){
       else {
         replaceURL = window.location.href;
       }
+      console.log("hey")
       window.location.replace(replaceURL)
   }
 }
