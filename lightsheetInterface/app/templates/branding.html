@@ -7,31 +7,33 @@
 {% block navbar %}
   <nav class="navbar navbar-light bg-light justify-content-start">
     <a class="navbar-brand navbar-brand-left" href="{{ url_for('index') }}"> Home </a>
-    <a class="navbar-brand navbar-brand-left" href="{{ url_for('job_status') }}"> Check Job Status </a>
-    <form class="form-inline" style="display: none;">
-      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn btn-outline-success my-2 my-sm-0" type="submit" style="display: none;">Search</button>
-    </form>
-    <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}" style="display: none;"> Advanced Search </a>
-    <a class="navbar-brand" href="{{ url_for('upload') }}"> Upload Pipeline</a>
-    <a class="navbar-brand" href="{{ url_for('upload_config') }}"> Upload Config</a>
-    <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
-    <a class="navbar-brand" href="{{ url_for('logout') }}"> Logout </a>
-    <div style="margin-left: 8em;">
-      <select class="selectpicker" id="pipeline-configs" data-live-search="true">
-        <option value=""></option>
-        {% if pConfig is defined %}
-          {% set current = request.path | replace("/load/", "", 1) %}
-          {% for p in pConfig %}
-            {% if current == p.name %}
-              <option selected value={{ p.name }}>{{ p.description }}</option>
-            {% else %}
-              <option value={{ p.name }}>{{ p.description }}</option>
-            {% endif %}
-          {% endfor %}
-        {% endif %}
-      </select>
-    </div>
+    {% if session.user_id %}
+      <a class="navbar-brand navbar-brand-left" href="{{ url_for('job_status') }}"> Check Job Status </a>
+      <form class="form-inline" style="display: none;">
+        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit" style="display: none;">Search</button>
+      </form>
+      <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}" style="display: none;"> Advanced Search </a>
+      <a class="navbar-brand" href="{{ url_for('upload') }}"> Upload Pipeline</a>
+      <a class="navbar-brand" href="{{ url_for('upload_config') }}"> Upload Config</a>
+      <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
+      <a class="navbar-brand" href="{{ url_for('logout') }}"> Logout </a>
+      <div style="margin-left: 8em;">
+        <select class="selectpicker" id="pipeline-configs" data-live-search="true">
+          <option value=""></option>
+          {% if pConfig is defined %}
+            {% set current = request.path | replace("/load/", "", 1) %}
+            {% for p in pConfig %}
+              {% if current == p.name %}
+                <option selected value={{ p.name }}>{{ p.description }}</option>
+              {% else %}
+                <option value={{ p.name }}>{{ p.description }}</option>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+    {% endif %}
   </nav>
 
   <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
