@@ -206,7 +206,7 @@ def getHeaders(forQuery=False):
         return {
             'content-type': 'application/json',
             'USERNAME': current_user.username if current_user.is_authenticated else "",
-            'RUNASUSER': current_user.username if current_user.is_authenticated else ""
+            #'RUNASUSER': current_user.username if current_user.is_authenticated else ""
         }
 
 
