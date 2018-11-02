@@ -12,5 +12,6 @@ lightsheetInterface/app/lightsheet-config.cfg
 lightsheetInterface/package-lock.json
 lightsheetInterface/upload
 lightsheetInterface/flightplan.js
+lightsheetInterface/env_config.py
 flightplan.js
 package-lock.json
