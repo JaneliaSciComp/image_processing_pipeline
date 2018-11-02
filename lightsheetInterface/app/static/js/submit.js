@@ -120,6 +120,13 @@ dataIo.customSubmit = function(){
     .catch(dataIo.handleError);
 };
 
+dataIo.reset = function(stepOrTemplateName, id){
+    var baseUrl = window.location.origin;
+    window.location.replace(baseUrl+stepOrTemplateName+"?lightsheetDB_id="+id+"&reparameterize=true");
+};
+
+
+
 dataIo.downloadSettings = async function(event,stepOrTemplateName){
   event.preventDefault();
   data = dataIo.grabData();

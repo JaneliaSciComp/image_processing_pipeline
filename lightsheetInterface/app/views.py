@@ -76,7 +76,7 @@ def step(step_name):
             submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
                                          None, stepOrTemplateName)
         else:
-            time.sleep(0.25)
+            time.sleep(0.5)
     if lightsheetDB_id:
         pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
@@ -114,7 +114,7 @@ def template(template_name):
                                          None,
                                          stepOrTemplateName)
         else:
-            time.sleep(0.25)
+            time.sleep(0.5)
     if lightsheetDB_id:
         pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
@@ -164,12 +164,12 @@ def job_status():
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
         submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
-        time.sleep(0.25)
+        time.sleep(0.5)
         updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
         jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
         if not stepOrTemplateName:
-            stepOrTemplateName = "load/previousjob"
+            stepOrTemplateName = "/load/previousjob"
     # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html',
                            parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
@@ -319,6 +319,7 @@ def load_configuration(config_name):
     currentTemplate = None
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
     global allStepNames
+    stepOrTemplateName=None
     allStepNames = []
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
@@ -360,10 +361,9 @@ def load_configuration(config_name):
         if request.method == 'POST':
             posted="true"
             if request.json:
-                doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, None)
+                doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
             else:
-                time.sleep(0.25)
-
+                time.sleep(0.5)
 
         updateDBStatesAndTimes(imageProcessingDB)
         return render_template('index.html',
@@ -414,6 +414,7 @@ def download_settings(unique_id):
         imageProcessingDB.downloadSettings.insert_one(reformattedData)
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
     else:
+        time.sleep(0.5)
         output = list(imageProcessingDB.downloadSettings.find({"unique_id": unique_id, 'username': current_user.username}, {"_id": 0, "unique_id": 0, "username":0}))
         output = output[0]
         name = output['name']

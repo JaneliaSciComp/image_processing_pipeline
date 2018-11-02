@@ -52,11 +52,13 @@ lightsheet.deleteEntries = function(){
       var urlParams = new URLSearchParams(window.location.search)
       if (job_ids_to_delete.indexOf(urlParams.get('lightsheetDB_id'))>=0) {//Then it was deleted and we need to reload an earlier verison of the page
           replaceURL = window.location.href.split('?')[0];
+          if (replaceURL.indexOf('load/previousjob')>=0){//Then we have to redirect to host
+              replaceURL = window.location.host;
+          }
       }
       else {
         replaceURL = window.location.href;
       }
-      console.log("hey")
       window.location.replace(replaceURL)
   }
 }

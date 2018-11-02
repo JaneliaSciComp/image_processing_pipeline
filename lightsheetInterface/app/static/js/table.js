@@ -66,11 +66,11 @@ $(document).ready(() => {
               namesIndex++;
             }
             else if(states[i]=='RESUME' && i<states.length-1){
-              names.push("<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button onclick=\"dataIo.thankYouMessage()\"> RESUME </button> </form>");
+              names.push("<form action=\"/job_status?lightsheetDB_id="+row.id+"\" method=\"post\" style=\"display:inline;\"> <button> RESUME </button> </form>");
             }
             else if(states[i]=='RESET'){
               var baseUrl = window.location.origin;
-              names.push("<form action=\""+baseUrl+ row.stepOrTemplateName + "?lightsheetDB_id="+row.id+"&reparameterize=true\" method=\"post\" style=\"display:inline;\"> <button> RESET </button> </form>");
+              names.push("<button onclick=\"dataIo.reset('"+row.stepOrTemplateName+ "','"+ row.id+"')\"> RESET </button> ");
             }
             else if(states[i]=="NOT YET QUEUED" || states[i]=="CREATED"){
               names.push("<font>" + namesProvided[namesIndex] +"</font>");

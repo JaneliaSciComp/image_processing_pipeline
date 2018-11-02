@@ -1,5 +1,6 @@
 {% extends "branding.html" %}
 {% block content %}
+<script src="{{ url_for('static', filename='js/submit.js') }}"></script>
 {% if posted=="true" %}
 <div class="alert" style="background-color:#4CAF50">
   <strong>Thank you for submitting a job! </strong>
@@ -63,7 +64,7 @@
               <td>{{ currentChildJob.creationTime }}</td>
               <td>{{ currentChildJob.endTime }}</td>
               <td>{{ currentChildJob.elapsedTime }}</td>
-              {% if "logAndErrorPath" in currentChildJob %}
+              {% if "_id" in currentChildJob %}
                <td><a href= {{devOrProductionJACS+":8080/job/"+currentChildJob._id}} target="_blank">Monitor Step</a></td>
               {% else %}
                 <td></td>
@@ -74,14 +75,14 @@
                 {% if loop.index<childJobInfo|length %}
                   <td align="center" colspan=6>
                   <form action={{"/job_status?lightsheetDB_id="+lightsheetDB_id }} method="post" style="display:inline;"> <button> RESUME </button> </form>
-                  <form action={{ baseURL }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                  <button onclick={{"dataIo.reset('"+stepOrTemplateName+ "','"+lightsheetDB_id+"')"}}> RESET </button>
                   </td>
                 {% endif %}
               </tr>
             {% elif currentChildJob.state not in ["SUCCESSFUL","RUNNING","NOT YET QUEUED","CREATED"] %}
               <tr>
                 <td align="center" colspan=6>
-                <form action={{ baseURL }}{{stepOrTemplateName+"?lightsheetDB_id="+lightsheetDB_id+"&reparameterize=true"}} method="post" style="display:inline;"> <button> RESET </button> </form>
+                  <button onclick={{"dataIo.reset('"+stepOrTemplateName+ "','"+lightsheetDB_id+"')"}}> RESET </button>
                 </td>
               </tr>
             {% endif %}
