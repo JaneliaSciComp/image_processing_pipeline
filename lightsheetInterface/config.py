@@ -24,7 +24,7 @@ MONGODB_SETTINGS = {
     'port': 27017
 }
 
-UPLOAD_FOLDER = '/groups/lightsheet/lightsheet/home/ackermand/upload' #'/opt/projects/lightsheet/upload'
+UPLOAD_FOLDER ='/groups/lightsheet/lightsheet/home/ackermand/upload' # '/opt/projects/lightsheet/upload'
 
 # Production auth service: http://api.int.janelia.org:8030/authenticate
 # Dev auth service: https://jacs-dev.int.janelia.org/SCSW/AuthenticationService/v1/authenticate
