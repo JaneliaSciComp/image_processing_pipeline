@@ -111,7 +111,7 @@ def mapJobsToDict(x):
 
 # get job information used by jquery datatable
 def allJobsInJSON(imageProcessingDB):
-    if current_user.username == "ackermand":
+    if current_user.username == "test":
         parentJobInfo = imageProcessingDB.jobs.find({}, {"_id": 1, "jobName": 1, "submissionAddress": 1, "creationDate": 1,
                                                                                          "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
                                                                                          "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})

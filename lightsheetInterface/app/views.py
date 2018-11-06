@@ -69,6 +69,7 @@ def step(step_name):
 
     submissionStatus = None
     pipelineSteps = None
+    jobName = None
     posted="false"
     if request.method == 'POST':
         posted="true"
@@ -78,7 +79,7 @@ def step(step_name):
         else:
             time.sleep(0.5)
     if lightsheetDB_id:
-        pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
@@ -91,7 +92,8 @@ def step(step_name):
                            submissionStatus=None,
                            currentStep=step_name,
                            currentTemplate=None,
-                           posted=posted)
+                           posted=posted,
+                           jobName = jobName)
 
 
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
@@ -106,6 +108,7 @@ def template(template_name):
 
     submissionStatus = None
     pipelineSteps = None
+    jobName = None
     posted="false"
     if request.method == 'POST':
         posted="true"
@@ -116,13 +119,14 @@ def template(template_name):
         else:
             time.sleep(0.5)
     if lightsheetDB_id:
-        pipelineSteps, loadStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
 
     global allStepNames
     allStepNames = []
     for step in configObj["steps"][template_name]:
         allStepNames.append(step.name)
     updateDBStatesAndTimes(imageProcessingDB)
+    print(jobName)
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            parentJobInfo=None,
@@ -130,7 +134,8 @@ def template(template_name):
                            jobsJson=allJobsInJSON(imageProcessingDB),
                            submissionStatus=submissionStatus,
                            currentTemplate=template_name,
-                           posted=posted)
+                           posted=posted,
+                           jobName=jobName)
 
 
 @app.route('/', methods=['GET'])
@@ -321,10 +326,10 @@ def load_configuration(config_name):
     global allStepNames
     stepOrTemplateName=None
     allStepNames = []
+    jobName = None
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
-            pipelineSteps, submissionStatus = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
-                                                                 configObj)
+            pipelineSteps, submissionStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,configObj)
             for stepName in pipelineSteps:
                 allStepNames.append(stepName)
         else:
@@ -374,7 +379,8 @@ def load_configuration(config_name):
                                config=configObj,
                                currentStep=currentStep,
                                currentTemplate=currentTemplate,
-                               posted=posted
+                               posted=posted,
+                               jobName = None
                                )
 
         updateDBStatesAndTimes(imageProcessingDB)

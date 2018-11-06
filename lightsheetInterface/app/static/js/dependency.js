@@ -12,6 +12,7 @@ dependency.applyGlobalParameter = function(){
       globalStepName = globalStepName[globalStepName.length-1]+"-";
       var outputStepName = Mustache.render("{{output}}", value_dependencies[t]).split("_");
       outputStepName = outputStepName[outputStepName.length-1];
+      var isLightsheet = lightsheetStepNames.indexOf(outputStepName)>=0;
       var globalId = Mustache.render(globalStepName+"{{input}}", value_dependencies[t]);
       var stepId = Mustache.render("{{step}}-{{output}}", value_dependencies[t]);
       var globalElem = document.getElementById(globalId);
@@ -29,22 +30,40 @@ dependency.applyGlobalParameter = function(){
           }
           currentVariableId = globalStepName+variables[i];
           needToFormat=false;
-          if (currentVariableId.includes("_string") && lightsheetStepNames.indexOf(outputStepName)>=0 ){ //Specific to lightsheet
+          if (currentVariableId.includes("_string") && isLightsheet ){ //Specific to lightsheet
             needToFormat=true;
             currentVariableId=currentVariableId.replace("_string","");
           }
-          if (currentVariableId.includes("cameras") || currentVariableId.includes("channels") && lightsheetStepNames.indexOf(outputStepName)>=0){//Specific to lightsheet
+          if (currentVariableId.includes("cameras") || currentVariableId.includes("channels") && isLightsheet){//Specific to lightsheet
             currentVariableValue = getCheckboxVal(globalStepName, currentVariableId);
           }
           else{//More generic handling of global params, ie, not specific to Lightsheet
             var globalElem = document.getElementById(currentVariableId);
             var globalInputs = globalElem.getElementsByTagName('input');
             var currentVariableValue = globalInputs[0].value;
-            if (globalId.includes("useOutputFolderForClusterPT") && lightsheetStepNames.indexOf(outputStepName)>=0 ){ //Specific to lightsheet
-                  if (currentVariableId.includes("inputFolder")){
-                    currentVariableValue = globalInputs[0].value.match(/([^\/]*)\/*$/)[1]; //get last folder
-                  }
-              }
+            checkboxId = globalId.split("-")[1];
+            if (globalId.includes("useOutputFolderForClusterPT") && isLightsheet ) { //Specific to lightsheet
+                if (document.getElementById(checkboxId).checked) {
+                    if (currentVariableId.includes("inputFolder")) {
+                        currentVariableValue = "/"+globalInputs[0].value.match(/([^\/]*)\/*$/)[1]; //get last folder
+                    }
+                }
+                else{
+                    currentVariableValue=""
+                }
+            }
+            else if (isLightsheet) {
+                if (currentVariableId.includes("inputFolder")) {//If useOutputFolderForClusterPT checkbox is checked need to do this so that the correct directory is used
+                    checkboxId = document.querySelector('[id*="useOutputFolderForClusterPT"]').id.split("-")[1];
+                    if (document.getElementById(checkboxId).checked) {
+                        outputFolderId = "outputFolder_"+globalStepName.slice(0,-1);
+                        inputFolderId = "inputFolder_"+globalStepName.slice(0,-1);
+                        outputFolder = document.getElementById(outputFolderId).value;
+                        inputFolderLastDir = document.getElementById(inputFolderId).value.match(/([^\/]*)\/*$/)[1]
+                        currentVariableValue = outputFolder + "/" + inputFolderLastDir;
+                    }
+                }
+            }
           }
           if(needToFormat){
             var prefix;

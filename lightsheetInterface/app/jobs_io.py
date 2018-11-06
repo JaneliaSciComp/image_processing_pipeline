@@ -41,7 +41,6 @@ def reformatDataToPost(postedData, forSubmission=True):
             for parameterKey in sortedParameters:
                 # Find checkboxes and deal with them separately
                 if 'checkbox' in parameterKey:
-                    print(parameterKey)
                     checkboxes.append(parameterKey);
                 paramType = None
                 range = False
@@ -287,7 +286,10 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
         if errorStepIndex:
             for i in range(errorStepIndex):
                 succededButLatterStepFailed.append(jobData[i]["name"])
+    jobName = None
     if reparameterize == "true" and imageProcessingDB_id:
+        jobName = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},{"_id":0, "jobName":1}))
+        jobName = jobName[0]["jobName"]
         reparameterize = True
         remainingStepNames = globalParametersAndRemainingStepNames[0]["remainingStepNames"]
         if not ableToReparameterize:
@@ -324,4 +326,4 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
     elif type(jobData) is dict:
         loadStatus = 'Job cannot be loaded.'
 
-    return pipelineSteps, loadStatus
+    return pipelineSteps, loadStatus, jobName
