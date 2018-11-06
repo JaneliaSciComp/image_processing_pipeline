@@ -96,8 +96,11 @@ dataIo.grabData = function(){
             data[step][p][val.name]  = radioButtonValue;
           }
           else if (val.type == 'checkbox') { // For checkbox parameters, only add value if it's true
-            if (val.value !== undefined && val.value !== false && val.value !== 'false'){
+            if (val.checked !== undefined && val.checked !== false && val.checked !== 'false'){
               data[step][p][val.id] = 'True';
+            }
+            else{
+                data[step][p][val.id] = 'False';
             }
           }
           else if (val.value) {

@@ -29,17 +29,22 @@ dependency.applyGlobalParameter = function(){
           }
           currentVariableId = globalStepName+variables[i];
           needToFormat=false;
-          if (currentVariableId.includes("_string") && lightsheetStepNames.indexOf(outputStepName)>0 ){ //Specific to lightsheet
+          if (currentVariableId.includes("_string") && lightsheetStepNames.indexOf(outputStepName)>=0 ){ //Specific to lightsheet
             needToFormat=true;
             currentVariableId=currentVariableId.replace("_string","");
           }
-          if (currentVariableId.includes("cameras") || currentVariableId.includes("channels") && lightsheetStepNames.indexOf(outputStepName)>0){//Specific to lightsheet
+          if (currentVariableId.includes("cameras") || currentVariableId.includes("channels") && lightsheetStepNames.indexOf(outputStepName)>=0){//Specific to lightsheet
             currentVariableValue = getCheckboxVal(globalStepName, currentVariableId);
           }
           else{//More generic handling of global params, ie, not specific to Lightsheet
             var globalElem = document.getElementById(currentVariableId);
             var globalInputs = globalElem.getElementsByTagName('input');
             var currentVariableValue = globalInputs[0].value;
+            if (globalId.includes("useOutputFolderForClusterPT") && lightsheetStepNames.indexOf(outputStepName)>=0 ){ //Specific to lightsheet
+                  if (currentVariableId.includes("inputFolder")){
+                    currentVariableValue = globalInputs[0].value.match(/([^\/]*)\/*$/)[1]; //get last folder
+                  }
+              }
           }
           if(needToFormat){
             var prefix;

@@ -32,9 +32,13 @@
         {{ displayName| trimend }}
       </span>
       <div class="input-group-prepend lightsheet-fields">
-        {% if meta.formatting == 'F' %}
+          {% if meta.formatting == 'F' %}
           {% if value.boolean == true %}
-            <input type="checkbox" class="flag-parameter" {{ addAttribute }} step="any" checked id="{{ param.name }}">
+            {% if data=='False' %}
+                <input type="checkbox" class="flag-parameter" {{ addAttribute }} step="any" id="{{ param.name }}">
+            {% else %}
+                <input type="checkbox" class="flag-parameter" {{ addAttribute }} step="any" checked id="{{ param.name }}">
+            {% endif %}
           {% else %}
             <input type="checkbox" class="flag-parameter" {{ addAttribute }} disabled step="any" id="{{ param.name }}">
           {% endif %}

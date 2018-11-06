@@ -41,6 +41,7 @@ def reformatDataToPost(postedData, forSubmission=True):
             for parameterKey in sortedParameters:
                 # Find checkboxes and deal with them separately
                 if 'checkbox' in parameterKey:
+                    print(parameterKey)
                     checkboxes.append(parameterKey);
                 paramType = None
                 range = False
