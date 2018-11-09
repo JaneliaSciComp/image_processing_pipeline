@@ -30,14 +30,21 @@ if hasattr(settings, 'outputDirectoryBase'):
 global_error = None
 
 # Mongo client
-mongosettings = 'mongodb://' + app.config['MONGODB_SETTINGS']['host'] + ':' + str(
-    app.config['MONGODB_SETTINGS']['port']) + '/'
-client = MongoClient(mongosettings)
+mongo_uri = app.config['MONGODB_HOST']
+mongo_user = app.config.get('MONGODB_USERNAME')
+mongo_password = app.config.get('MONGODB_PASSWORD')
+
+if mongo_user:
+    client = MongoClient(mongo_uri, username=mongo_user, password=mongo_password)
+else:
+    client = MongoClient(mongo_uri)
+
 # imageProcessingDB is the database containing lightsheet job information and parameters
 imageProcessingDB = client.lightsheet
 
-#All step names for current config
+# All step names for current config
 allStepNames = []
+
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -49,7 +56,7 @@ def favicon():
                                'favicon.ico')
 
 
-@app.route('/logout', methods=['GET','POST'])
+@app.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     auth_service = create_auth_service()
@@ -70,16 +77,18 @@ def step(step_name):
     submissionStatus = None
     pipelineSteps = None
     jobName = None
-    posted="false"
+    posted = "false"
     if request.method == 'POST':
-        posted="true"
+        posted = "true"
         if request.json:
-            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
+            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
+                                         lightsheetDB_id,
                                          None, stepOrTemplateName)
         else:
             time.sleep(0.5)
     if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
+                                                                configObj)
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
@@ -93,7 +102,7 @@ def step(step_name):
                            currentStep=step_name,
                            currentTemplate=None,
                            posted=posted,
-                           jobName = jobName)
+                           jobName=jobName)
 
 
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
@@ -109,22 +118,26 @@ def template(template_name):
     submissionStatus = None
     pipelineSteps = None
     jobName = None
-    posted="false"
+    posted = "false"
     if request.method == 'POST':
-        posted="true"
+        posted = "true"
         if request.json:
-            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id,
+            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
+                                         lightsheetDB_id,
                                          None,
                                          stepOrTemplateName)
         else:
             time.sleep(0.5)
     if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
+                                                                configObj)
 
     global allStepNames
     allStepNames = []
-    for step in configObj["steps"][template_name]:
-        allStepNames.append(step.name)
+    if configObj.get('steps'):
+        # only populate step names if steps is set
+        for step in configObj["steps"][template_name]:
+            allStepNames.append(step.name)
     updateDBStatesAndTimes(imageProcessingDB)
     print(jobName)
     return render_template('index.html',
@@ -155,9 +168,9 @@ def job_status():
     childJobInfo = []
     jobType = []
     stepOrTemplateName = []
-    posted="false"
+    posted = "false"
     if request.method == 'POST':
-        posted="true"
+        posted = "true"
         pausedJobInformation = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)}))
         pausedJobInformation = pausedJobInformation[0]
         pausedStates = [step['parameters']['pause'] if 'pause' in step['parameters'] else 0 for step in
@@ -324,12 +337,13 @@ def load_configuration(config_name):
     currentTemplate = None
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
     global allStepNames
-    stepOrTemplateName=None
+    stepOrTemplateName = None
     allStepNames = []
     jobName = None
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
-            pipelineSteps, submissionStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,configObj)
+            pipelineSteps, submissionStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id,
+                                                                          reparameterize, configObj)
             for stepName in pipelineSteps:
                 allStepNames.append(stepName)
         else:
@@ -356,17 +370,18 @@ def load_configuration(config_name):
                 stepOrTemplateName = content["stepOrTemplateName"]
                 if stepOrTemplateName.find("Step: ", 0, 6) != -1:
                     currentStep = stepOrTemplateName[6:]
-                    allStepName=currentStep
+                    allStepName = currentStep
                 else:
                     currentTemplate = stepOrTemplateName[10:]
                     allStepName = []
                     for step in configObj["steps"][currentTemplate]:
                         allStepNames.append(step.name)
-        posted="false"
+        posted = "false"
         if request.method == 'POST':
-            posted="true"
+            posted = "true"
             if request.json:
-                doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None, stepOrTemplateName)
+                doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
+                          stepOrTemplateName)
             else:
                 time.sleep(0.5)
 
@@ -380,7 +395,7 @@ def load_configuration(config_name):
                                currentStep=currentStep,
                                currentTemplate=currentTemplate,
                                posted=posted,
-                               jobName = None
+                               jobName=None
                                )
 
         updateDBStatesAndTimes(imageProcessingDB)
@@ -421,24 +436,26 @@ def download_settings(unique_id):
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
     else:
         time.sleep(0.5)
-        output = list(imageProcessingDB.downloadSettings.find({"unique_id": unique_id, 'username': current_user.username}, {"_id": 0, "unique_id": 0, "username":0}))
+        output = list(
+            imageProcessingDB.downloadSettings.find({"unique_id": unique_id, 'username': current_user.username},
+                                                    {"_id": 0, "unique_id": 0, "username": 0}))
         output = output[0]
         name = output['name']
         imageProcessingDB.downloadSettings.delete_many({'username': current_user.username})
-        #imageProcessingDB.downloadSettings.delete_one({"unique_id": unique_id})
+        # imageProcessingDB.downloadSettings.delete_one({"unique_id": unique_id})
         return Response(json.dumps(OrderedDict(output), indent=2, separators=(',', ': ')),
                         mimetype='application/json',
                         headers={"Content-Disposition": "attachment;filename=" + name + ".json"})
 
+
 @app.route('/delete_entries/', methods=['POST'])
 @login_required
 def delete_entries():
-    ids_to_delete=request.json
+    ids_to_delete = request.json
     for i, id_to_delete in enumerate(ids_to_delete):
-        ids_to_delete[i]=ObjectId(id_to_delete)
-    imageProcessingDB.jobs.delete_many({"username": current_user.username, "_id" : {"$in": ids_to_delete}})
+        ids_to_delete[i] = ObjectId(id_to_delete)
+    imageProcessingDB.jobs.delete_many({"username": current_user.username, "_id": {"$in": ids_to_delete}})
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
 
 
 def createDependencyResults(dependencies):

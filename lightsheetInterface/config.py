@@ -18,13 +18,16 @@ DEBUG_TB_MONGO = {
 
 LOGIN_PAGE = '.login_form'
 
-MONGODB_SETTINGS = {
-    'db': 'lightsheet',
-    'host': '10.40.3.155',
-    'port': 27036
-}
+# These settings are needed exactly like this by flask mongo engine
+# The host should always be mongodb://<hostname>:<port>/
+# For localhost use 'mongodb://localhost:27017/lightsheet'
+# For a replica set use something like:
+# 'mongodb://mongodb4:27029,mongodb4:27030,mongodb4:27031/?replicaSet=rsLightsheet&authSource=lightsheet'
+MONGODB_HOST = 'mongodb://localhost:27017/lightsheet'
+MONGODB_USERNAME = ''
+MONGODB_PASSWORD = ''
 
-UPLOAD_FOLDER = '/groups/lightsheet/lightsheet/home/ackermand/upload' #'/opt/projects/lightsheet/upload'
+UPLOAD_FOLDER = '/groups/lightsheet/lightsheet/home/ackermand/upload'  # '/opt/projects/lightsheet/upload'
 
 # Production auth service: http://api.int.janelia.org:8030/authenticate
 # Dev auth service: https://jacs-dev.int.janelia.org/SCSW/AuthenticationService/v1/authenticate
