@@ -3,7 +3,7 @@ var plan = require('flightplan');
 var config = {
   srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the remote server
   projectDir: '/opt/projects/lightsheet',  // location on the remote server
-  pythonPath: '/usr/local/bin/python3.6',
+  pythonPath: '/usr/bin/python3',
   keepReleases: 3,
   username: 'kazimiersa',
   root: 'root'
@@ -13,20 +13,27 @@ plan.target('local', {
   host: 'localhost',
   username: config.username,
   agent: process.env.SSH_AUTH_SOCK
-},
-{
-  // Shouldn't be overridden, so please don't try.
-  gitCheck: true
+  },{
+    // Shouldn't be overridden, so please don't try.
+    gitCheck: true
 });
 
-plan.target('production', {
+plan.target('staging', {
   host: 'lightsheet',
   username: config.username,
   agent: process.env.SSH_AUTH_SOCK
-},
-{
-  // Shouldn't be overridden, so please don't try.
-  gitCheck: true
+  },{
+    // Shouldn't be overridden, so please don't try.
+    gitCheck: true
+});
+
+plan.target('production', {
+  host: 'pipeline',
+  username: config.username,
+  agent: process.env.SSH_AUTH_SOCK
+  },{
+    // Shouldn't be overridden, so please don't try.
+    gitCheck: true
 });
 
 plan.local('version', function(local) {
@@ -100,27 +107,22 @@ plan.remote('deploy', function(remote) {
 plan.remote('deploy', function(remote) {
   remote.log('Install the requirements');
   // use pip9 due to bug reported here: https://stackoverflow.com/questions/49854465/pythonpip-install-bson-error
-  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -U "pip>=9,<10"; pip install -r requirements.txt');
+  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -U pip; pip install -r requirements.txt --no-cache-dir');
 });
 
 plan.remote('deploy', function(remote) {
   remote.log('Copy over settings.py');
-  remote.exec('cp ' + config.projectDir + '/settings.py ' + config.projectDir + '/current/lightsheetInterface/app/');
+  remote.exec('cp ' + config.projectDir + '/settings.py ' + config.projectDir + '/current/app/');
 });
 
 plan.remote('deploy', function(remote) {
   remote.log('Copy over lightsheet-config.cfg');
-  remote.exec('cp ' + config.projectDir + '/lightsheet-config.cfg ' + config.projectDir + '/current/lightsheetInterface/app/');
+  remote.exec('cp ' + config.projectDir + '/lightsheet-config.cfg ' + config.projectDir + '/current/app/');
 });
 
 plan.remote('deploy', function(remote) {
   remote.log('Copy over env_config.py');
-  remote.exec('cp ' + config.projectDir + '/env_config.py ' + config.projectDir + '/current/lightsheetInterface/');
-});
-
-plan.remote('deploy', function(remote) {
-  remote.log('Copy over config.py');
-  remote.exec('cp ' + config.projectDir + '/config.py ' + config.projectDir + '/current/lightsheetInterface/');
+  remote.exec('cp ' + config.projectDir + '/env_config.py ' + config.projectDir + '/current/');
 });
 
 plan.remote('deploy', function(remote) {
