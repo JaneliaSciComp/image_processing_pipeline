@@ -118,6 +118,24 @@ $ sudo systemctl start lightsheet
 $ sudo systemctl restart nginx
 ```
 
+## Production
+Supervisor config file is located in
+
+```bash
+/etc/supervisor/conf.d/pipeline.conf
+```
+
+After making changes to the supervisor config file, reload the configuration with
+
+```bash
+sudo supervisorctl reread; sudo supervisorctl update;
+```
+
+Restart the application with
+```bash
+sudo supervisorctl restart 'pipeline:'
+```
+
 ## Access the database
 
 We use MongoDB to store the data. To open a Mongo cmd, type
