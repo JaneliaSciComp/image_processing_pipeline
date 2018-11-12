@@ -126,7 +126,6 @@ def template(template_name):
     for step in configObj["steps"][template_name]:
         allStepNames.append(step.name)
     updateDBStatesAndTimes(imageProcessingDB)
-    print(jobName)
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            parentJobInfo=None,
@@ -156,6 +155,7 @@ def job_status():
     jobType = []
     stepOrTemplateName = []
     posted="false"
+    remainingStepNames = None
     if request.method == 'POST':
         posted="true"
         pausedJobInformation = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)}))
@@ -172,7 +172,7 @@ def job_status():
         time.sleep(0.5)
         updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
-        jobType, stepOrTemplateName, childJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
+        jobType, stepOrTemplateName, childJobInfo, remainingStepNames = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
         if not stepOrTemplateName:
             stepOrTemplateName = "/load/previousjob"
     # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
@@ -184,7 +184,8 @@ def job_status():
                            submissionStatus=submissionStatus,
                            jobType=jobType,
                            posted=posted,
-                           devOrProductionJACS=settings.devOrProductionJACS)
+                           devOrProductionJACS=settings.devOrProductionJACS,
+                           remainingStepNames = remainingStepNames)
 
 
 @app.route('/search')

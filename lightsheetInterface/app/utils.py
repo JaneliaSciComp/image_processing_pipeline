@@ -20,7 +20,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
         _id = ObjectId(_id)
 
     if parentOrChild == "parent":
-        parentJobInfo = list(imageProcessingDB.jobs.find({"username": current_user.username}, {"configAddress": 1, "state": 1, "jobName": 1,
+        parentJobInfo = list(imageProcessingDB.jobs.find({"username": current_user.username}, {"configAddress": 1, "state": 1, "jobName": 1, "remainingStepNames":1,
                                                               "creationDate": 1, "jacs_id": 1, "steps.name": 1,
                                                               "steps.state": 1}))
         for currentJobInfo in parentJobInfo:
@@ -40,11 +40,12 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
     elif parentOrChild == "child" and _id:
         childJobInfo = []
         tempList = list(imageProcessingDB.jobs.find({"username": current_user.username, "_id": _id},
-                                                    {"stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
+                                                    {"remainingStepNames":1,"stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
                                                      "steps.creationTime": 1, "steps.endTime": 1,
                                                      "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
                                                      "steps.parameters.pause": 1, "steps._id":1}))
         tempList = tempList[0]
+        remainingStepNames = tempList["remainingStepNames"]
         for step in tempList["steps"]:
             stepTemplate = next((stepTemplate for stepTemplate in allSteps if stepTemplate.name == step["name"]), None)
             if stepTemplate == None or stepTemplate.submit:  # None implies a deprecated name
@@ -55,7 +56,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
         else:
             stepOrTemplateName = ''
             stepOrTemplateNamePath = ''
-        return stepOrTemplateName, stepOrTemplateNamePath, childJobInfo
+        return stepOrTemplateName, stepOrTemplateNamePath, childJobInfo, remainingStepNames
     else:
         return 404
 
@@ -100,9 +101,11 @@ def mapJobsToDict(x):
             result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
             result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
             if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED"]:
-                result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET' + ','
+                if step["name"] in x['remainingStepNames']:
+                    result['selectedSteps']['states']=result['selectedSteps']['states']+ 'RESET,'
             elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state'] == "SUCCESSFUL":
-                result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET' + ','
+                if step["name"] in x['remainingStepNames']:
+                    result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET,'
 
     result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
     result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
@@ -116,7 +119,7 @@ def allJobsInJSON(imageProcessingDB):
     #                                                                                     "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
     #                                                                                     "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
     #else:
-    parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username}, {"_id": 1, "jobName": 1, "submissionAddress": 1, "creationDate": 1,
+    parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
                                                 "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
                                                 "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
     return list(map(mapJobsToDict, parentJobInfo))
