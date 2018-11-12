@@ -2,6 +2,8 @@
 
 This repo contains a python flask application to configure step parameters for pipeline jobs.
 
+### Development
+
 Make sure, your python is version 3.5 or higher and your pip is using this correct python:
 
 ```bash
@@ -116,6 +118,24 @@ $ sudo systemctl start lightsheet
 
 ```bash
 $ sudo systemctl restart nginx
+```
+
+## Production
+Supervisor config file is located in
+
+```bash
+/etc/supervisor/conf.d/pipeline.conf
+```
+
+After making changes to the supervisor config file, reload the configuration with
+
+```bash
+sudo supervisorctl reread; sudo supervisorctl update;
+```
+
+Restart the application with
+```bash
+sudo supervisorctl restart 'pipeline:'
 ```
 
 ## Access the database

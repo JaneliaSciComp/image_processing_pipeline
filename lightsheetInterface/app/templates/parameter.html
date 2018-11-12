@@ -23,9 +23,9 @@
 {% endif %}
 
 {% if value.description is not none %}
-  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+  <div class="input-group input-group-sm mb-2" id="{{ step.name }}-{{ param.name }}">
 {% else %}
-  <div class="input-group input-group-sm mb-3" id="{{ step.name }}-{{ param.name }}">
+  <div class="input-group input-group-sm mb-2" id="{{ step.name }}-{{ param.name }}">
 {% endif %}
   <div class="input-group-prepend lightsheet-area" title="{{ value.description }}">
       <span class="{{ spanClass }}" value="">

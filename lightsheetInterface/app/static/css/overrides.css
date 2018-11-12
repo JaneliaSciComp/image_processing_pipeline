@@ -82,7 +82,9 @@ fieldset {
 }
 
 .navbar-brand {
-  padding-left: 3em;
+  padding-right: 2em;
+  padding-left: 1em;
+  font-size: 1em;
 }
 
 .field-left {
@@ -99,6 +101,11 @@ fieldset {
 
 .step-name {
   color: black;
+}
+
+.step-checkbox {
+  margin-top: -0.29em;
+  margin-right: 0.5em;
 }
 
 .status-error {
@@ -274,3 +281,4 @@ select .template-dropdown {
 .job-select {
   min-width: 30em;
 }
+
