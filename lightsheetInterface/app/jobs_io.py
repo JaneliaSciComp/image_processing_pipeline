@@ -148,8 +148,7 @@ def reformatDataToPost(postedData, forSubmission=True):
             allSteps = Step.objects.all().order_by('order')
             if allSteps:
                 for step in allSteps:
-                    currentStepDictionary = next(
-                        (dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
+                    currentStepDictionary = next((dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
                     if currentStepDictionary:
                         currentStepDictionary["codeLocation"]= step.codeLocation if step.codeLocation else ""
                         if step.steptype == "Sp":
@@ -230,9 +229,7 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
 
         # delete the jobName entry from the dictionary so that the other entries are all steps
         jobSteps = list(formJson.keys())
-
         processedData, remainingStepNames = reformatDataToPost(formJson)
-
         # Prepare the db data
         dataToPostToDB = {
             "jobName": jobName,
@@ -256,9 +253,14 @@ def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, im
                 'remainingStepNames')}
             imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id}, {"$set": subDict})
             for currentStepDictionary in processedData:
-                imageProcessingDB.jobs.update_one(
+                update_output = imageProcessingDB.jobs.update_one(
                     {"_id": imageProcessingDB_id, "steps.name": currentStepDictionary["name"]},
                     {"$set": {"steps.$": currentStepDictionary}})
+                if update_output.matched_count==0: #Then new step
+                    imageProcessingDB.jobs.update_one(
+                        {"_id": imageProcessingDB_id},
+                        {"$push": {"steps": currentStepDictionary}})
+
         else:
             imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
 

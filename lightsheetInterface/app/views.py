@@ -8,7 +8,6 @@ from pymongo import MongoClient
 from app import app
 from app.authservice import create_auth_service
 from app.forms import LoginForm
-from app.settings import Settings
 from app.utils import *
 from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loadPreexistingJob
 from app.models import Dependency, Configuration
@@ -16,23 +15,16 @@ from bson.objectid import ObjectId
 from collections import OrderedDict
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
-settings = Settings()
 
-# Prefix for all default pipeline step json file names
-defaultFileBase = None
-if hasattr(settings, 'defaultFileBase'):
-    defaultFileBase = settings.defaultFileBase
-
-# Location to store json files
-outputDirectoryBase = None
-if hasattr(settings, 'outputDirectoryBase'):
-    outputDirectoryBase = settings.outputDirectoryBase
 global_error = None
 
 # Mongo client
 mongo_uri = app.config['MONGODB_HOST']
 mongo_user = app.config.get('MONGODB_USERNAME')
 mongo_password = app.config.get('MONGODB_PASSWORD')
+
+# JACS server
+jacs_host = app.config.get('JACS_HOST')
 
 if mongo_user:
     client = MongoClient(mongo_uri, username=mongo_user, password=mongo_password)
@@ -197,7 +189,7 @@ def job_status():
                            submissionStatus=submissionStatus,
                            jobType=jobType,
                            posted=posted,
-                           devOrProductionJACS=settings.devOrProductionJACS,
+                           jacs_host=jacs_host,
                            remainingStepNames = remainingStepNames)
 
 

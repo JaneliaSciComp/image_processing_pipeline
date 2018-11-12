@@ -6,11 +6,12 @@ from datetime import datetime
 from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
+from app import app
 from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
-from app.settings import Settings
 from collections import OrderedDict
 
-settings = Settings()
+# JACS server
+jacs_host = app.config.get('JACS_HOST')
 
 
 # collect the information about existing job used by the job_status page
@@ -307,14 +308,14 @@ def updateDBStatesAndTimes(imageProcessingDB):
                     jacs_ids = [parentJobInfoFromDB["jacs_id"]]
 
                 for jacs_id in jacs_ids:
-                    parentJobInfoFromJACS = requests.get(settings.devOrProductionJACS + ':9000/api/rest-v2/services/',
+                    parentJobInfoFromJACS = requests.get(jacs_host + ':9000/api/rest-v2/services/',
                                                          params={'service-id': jacs_id},
                                                          headers=getHeaders(True)).json()
                     if parentJobInfoFromJACS and len(parentJobInfoFromJACS["resultList"]) > 0:
                         parentJobInfoFromJACS = parentJobInfoFromJACS["resultList"][0]
                         imageProcessingDB.jobs.update_one({"_id": parentJobInfoFromDB["_id"]},
                                                           {"$set": {"state": parentJobInfoFromJACS["state"]}})
-                        allChildJobInfoFromJACS = requests.get(settings.devOrProductionJACS + ':9000/api/rest-v2/services/',
+                        allChildJobInfoFromJACS = requests.get(jacs_host + ':9000/api/rest-v2/services/',
                                                                params={'parent-id': jacs_id},
                                                                headers=getHeaders(True)).json()
                         allChildJobInfoFromJACS = allChildJobInfoFromJACS["resultList"]
@@ -464,12 +465,12 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
 
     postBody = {"ownerKey": "user:"+current_user.username if current_user.is_authenticated else ""}
     if remainingSteps[0]['type'] == "LightSheet":
-        postUrl = settings.devOrProductionJACS + ':9000/api/rest-v2/async-services/lightsheetPipeline'
+        postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'
         postBody['processingLocation']= 'LSF_JAVA'
         postBody['args']= ['-configAddress', configAddress]
     else:
         pipelineServices = []
-        postUrl = settings.devOrProductionJACS + ':9000/api/rest-v2/async-services/pipeline'
+        postUrl = jacs_host + ':9000/api/rest-v2/async-services/pipeline'
         for step in remainingSteps:
             if step["type"]=="Sparks":
                 stepPostBody={
