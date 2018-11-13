@@ -139,8 +139,8 @@ dataIo.downloadSettings = async function(event,stepOrTemplateName){
   var numMilliseconds = d.getTime().toString();
   dataIo.fetch(baseUrl+'/download_settings/'+numMilliseconds+'?stepOrTemplateName='+stepOrTemplateName, 'POST', data)
     .catch(dataIo.handleError); //Post to database
-  await sleep(250)//Hacky way to wait for post to finish
-  window.open(baseUrl+'/download_settings/'+numMilliseconds) //Download from database 
+  await sleep(250);//Hacky way to wait for post to finishnew
+    window.open(baseUrl+'/download_settings/'+numMilliseconds) //Download from database
   /*dataIo.fetch(baseUrl+'/downloadSettings/'+numMilliseconds, 'DELETE', data) //Delete from database
     .catch(dataIo.handleError);*/
   /*dataIo.fetch(baseUrl+'/downloadSettings/1539810304153', 'GET')

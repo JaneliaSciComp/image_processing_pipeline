@@ -162,15 +162,15 @@ def job_status():
     posted="false"
     remainingStepNames = None
     if request.method == 'POST':
+        #Find pause that is in remaining steps
         posted = "true"
         pausedJobInformation = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)}))
         pausedJobInformation = pausedJobInformation[0]
-        pausedStates = [step['parameters']['pause'] if 'pause' in step['parameters'] else 0 for step in
-                        pausedJobInformation["steps"]]
+        # Make sure that we pop off all steps that have completed and been approved, ie, ones that are no longer in remaining
+        pausedStates = [step['parameters']['pause'] if ('pause' in step['parameters'] and step["name"] in pausedJobInformation["remainingStepNames"]) else 0 for step in pausedJobInformation["steps"]]
         pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
-        pausedJobInformation["steps"][pausedStepIndex]["parameters"]["pause"] = 0
         while pausedJobInformation["remainingStepNames"][0] != pausedJobInformation["steps"][pausedStepIndex]["name"]:
-            pausedJobInformation["remainingStepNames"].pop(0)
+             pausedJobInformation["remainingStepNames"].pop(0)
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
         submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
