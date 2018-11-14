@@ -71,7 +71,7 @@
               {% endif %}
             </tr>
             {% if currentChildJob.parameters.pause and currentChildJob.state=="SUCCESSFUL"%}
-              {% if loop.index<childJobInfo|length and currentChildJob.name in remainingStepNames %}
+              {% if loop.index<=childJobInfo|length and currentChildJob.name in remainingStepNames %}
                 <tr>
                   <td align="center" colspan=6>
                   <form action={{"/job_status?lightsheetDB_id="+lightsheetDB_id }} method="post" style="display:inline;"> <button> RESUME </button> </form>
@@ -79,7 +79,7 @@
                   </td>
                </tr>
               {% endif %}
-             {% elif currentChildJob.state not in ["SUCCESSFUL","RUNNING","NOT YET QUEUED","CREATED"] and currentChildJob.name in remainingStepNames  %}
+             {% elif currentChildJob.state not in ["SUCCESSFUL","RUNNING","NOT YET QUEUED","CREATED","DISPATCHED"] and currentChildJob.name in remainingStepNames  %}
               <tr>
                 <td align="center" colspan=6>
                   <button onclick={{"dataIo.reset('"+stepOrTemplateName+ "','"+lightsheetDB_id+"')"}}> RESET </button>

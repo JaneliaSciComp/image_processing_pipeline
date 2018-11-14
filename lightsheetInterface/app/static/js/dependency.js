@@ -104,7 +104,7 @@ dependency.applyGlobalParameter = function(){
         $(stepInputForChanging).change();
       }
       else {
-        // We're dealing with array or range parameters
+        // We're dealing with array or range parameters, or it is just taking the same exact value
         if (globalElem && stepElem) {
           var globalInputs = globalElem.getElementsByTagName('input');
           var stepInputs = stepElem.getElementsByTagName('input');
@@ -162,6 +162,8 @@ dependency.applyGlobalParameter = function(){
           }
           else {
             stepInputs[0].value = globalInputs[0].value;
+            var stepInputForChanging = Mustache.render("#{{output}}", value_dependencies[t]);
+            $(stepInputForChanging).change(); //Mark it is changed
           }
         }
       }

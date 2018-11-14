@@ -72,7 +72,7 @@ $(document).ready(() => {
               var baseUrl = window.location.origin;
               names.push("<button onclick=\"dataIo.reset('"+row.stepOrTemplateName+ "','"+ row.id+"')\"> RESET </button> ");
             }
-            else if(states[i]=="NOT YET QUEUED" || states[i]=="CREATED"){
+            else if(states[i]=="NOT YET QUEUED" || states[i]=="CREATED" || states[i]=="DISPATCHED"){
               names.push("<font>" + namesProvided[namesIndex] +"</font>");
               namesIndex++;
             }

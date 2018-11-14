@@ -101,7 +101,7 @@ def mapJobsToDict(x):
             result['selectedSteps']['submissionAddress'] = result['submissionAddress']
             result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
             result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
-            if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED"]:
+            if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED", "DISPATCHED"]:
                 if step["name"] in x['remainingStepNames']:
                     result['selectedSteps']['states']=result['selectedSteps']['states']+ 'RESET,'
             elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state'] == "SUCCESSFUL":
@@ -298,7 +298,7 @@ def updateDBStatesAndTimes(imageProcessingDB):
     if current_user.is_authenticated:
         allJobInfoFromDB = list(imageProcessingDB.jobs.find(
                             {"username": current_user.username,
-                             "state": {"$in": ["NOT YET QUEUED","RUNNING", "CREATED","QUEUED"]}}))
+                             "state": {"$in": ["NOT YET QUEUED","RUNNING", "CREATED","QUEUED","DISPATCHED"]}}))
         for parentJobInfoFromDB in allJobInfoFromDB:
             if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
                 # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
@@ -335,7 +335,7 @@ def updateDBStatesAndTimes(imageProcessingDB):
                                                                           {"$set": {
                                                                               "steps.$.state": currentChildJobInfoFromJACS["state"],
                                                                               "steps.$.creationTime": creationTime.strftime("%Y-%m-%d %H:%M:%S"),
-                                                                              "steps.$.elapsedTime": str(datetime.now(eastern) - creationTime),
+                                                                              "steps.$.elapsedTime": str(datetime.now(eastern).replace(microsecond=0) - creationTime),
                                                                               "steps.$.logAndErrorPath": outputPath,
                                                                               "steps.$._id": currentChildJobInfoFromJACS["_id"]
                                                                               }})
@@ -464,6 +464,7 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
             remainingSteps.append(step)
 
     postBody = {"ownerKey": "user:"+current_user.username if current_user.is_authenticated else ""}
+    postBody["resources"] = {"gridAccountId": current_user.username}
     if remainingSteps[0]['type'] == "LightSheet":
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'
         postBody['processingLocation']= 'LSF_JAVA'
@@ -507,7 +508,7 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
         creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
         if continueOrReparameterize:
             imageProcessingDB.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
-                "jacsStatusAddress": 'http://jacs-dev.int.janelia.org:8080/job/' + requestOutputJsonified["_id"],
+                "jacsStatusAddress": jacs_host + '8080/job/' + requestOutputJsonified["_id"],
                 "jacs_id": requestOutputJsonified["_id"]}})
         else:
             imageProcessingDB.jobs.update_one({"_id": job_id}, {

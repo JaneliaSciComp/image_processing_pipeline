@@ -175,7 +175,8 @@ def job_status():
              pausedJobInformation["remainingStepNames"].pop(0)
         pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
-        submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
+        if pausedJobInformation["remainingStepNames"]: #only submit if not empty
+            submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
         time.sleep(0.5)
         updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
