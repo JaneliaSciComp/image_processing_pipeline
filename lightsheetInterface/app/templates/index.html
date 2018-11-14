@@ -80,6 +80,7 @@
   <!-- template variables to be processed in JavaScript -->
   <script>
      {% if jobsJson %}
+        var jacs_host="{{jacs_host}}";
         var table_data = {{ jobsJson|safe }};
      {% else %}
         var table_data = null;

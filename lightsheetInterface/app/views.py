@@ -94,7 +94,8 @@ def step(step_name):
                            currentStep=step_name,
                            currentTemplate=None,
                            posted=posted,
-                           jobName=jobName)
+                           jobName=jobName,
+                           jacs_host = jacs_host)
 
 
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
@@ -139,7 +140,8 @@ def template(template_name):
                            submissionStatus=submissionStatus,
                            currentTemplate=template_name,
                            posted=posted,
-                           jobName=jobName)
+                           jobName=jobName,
+                           jacs_host = jacs_host)
 
 
 @app.route('/', methods=['GET'])

@@ -24,7 +24,7 @@ $(document).ready(() => {
           }
           return data;
       },
-      className: "dt-body-center"
+      className: "dt-body-center",
       },
       {
         title: 'Name (Click To Load)',
@@ -107,12 +107,12 @@ $(document).ready(() => {
           var jacsLinks="";
           if(data && data.constructor === Array){
             for(var i=0; i<data.length; i++){
-              jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data[i] +  "\" target=\"_blank\">" + data[i] + "</a>,";
+              jacsLinks = jacsLinks+"<a href=\""+jacs_host+":8080/job/" + data[i] +  "\" target=\"_blank\">" + data[i] + "</a>,";
             }
             jacsLinks=jacsLinks.slice(0,-1);
           }
           else{
-            jacsLinks = jacsLinks+"<a href=\"http://jacs-dev.int.janelia.org:8080/job/" + data +  "\" target=\"_blank\">" + data + "</a>";
+            jacsLinks = jacsLinks+"<a href=\""+jacs_host+":8080/job/" + data +  "\" target=\"_blank\">" + data + "</a>";
           }
           return jacsLinks;
         }
