@@ -111,11 +111,6 @@ plan.remote('deploy', function(remote) {
 });
 
 plan.remote('deploy', function(remote) {
-  remote.log('Copy over settings.py');
-  remote.exec('cp ' + config.projectDir + '/settings.py ' + config.projectDir + '/current/app/');
-});
-
-plan.remote('deploy', function(remote) {
   remote.log('Copy over lightsheet-config.cfg');
   remote.exec('cp ' + config.projectDir + '/lightsheet-config.cfg ' + config.projectDir + '/current/app/');
 });
