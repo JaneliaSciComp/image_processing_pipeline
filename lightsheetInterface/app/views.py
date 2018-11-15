@@ -362,7 +362,6 @@ def load_configuration(config_name):
 
         else:
             content = json.loads(pInstance.content)
-            print(content)
             pipelineSteps = OrderedDict()
             if 'steps' in content:
                 steps = content['steps']
