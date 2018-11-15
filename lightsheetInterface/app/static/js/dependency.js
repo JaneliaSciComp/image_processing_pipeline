@@ -9,12 +9,12 @@ dependency.applyGlobalParameter = function(){
     lightsheetStepNames = ['clusterPT','clusterMF','localAP','clusterTF','localEC','clusterCS','clusterFR'];
     for (var t = 0; t < value_dependencies.length; t++) {
       var globalStepName = Mustache.render("{{input}}", value_dependencies[t]).split("_");
-      globalStepName = globalStepName[globalStepName.length-1]+"-";
+      globalStepName = globalStepName[globalStepName.length-1]+"-"; //Needed because different global parameters can be used in a single global parameter step
       var outputStepName = Mustache.render("{{output}}", value_dependencies[t]).split("_");
       outputStepName = outputStepName[outputStepName.length-1];
       var isLightsheet = lightsheetStepNames.indexOf(outputStepName)>=0;
-      var globalId = Mustache.render(globalStepName+"{{input}}", value_dependencies[t]);
-      var stepId = Mustache.render("{{step}}-{{output}}", value_dependencies[t]);
+      var globalId = Mustache.render("divisionFor-{{input}}", value_dependencies[t]);
+      var stepId = Mustache.render("divisionFor-{{output}}", value_dependencies[t]);
       var globalElem = document.getElementById(globalId);
       var stepElem = document.getElementById(stepId);
       if (value_dependencies[t].pattern) {
@@ -28,7 +28,7 @@ dependency.applyGlobalParameter = function(){
             variables[i]=variables[i].slice(0,-1);
             loopVariable = true;
           }
-          currentVariableId = globalStepName+variables[i];
+          currentVariableId = "divisionFor-"+variables[i];
           needToFormat=false;
           if (currentVariableId.includes("_string") && isLightsheet ){ //Specific to lightsheet
             needToFormat=true;
@@ -65,6 +65,10 @@ dependency.applyGlobalParameter = function(){
                 }
             }
           }
+            console.log(globalStepName)
+
+            console.log(currentVariableId)
+            console.log(currentVariableValue)
           if(needToFormat){
             var prefix;
             if (currentVariableId.includes("specimen")){
@@ -185,6 +189,6 @@ dependency.addParameter = function(element){
 };
 
 getCheckboxVal = function(globalStepName, checkbox_id){
-  var stepCheckbox = $('select[id=select_' + checkbox_id.replace(globalStepName,"") +']');
+  var stepCheckbox = $('select[id=select_' + checkbox_id.replace("divisionFor-","") +']');
   return stepCheckbox.val();
 };

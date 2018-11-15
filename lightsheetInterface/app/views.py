@@ -34,9 +34,10 @@ else:
 # imageProcessingDB is the database containing lightsheet job information and parameters
 imageProcessingDB = client.lightsheet
 
-# All step names for current config
+# All step names and globalParameters and nonGlobalParameters for current config
 allStepNames = []
-
+globalParameters = []
+nonGlobalParameters = []
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -125,12 +126,26 @@ def template(template_name):
         pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
                                                                 configObj)
 
-    global allStepNames
+    global allStepNames, globalParameters, nonGlobalParameters
     allStepNames = []
+    globalParameters = []
+    nonGlobalParameters = []
     if configObj.get('steps'):
         # only populate step names if steps is set
-        for step in configObj["steps"][template_name]:
-            allStepNames.append(step.name)
+        if template_name in configObj["steps"]:
+            for step in configObj["steps"][template_name]:
+                allStepNames.append(step.name)
+                if "GLOBALPARAMETERS" in step.name.upper():
+                    globalParameters = [parameter.name for parameter in step.parameter]
+                else:
+                    nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
+        else: #old template name or something
+            for stepName in pipelineSteps:
+                allStepNames.append(stepName)
+                if "GLOBALPARAMETERS" in stepName.upper():
+                    globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
+                else:
+                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
     updateDBStatesAndTimes(imageProcessingDB)
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
@@ -332,9 +347,11 @@ def load_configuration(config_name):
     currentStep = None
     currentTemplate = None
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
-    global allStepNames
+    global allStepNames, globalParameters, nonGlobalParameters
     stepOrTemplateName = None
     allStepNames = []
+    globalParameters = []
+    nonGlobalParameters = []
     jobName = None
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
@@ -342,12 +359,13 @@ def load_configuration(config_name):
                                                                           reparameterize, configObj)
             for stepName in pipelineSteps:
                 allStepNames.append(stepName)
+
         else:
             content = json.loads(pInstance.content)
+            print(content)
             pipelineSteps = OrderedDict()
             if 'steps' in content:
                 steps = content['steps']
-
                 for s in steps:
                     name = s['name']
                     allStepNames.append(name)
@@ -362,16 +380,17 @@ def load_configuration(config_name):
                         'collapseOrShow': 'show',
                         'jobs': jobs
                     }
-            if "stepOrTemplateName" in content:
+                    if "GLOBALPARAMETERS" in name.upper():
+                        globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
+                    else:
+                        nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
+
+        if "stepOrTemplateName" in content:
                 stepOrTemplateName = content["stepOrTemplateName"]
                 if stepOrTemplateName.find("Step: ", 0, 6) != -1:
                     currentStep = stepOrTemplateName[6:]
-                    allStepName = currentStep
                 else:
                     currentTemplate = stepOrTemplateName[10:]
-                    allStepName = []
-                    for step in configObj["steps"][currentTemplate]:
-                        allStepNames.append(step.name)
         posted = "false"
         if request.method == 'POST':
             posted = "true"
@@ -457,15 +476,17 @@ def delete_entries():
 def createDependencyResults(dependencies):
     result = []
     for d in dependencies:
-        if d.outputStep is not None and d.outputStep.name in allStepNames:
-            # need to check here, if simple value transfer (for string or float values) or if it's a nested field
-            obj = {}
-            obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
-            obj['output'] = d.outputField.name if d.outputField and d.outputField.name is not None else ''
-            obj['pattern'] = d.pattern if d.pattern is not None else ''
-            obj['step'] = d.outputStep.name if d.outputStep is not None else ''
-            obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
-            result.append(obj)
+        inputFieldName = d.inputField.name
+        outputFieldName = d.outputField.name
+        if inputFieldName in globalParameters and outputFieldName in nonGlobalParameters:
+        # #     # need to check here, if simple value transfer (for string or float values) or if it's a nested field
+              obj = {}
+              obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
+              obj['output'] = d.outputField.name if d.outputField and d.outputField.name is not None else ''
+              obj['pattern'] = d.pattern if d.pattern is not None else ''
+              obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
+              obj['step']=outputFieldName.split("_")[-1]
+              result.append(obj)
     return result
 
 
