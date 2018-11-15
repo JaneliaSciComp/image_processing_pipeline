@@ -65,10 +65,6 @@ dependency.applyGlobalParameter = function(){
                 }
             }
           }
-            console.log(globalStepName)
-
-            console.log(currentVariableId)
-            console.log(currentVariableValue)
           if(needToFormat){
             var prefix;
             if (currentVariableId.includes("specimen")){
