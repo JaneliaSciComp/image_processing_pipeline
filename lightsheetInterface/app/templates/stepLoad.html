@@ -1,105 +1,107 @@
 {% from "_formhelpers.html" import render_field %}
 <!-- This file contains the template code for each and every pipeline step and includes a separate template to render each parameter -->
 <div class="card" id="{{ step.name }}-card">
-  <div class="card-header" id="headingOne">
-    <h5 class="mb-0">
-      <label>
-        {% set state = False %}
-        <input
-            id="check-{{ step.name }}"
-            type="checkbox"
-            class="btn btn-link step-name step-checkbox"
-            data-toggle="collapse"
-            data-target="#collapse{{ step.name }}"
-            aria-expanded={{ state }}
-            aria-controls="collapse{{ step.name }}"
-            value={{ step.name + "_checkbox"}}
-            onclick="lightsheet.testAllCheckboxes()"
-            {{ pipelineStep.checkboxState }}
-        {{ state }}>
-        {{ step.description }}
-      </label>
-      <label class="step-type">
-        {% if step.steptype is not none %}
-        {{ step.steptype }}
-        {% endif %}
-      </label>
-    </h5>
-  </div>
-  <div id="collapse{{ step.name }}" class="collapse {{ pipelineStep.collapseOrShow }}" aria-labelledby="headingOne" data-parent="#accordion">
-    <div class="card-body">
-      {% include "tabnav.html" %}
-      {% set panels = ['frequent', 'sometimes', 'rare'] %}
-      <!-- Tab panes -->
-        <div class="tab-content">
-        {% for panel in panels %}
-          {% if panel == 'frequent' %}
-            <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
-          {% else %}
-            <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
-          {% endif %}
-          {% for param in step.parameter %}
-            {% set key=param.name %}
-              {% if key in config.parameterDictionary[panel] %}
-              {% set value = config.parameterDictionary[panel][key] %}
-              {% set meta = value %}
-              {% set keyForProvidedStep = param.name.split("_")[0] %}
-              {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
-                {% if param.text1 and '{' in param.text1 and '}' in param.text1 and not param.text2 %} {#Then is dependency, TODO: do this in a better way#}
-                  {% set data = param.text1 %}
-                {% else %}
-                  {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
+    <div class="card-header" id="headingOne">
+        <h5 class="mb-0">
+            <label>
+                {% set state = False %}
+                <input
+                        id="check-{{ step.name }}"
+                        type="checkbox"
+                        class="btn btn-link step-name step-checkbox"
+                        data-toggle="collapse"
+                        data-target="#collapse{{ step.name }}"
+                        aria-expanded={{ state }}
+                                aria-controls="collapse{{ step.name }}"
+                        value={{ step.name + "_checkbox" }}
+                                onclick="lightsheet.testAllCheckboxes()"
+                        {{ pipelineStep.checkboxState }}
+                        {{ state }}>
+                {{ step.description }}
+            </label>
+            <label class="step-type">
+                {% if step.steptype is not none %}
+                    {{ step.steptype }}
                 {% endif %}
-              {% else %}
-                {% if meta.formatting == 'C' and pipelineStep is none %}
-                  {% set data = [param.number1] %}
-                {% elif meta.formatting == 'B' %}{#Radio Button#}
-                  {% if param.text4 %}
-                    {% set data = [param.text1, param.text2, param.text3, param.text4] %}
-                  {% elif param.text3 %}
-                    {% set data = [param.text1, param.text2, param.text3] %}
-                  {% elif param.text2 %}
-                    {% set data = [param.text1, param.text2] %}
-                  {% elif param.text1 %}
-                    {% set data = [param.text1] %}
-                  {% elif param.number4 %}
-                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
-                  {% elif param.number3 %}
-                    {% set data = [param.number1, param.number2, param.number3] %}
-                  {% elif param.number2 %}
-                    {% set data = [param.number1, param.number2] %}
-                  {% elif param.number1 %}
-                    {% set data = [param.number1] %}
-                  {% endif %}
-                {% elif meta.type == "Text" or meta.formatting=='A' %}
-                  {% set data = param.text1 %}
-                {% else %}
-                  {% if meta.count == '1' %}
-                    {% set data = param.number1 %}
-                  {% elif meta.count == '2' %}
-                    {% set data = [param.number1, param.number2] %}
-                  {% elif meta.formatting == 'R' %}
-                    {% set data = {'start': param.number1, 'end': param.number2, 'every': param.number3} %}
-                  {% elif meta.count == '3' %}
-                    {% set data = [param.number1, param.number2, param.number3] %}
-                  {% elif meta.count == '4' %}
-                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
-                  {% endif %}
-                {% endif %}
-              {% endif %}
-              {% include "parameter.html" ignore missing with context %}
-            {% endif %}
-          {% endfor %}
-        </div>
-        {% endfor %}
-        {% if 'GLOBALPARAMETERS' in step.name.upper() %}
-        <div class="col-md-12">
-          <input class="btn btn-info apply-button" type="button" value="Apply"
-                 title="Apply global parameters to other steps in the pipeline"
-                 onclick="dependency.applyGlobalParameter()"/>
-        </div>
-        {% endif %}
-      </div>
+            </label>
+        </h5>
     </div>
-  </div>
-</div>
+    <div id="collapse{{ step.name }}" class="collapse {{ pipelineStep.collapseOrShow }}" aria-labelledby="headingOne"
+         data-parent="#accordion">
+        <div class="card-body">
+            {% include "tabnav.html" %}
+            {% set panels = ['frequent', 'sometimes', 'rare'] %}
+            <!-- Tab panes -->
+            <div class="tab-content">
+                {% for panel in panels %}
+                    {% if panel == 'frequent' %}
+                        <div role="tabpanel" class="tab-pane active lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+                    {% else %}
+                        <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
+                    {% endif %}
+                {% for param in step.parameter %}
+                    {% set key=param.name %}
+                    {% if key in config.parameterDictionary[panel] %}
+                        {% set value = config.parameterDictionary[panel][key] %}
+                        {% set meta = value %}
+                        {% set keyForProvidedStep = param.name.split("_")[0] %}
+                        {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
+                            {% if param.text1 and '{' in param.text1 and '}' in param.text1 and not param.text2 %}
+                                {#Then is dependency, TODO: do this in a better way#}
+                                {% set data = param.text1 %}
+                            {% else %}
+                                {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
+                            {% endif %}
+                        {% else %}
+                            {% if meta.formatting == 'C' and pipelineStep is none %}
+                                {% set data = [param.number1] %}
+                                {% elif meta.formatting == 'B' %}{#Radio Button#}
+                                {% if param.text4 %}
+                                    {% set data = [param.text1, param.text2, param.text3, param.text4] %}
+                                {% elif param.text3 %}
+                                    {% set data = [param.text1, param.text2, param.text3] %}
+                                {% elif param.text2 %}
+                                    {% set data = [param.text1, param.text2] %}
+                                {% elif param.text1 %}
+                                    {% set data = [param.text1] %}
+                                {% elif param.number4 %}
+                                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
+                                {% elif param.number3 %}
+                                    {% set data = [param.number1, param.number2, param.number3] %}
+                                {% elif param.number2 %}
+                                    {% set data = [param.number1, param.number2] %}
+                                {% elif param.number1 %}
+                                    {% set data = [param.number1] %}
+                                {% endif %}
+                            {% elif meta.type == "Text" or meta.formatting=='A' %}
+                                {% set data = param.text1 %}
+                            {% else %}
+                                {% if meta.count == '1' %}
+                                    {% set data = param.number1 %}
+                                {% elif meta.count == '2' %}
+                                    {% set data = [param.number1, param.number2] %}
+                                {% elif meta.formatting == 'R' %}
+                                    {% set data = {'start': param.number1, 'end': param.number2, 'every': param.number3} %}
+                                {% elif meta.count == '3' %}
+                                    {% set data = [param.number1, param.number2, param.number3] %}
+                                {% elif meta.count == '4' %}
+                                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                        {% include "parameter.html" ignore missing with context %}
+                    {% endif %}
+                {% endfor %}
+                </div>
+                {% endfor %}
+                {% if 'GLOBALPARAMETERS' in step.name.upper() %}
+                    <div class="col-md-12">
+                        <input class="btn btn-info apply-button" type="button" value="Apply"
+                               title="Apply global parameters to other steps in the pipeline"
+                               onclick="dependency.applyGlobalParameter()"/>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
