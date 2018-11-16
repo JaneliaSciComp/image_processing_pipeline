@@ -169,13 +169,14 @@ def buildConfigObject():
     try:
         sorted_steps = {}
         templates = Template.objects.all()
-        allSteps = Step.objects.all().order_by('order')
+        allSteps = Step.objects.all()
         allStepsDict = {}
 
         for step in allSteps:
             allStepsDict[step.name] = step
 
         for template in templates:
+            #sorted_steps[template.name] = template.steps
             steps = template.steps
             sorted_steps[template.name] = sorted(steps, key=operator.attrgetter('order'))
 

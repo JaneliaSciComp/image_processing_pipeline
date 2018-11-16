@@ -64,7 +64,7 @@
         <select class="selectpicker job-select" data-live-search="true" onchange="location = this.options[this.selectedIndex].value;">
           <option value={{ request.get_host }} selected>---Select Previous Run---</option>
           {% for job in jobsJson | reverse %}
-            <option value={{ request.get_host }}{{job.stepOrTemplateName}}?lightsheetDB_id={{ job.id }} >{{ job.creationDate }}, {{job.jobType}}, Steps: {{ job.selectedSteps['names'] }}</option>
+            <option value="{{ request.get_host }}{{job.stepOrTemplateName}}?lightsheetDB_id={{ job.id }}" >{{ job.creationDate }} {{job.jobName}}</option>
           {% endfor %}
         </select>
       </div>

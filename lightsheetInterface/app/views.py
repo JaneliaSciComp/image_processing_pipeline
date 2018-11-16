@@ -359,6 +359,10 @@ def load_configuration(config_name):
                                                                           reparameterize, configObj)
             for stepName in pipelineSteps:
                 allStepNames.append(stepName)
+                if "GLOBALPARAMETERS" in stepName.upper():
+                    globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
+                else:
+                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
 
         else:
             content = json.loads(pInstance.content)
@@ -384,12 +388,23 @@ def load_configuration(config_name):
                     else:
                         nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
 
-        if "stepOrTemplateName" in content:
+            if "stepOrTemplateName" in content:
                 stepOrTemplateName = content["stepOrTemplateName"]
                 if stepOrTemplateName.find("Step: ", 0, 6) != -1:
                     currentStep = stepOrTemplateName[6:]
                 else:
                     currentTemplate = stepOrTemplateName[10:]
+                if currentTemplate in configObj["steps"]: #then include all steps in this template
+                    allStepNames = []
+                    globalParameters = []
+                    nonGlobalParameters = []
+                    for step in configObj["steps"][currentTemplate]:
+                        allStepNames.append(step.name)
+                        if "GLOBALPARAMETERS" in step.name.upper():
+                            globalParameters = [parameter.name for parameter in step.parameter]
+                        else:
+                            nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
+
         posted = "false"
         if request.method == 'POST':
             posted = "true"
