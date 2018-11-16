@@ -20,21 +20,27 @@
       <option value="{{ url_for('job_status') }}" selected>---Select Previous Run---</option>
       {% if parentJobInfo is not none %}
         {% for currentJobInfo in parentJobInfo %}
+          {% if currentJobInfo.creationDate is defined %}
+            {% set displayName = currentJobInfo.creationDate | strftime + " " + currentJobInfo.jobName %}
+          {% else %}
+            {% set displayName = currentJobInfo.jobName %}
+          {% endif %}
           {% if currentJobInfo.state == "ERROR" %}
             <option class="status-error" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
-              {{ currentJobInfo.selected }}>  {{   currentJobInfo.creationDate | strftime + " " + currentJobInfo.jobName }}
+              {{ currentJobInfo.selected }}>  {{ displayName }}
             </option>
           {% elif currentJobInfo.state == "SUCCESSFUL" %}
             <option class="status-successful" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
-              {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + currentJobInfo.jobName }}
+              {{ currentJobInfo.selected }}>  {{ displayName }}
             </option>
           {% elif currentJobInfo.state == "RUNNING" %}
             <option class="status-running" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
-              {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + currentJobInfo.jobName }}
+              {{ currentJobInfo.selected }}>  {{ displayName }}
             </option>
           {% else %}
             <option class="status-other" value={{ url_for('job_status', lightsheetDB_id=currentJobInfo._id )}}
-              {{ currentJobInfo.selected }}>  {{ currentJobInfo.creationDate | strftime + " " + currentJobInfo.jobName }}
+              {{ currentJobInfo.selected }}>  {{ displayName }}
+            </option>
           {% endif %}
         {% endfor %}
       {% endif %}
