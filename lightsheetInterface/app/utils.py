@@ -140,8 +140,12 @@ def getParameters(parameter):
                 param.count = '2'
             elif param.number4 == None:
                 param.count = '3'
-            else:
+            elif param.number5 == None:
                 param.count = '4'
+            elif param.number6 == None:
+                param.count = '5'
+            else:
+                param.count = '6'
         elif param.text1:
             param.type = 'Text'
             if not param.text2:

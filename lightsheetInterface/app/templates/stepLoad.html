@@ -64,6 +64,10 @@
                                     {% set data = [param.text1, param.text2] %}
                                 {% elif param.text1 %}
                                     {% set data = [param.text1] %}
+                                {% elif param.number6 %}
+                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5, param.number6] %}
+                                {% elif param.number5 %}
+                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5] %}
                                 {% elif param.number4 %}
                                     {% set data = [param.number1, param.number2, param.number3, param.number4] %}
                                 {% elif param.number3 %}
@@ -86,6 +90,10 @@
                                     {% set data = [param.number1, param.number2, param.number3] %}
                                 {% elif meta.count == '4' %}
                                     {% set data = [param.number1, param.number2, param.number3, param.number4] %}
+                                {% elif meta.count == '5' %}
+                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5] %}
+                                {% elif meta.count == '6' %}
+                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5, param.number6] %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}

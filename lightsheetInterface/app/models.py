@@ -26,8 +26,8 @@ class AppConfig(Document):
 
 class Parameter(Document):
     # fields, which store the descriptive data of a parameter
-    name = StringField(max_length=200, unique=True, required=True)
-    displayName = StringField(max_length=200)
+    name = StringField(max_length=500, unique=True, required=True)
+    displayName = StringField(max_length=500)
     description = StringField(max_length=500)
     ignore = BooleanField()
     mount = BooleanField()
@@ -43,6 +43,8 @@ class Parameter(Document):
     number2 = FloatField()
     number3 = FloatField()
     number4 = FloatField()
+    number5 = FloatField()
+    number6 = FloatField()
     text1 = StringField(max_length=500)
     text2 = StringField(max_length=500)
     text3 = StringField(max_length=500)
@@ -54,21 +56,21 @@ class Parameter(Document):
 
 
 class Step(Document):
-    name = StringField(max_length=200, unique=True, required=True)
+    name = StringField(max_length=500, unique=True, required=True)
     description = StringField(max_length=500)
     parameter = ListField(ReferenceField(Parameter))
     submit = BooleanField(default=True)
-    template = ListField(StringField(max_length=200, choices=templates))
+    template = ListField(StringField(max_length=500, choices=templates))
     order = IntField(required=True)
-    steptype = StringField(max_length=200, choices=steptypes)
-    codeLocation = StringField(max_length=200)
-    entryPointForSpark = StringField(max_length=200)
+    steptype = StringField(max_length=500, choices=steptypes)
+    codeLocation = StringField(max_length=500)
+    entryPointForSpark = StringField(max_length=500)
     def __unicode__(self):
         return self.name
 
 
 class Template(Document):
-    name = StringField(max_length=200, unique=True, required=True)
+    name = StringField(max_length=500, unique=True, required=True)
     steps = ListField(ReferenceField(Step))
     order = IntField(required=True)
 
@@ -80,7 +82,7 @@ class Dependency(Document):
     inputField = ReferenceField(Parameter)
     outputField = ReferenceField(Parameter)
     outputStep = ReferenceField(Step)
-    pattern = StringField(max_length=200)
+    pattern = StringField(max_length=500)
     dependency_type = StringField(max_length=20, choices=dependency_type)
 
 
@@ -94,6 +96,8 @@ class ConfigurationInstance(Document):
     number2 = FloatField()
     number3 = FloatField()
     number4 = FloatField()
+    number5 = FloatField()
+    number6 = FloatField()
     text1 = StringField(max_length=500)
     text2 = StringField(max_length=500)
     text3 = StringField(max_length=500)
@@ -184,10 +188,10 @@ class CKTextAreaField(TextAreaField):
 
 class ExtendedParameterView(ModelView):
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1", "text2",
+    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1", "text2",
                     "text3", "text4", "boolean", "readonly", "ignore", "mount", "empty", "frequency", "formatting",
                     "order", "hint"]
-    column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "text1",
+    column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
                       "text2", "text3", "text4", "boolean", "mount", "frequency", "formatting", "ignore"]
     form_overrides = {
         'hint': CKTextAreaField

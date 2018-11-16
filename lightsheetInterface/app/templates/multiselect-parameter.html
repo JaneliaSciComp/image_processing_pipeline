@@ -12,6 +12,12 @@
       {% if value.number4 is not none %}
         <option {% if value.number4 in data %} selected {% endif %}>{{ value.number4 }}</option>
       {% endif %}
+        {% if value.number5 is not none %}
+            <option {% if value.number5 in data %} selected {% endif %}>{{ value.number5 }}</option>
+        {% endif %}
+        {% if value.number6 is not none %}
+            <option {% if value.number6 in data %} selected {% endif %}>{{ value.number6 }}</option>
+        {% endif %}
     </select>
     <div id="hidden_{{ param.name }}">
       <input type="hidden" value='' id="{{ param.name }}" />
