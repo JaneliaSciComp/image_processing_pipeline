@@ -17,8 +17,8 @@ steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightShe
 
 
 class AppConfig(Document):
-    name = StringField(max_length=200)
-    value = StringField(max_length=200)
+    name = StringField(max_length=500)
+    value = StringField(max_length=500)
 
     def __repr__(self):
         return self.name
