@@ -1,301 +1,323 @@
 {% extends "branding.html" %}
 {% block content %}
-  {% include "pageTitle.html" ignore missing with context %}
-  {% include "configurePipeline.html" ignore missing with context %}
-{% if posted=="true" %}
-    <div class="alert" style="background-color:#4CAF50">
-        <strong>Thank you for submitting a job! </strong>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-{% endif %}
-  <!--
-    Accordeon control which contains the steps
-  -->
-  <form action="" method="post">
-    <!-- button to submit the forms -->
-    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="dataIo.customSubmit()" />
-    {% if currentTemplate is defined and currentTemplate is not none %}
-      {% set stepOrTemplateName = "Template: "+currentTemplate %}
-    {% elif currentStep is defined and currentStep is not none %}
-      {% set stepOrTemplateName = "Step: "+currentStep %}
-    {% else %}
-      {% set stepOrTemplateName = None %}
+    {% include "pageTitle.html" ignore missing with context %}
+    {% include "configurePipeline.html" ignore missing with context %}
+    {% if posted=="true" %}
+        <div class="alert" style="background-color:#4CAF50">
+            <strong>Thank you for submitting a job! </strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
     {% endif %}
-   <input type="submit" name="downloadSettings" class="btn btn-info submit-button" value="Download Settings" disabled onclick="dataIo.downloadSettings(event,'{{stepOrTemplateName}}')">
-    <div class="row lightsheet-row">
-      <div id="steps">
-          {% set allStepNames = [] %}
-          {% if config['steps'] is not none %}
-            {% if currentTemplate is defined and currentTemplate is not none and currentTemplate in config['steps'] %}
-              {% for step in config['steps'][currentTemplate] %}
-                {% set allStepNames = allStepNames.append(step.name) %}
-                {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-                  {% set pipelineStep = pipelineSteps[step.name] %}
-                {% else %}
-                  {% set pipelineStep = none %}
-                {% endif %}
-                {% include "stepLoad.html" ignore missing with context %}
-              {% endfor %}
-            {% elif currentStep is defined and currentStep is not none and currentStep in config['stepsAllDict']%}
-              {% set step = config['stepsAllDict'][currentStep] %}
-              {% set allStepNames = allStepNames.append(step.name) %}
-              {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-                {% set pipelineStep = pipelineSteps[step.name] %}
-              {% else %}
-                {% set pipelineStep = none %}
-              {% endif %}
-              {% include "stepLoad.html" ignore missing with context %}
-            {% else %}
-              {% for stepName in pipelineSteps %}
-                {% set allStepNames = allStepNames.append(stepName) %}
-                {% set pipelineStep = pipelineSteps[stepName] %}
-                {% set step = config['stepsAllDict'][stepName] %}
-                {% include "stepLoad.html" ignore missing with context %}
-              {% endfor %}
-            {% endif %}
-          {% endif %}
-      </div>
+    <!--
+      Accordeon control which contains the steps
+    -->
+    <div>
     </div>
-    <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled onclick="dataIo.customSubmit()" />
-  </form>
-
-  <!--
-      Rows to select an existing job
-  -->
-{% if jobsJson %}
-  <div class="row lightsheet-row" style="margin-top: 2em;">
-    <h4>Previous Jobs</h4>
-  </div>
-<input type="submit" id = "deleteEntries" class="btn btn-info delete-button" value="Delete Selected" disabled onclick="lightsheet.deleteEntries()">
-{% endif %}
-
-  <div class="row lightsheet-row">
-    <table class="table table-striped table-hover" id='job-table' />
-  </div>
-
-  <script src="{{ url_for('static', filename='js/table.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/submit.js') }}"></script>
-  <!-- template variables to be processed in JavaScript -->
-  <script>
-     {% if jobsJson %}
-        var jacs_host="{{jacs_host}}";
-        var table_data = {{ jobsJson|safe }};
-     {% else %}
-        var table_data = null;
-     {% endif %}
-
-     {% if value_dependency is defined %}
-        var value_dependencies = {{ value_dependency|safe }};
-     {% else %}
-        var value_dependencies = null;
-     {% endif %}
-
-     {% if dimension_dependency is defined %}
-        var dimension_dependencies = {{ dimension_dependency|safe }};
-     {% else %}
-        var dimension_dependencies = null;
-     {% endif %}
-
-     {% if currentTemplate is defined %}
-        // var currentTemplate = String("{{ currentTemplate|safe }}").replace(/ /g, "%20");
-        var currentTemplate = String("{{ currentTemplate|safe }}");
-
-        dataIo.currentUrl = "{{ url_for('template', template_name='placeholder') }}";
-        dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
-     {% endif %}
-  </script>
-
-  <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
-
-  <!-- script to set default job name -->
-  <script>
-    $(document).ready(
-      function () {
-        // Show jobdata if job is selected
-        var myJobIndex = null;
-        {% if lightsheetDB_id is defined and jobIndex is not none %}
-          myJobIndex = "{{ lightsheetDB_id|safe }}";
+    <form action="" method="post">
+        <!-- button to submit the forms -->
+        {% if currentTemplate is defined and currentTemplate is not none %}
+            {% set stepOrTemplateName = "Template: "+currentTemplate %}
+        {% elif currentStep is defined and currentStep is not none %}
+            {% set stepOrTemplateName = "Step: "+currentStep %}
+        {% else %}
+            {% set stepOrTemplateName = None %}
         {% endif %}
-        if (myJobIndex && myJobIndex !== "None") {
-          lightsheet.stepsExistingJob();
-          var name = $('#existing-job-selector').find(":selected").text();
-          $('#job-heading').text('Configure ' + name);
-        }
+        <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled
+               onclick="dataIo.customSubmit()"/>
+        <a href="javascript:;" id="downloadURL">
+            <button type="button" class="btn btn-info submit-button" onclick="dataIo.downloadSettings('{{ stepOrTemplateName }}')" value="value">Download Settings</button>
+        </a>
+        <div class="row lightsheet-row">
+            <div id="steps">
+                {% set allStepNames = [] %}
+                {% if config['steps'] is not none %}
+                    {% if currentTemplate is defined and currentTemplate is not none and currentTemplate in config['steps'] %}
+                        {% for step in config['steps'][currentTemplate] %}
+                            {% set allStepNames = allStepNames.append(step.name) %}
+                            {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                                {% set pipelineStep = pipelineSteps[step.name] %}
+                            {% else %}
+                                {% set pipelineStep = none %}
+                            {% endif %}
+                            {% include "stepLoad.html" ignore missing with context %}
+                        {% endfor %}
+                    {% elif currentStep is defined and currentStep is not none and currentStep in config['stepsAllDict'] %}
+                        {% set step = config['stepsAllDict'][currentStep] %}
+                        {% set allStepNames = allStepNames.append(step.name) %}
+                        {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
+                            {% set pipelineStep = pipelineSteps[step.name] %}
+                        {% else %}
+                            {% set pipelineStep = none %}
+                        {% endif %}
+                        {% include "stepLoad.html" ignore missing with context %}
+                    {% else %}
+                        {% for stepName in pipelineSteps %}
+                            {% set allStepNames = allStepNames.append(stepName) %}
+                            {% set pipelineStep = pipelineSteps[stepName] %}
+                            {% set step = config['stepsAllDict'][stepName] %}
+                            {% include "stepLoad.html" ignore missing with context %}
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled
+               onclick="dataIo.customSubmit()"/>
+    </form>
 
-        $('body').on('change', "select[id^='select_']", function(event){
-          var inputField = this.id.replace("select_","");
-          var tmp = this.parentElement.getElementsByClassName('dropdown-menu')[0];
-          var selectedItems = $(tmp).find("a[aria-selected=true]");
-          var nrItems = selectedItems ? selectedItems.length : 0;
-          if (dimension_dependencies){
-            for (var d = 0; d < dimension_dependencies.length; d++){
-              var tmp = dimension_dependencies[d];
-              if (tmp.input == inputField) {
-                var stepPanel = $('#' + tmp.step + '-card');
-                var outputObj = stepPanel.find('#' + tmp.step + "-" +tmp.output);
-                var inputFields = outputObj.find(".lightsheet-nested-input");
-                for (var k = 0; k < inputFields.length; k++) {
-                  if (k < nrItems) {
-                    $(inputFields[k]).prop('disabled', false);
-                  }
-                  else {
-                    $(inputFields[k]).prop('disabled', true);
-                  }
-                }
-              }
-            }
-          }
-        });
+    <!--
+        Rows to select an existing job
+    -->
+    {% if jobsJson %}
+        <div class="row lightsheet-row" style="margin-top: 2em;">
+            <h4>Previous Jobs</h4>
+        </div>
+        <input type="submit" id="deleteEntries" class="btn btn-info delete-button" value="Delete Selected" disabled
+               onclick="lightsheet.deleteEntries()">
+    {% endif %}
 
-        $('body').on('change', "input[id^='emptycheckbox_']", function(event){
-          var inputField = this.id.replace("emptycheckbox_","");
-          if (dimension_dependencies){
-            for (var d = 0; d < dimension_dependencies.length; d++){
-              var dep = dimension_dependencies[d];
-              var fullFieldName = dep.step + "-" + dep.input;
-              if (fullFieldName == inputField) {
-                var stepPanel = $('#' + dep.step + '-card');
-                var outputObj = stepPanel.find('#' + dep.step + "-" +dep.output);
-                var inputFields = $(outputObj).find("input");
-                if (this.checked) { // disable fields
-                  inputFields.each(function(){
-                    this.disabled = true;
-                  })
-                }
-                else { // enable fields
-                  inputFields.each(function(){
-                    this.disabled = false;
-                  })
-                }
-              }
-            }
-          }
-        });
+    <div class="row lightsheet-row">
+        <table class="table table-striped table-hover" id='job-table'/>
+    </div>
 
-
-        $('#template-selector').on('change', function(event){
-          var template_id = $(this).find(":selected").val();
-          window.location = window.origin + '/template/' + template_id;
-        });
-
-        $('#step-selector').on('change', function(event){
-          var step_id = $(this).find(":selected").val();
-          window.location = window.origin + '/step/' + step_id;
-        });
-
-        $('.info-icon').on('click', function(event){
-          var elem = $(this.parentElement.parentElement.getElementsByClassName('parameter-hint')[0]);
-          if ( elem.css("display") == "none" ) {
-              elem.css("display","block");
-          }
-          else {
-              elem.css("display","none");
-          }
-        });
-
-        $( "input[id^='emptycheckbox_']" ).on('click', function(event){
-          if (this.checked) {
-            // $($(this.closest('.input-group')).find('span')).attr('disabled',true);
-            $($(this.closest('.lightsheet-fields')).find('input.form-control')).attr('disabled',true);
-          }
-          else {
-            $($(this.closest('.lightsheet-fields')).find('input.form-control')).removeAttr('disabled');
-          }
-        })
-
-        $.fn.dataTable.ext.errMode = 'throw';
-      }
-    )
-  </script>
+    <script src="{{ url_for('static', filename='js/table.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/submit.js') }}"></script>
+    <!-- template variables to be processed in JavaScript -->
     <script>
-  $(document).ready(function(){
-    lightsheet.testAllCheckboxes()
-    $(':input[type=text]').each(function(){ //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
-        let currentValue = $(this).val();
-        let currentID = "#"+$(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
-        var dependenciesFound = currentValue.match(/{([^}]+)}/g);
-        if(dependenciesFound != null){
-          for (var i=0; i< dependenciesFound.length; i++){//Loop over dependencies
-              let dependencyFound = dependenciesFound[i];
-              var isThisALoop = dependencyFound.substr(1,dependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
-              if (isThisALoop != null){dependencyFound = isThisALoop[0];}
-              let dependencySubstring = dependencyFound.substr(1,dependencyFound.length-2);
-              stepName = dependencySubstring.split("_");
-              stepName = stepName[stepName.length-1];
-              let currentDependency="#"+dependencySubstring;
-              if($(currentDependency).prop('type')=="hidden"){
-                temp="select_"+dependencyFound.substr(1,dependencyFound.length-2);
-                currentDependency='[data-id="'+temp+'"]'; //multiselect checkbox still acts weird... cant get it to react when clicked or anything
-              }
-              else if( $('input[name='+dependencySubstring+']').prop('type') ){
-                //Radiobutton
-                currentDependency = 'input[name='+dependencySubstring+']'
-              }
-              $(currentDependency).bind("focus click keyup change checked",function(){
-                let updatedValue = currentValue;
-                for (var j=0; j< dependenciesFound.length; j++){//Need to loop through dependencies to ensure that all values are updated, not just the one that was just changed
-                  loopedDependencyFound = dependenciesFound[j];
-                  var isThisALoop = loopedDependencyFound.substr(1,loopedDependencyFound.length-1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
-                  if (isThisALoop != null){loopedDependencyFound = isThisALoop[0];}
-                  let standardID=loopedDependencyFound.substr(1,loopedDependencyFound.length-2);
-                  let dependencyToUpdate="#"+standardID; //Current one we are updating
-                  let type = $(dependencyToUpdate).prop('type');
-                  dependencyToUpdateValue = null; //Initialize dependencyToUpdateValue to null
-                  if(type=="checkbox"){//If check box is checked, then dependencyToUpdateValue equals empty string
-                    if ($(dependencyToUpdate).prop('checked')){dependencyToUpdateValue = "";}
-                  }
-                  else if(type == "hidden"){//Multiselect checkbox
-                    dependencyToUpdate = "select_"+standardID;
-                    dependencyToUpdateValue = $('[data-id="'+dependencyToUpdate+'"]').prop('title');
-                    if (dependencyToUpdateValue == "Nothing selected" || dependencyToUpdateValue==undefined){dependencyToUpdateValue = null;}
-                  }
-                  else if( $('input[name='+standardID+']').val() ) {
-                      //radiobutton
-                      dependencyToUpdateValue = $('input[name=' + standardID + ']:checked').val()
-                  }
-                  else if (!($('input[id=emptycheckbox_'+stepName+'-'+standardID+']').prop('checked'))){//If it has an empty checkbox that is checked, then keep it empty. Otherwise, take the value
-                      //dependencyToUpdateValue takes on the value of the dependency
-                    dependencyToUpdateValue = $(dependencyToUpdate).val();
-                    if(currentID.includes("parentOutputDirectory")){
-                        dependencyToUpdateValue = dependencyToUpdateValue.substring(0, dependencyToUpdateValue.lastIndexOf("/"));
+        {% if jobsJson %}
+            var jacs_host = "{{jacs_host}}";
+            var table_data = {{ jobsJson|safe }};
+        {% else %}
+            var table_data = null;
+        {% endif %}
+
+        {% if value_dependency is defined %}
+            var value_dependencies = {{ value_dependency|safe }};
+        {% else %}
+            var value_dependencies = null;
+        {% endif %}
+
+        {% if dimension_dependency is defined %}
+            var dimension_dependencies = {{ dimension_dependency|safe }};
+        {% else %}
+            var dimension_dependencies = null;
+        {% endif %}
+
+        {% if currentTemplate is defined %}
+            // var currentTemplate = String("{{ currentTemplate|safe }}").replace(/ /g, "%20");
+            var currentTemplate = String("{{ currentTemplate|safe }}");
+
+            dataIo.currentUrl = "{{ url_for('template', template_name='placeholder') }}";
+            dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
+        {% endif %}
+    </script>
+
+    <script src="{{ url_for('static', filename='js/dependency.js') }}"></script>
+
+    <!-- script to set default job name -->
+    <script>
+        $(document).ready(
+            function () {
+                // Show jobdata if job is selected
+                var myJobIndex = null;
+                {% if lightsheetDB_id is defined and jobIndex is not none %}
+                    myJobIndex = "{{ lightsheetDB_id|safe }}";
+                {% endif %}
+                if (myJobIndex && myJobIndex !== "None") {
+                    lightsheet.stepsExistingJob();
+                    var name = $('#existing-job-selector').find(":selected").text();
+                    $('#job-heading').text('Configure ' + name);
+                }
+
+                $('body').on('change', "select[id^='select_']", function (event) {
+                    var inputField = this.id.replace("select_", "");
+                    var tmp = this.parentElement.getElementsByClassName('dropdown-menu')[0];
+                    var selectedItems = $(tmp).find("a[aria-selected=true]");
+                    var nrItems = selectedItems ? selectedItems.length : 0;
+                    if (dimension_dependencies) {
+                        for (var d = 0; d < dimension_dependencies.length; d++) {
+                            var tmp = dimension_dependencies[d];
+                            if (tmp.input == inputField) {
+                                var stepPanel = $('#' + tmp.step + '-card');
+                                var outputObj = stepPanel.find('#' + tmp.step + "-" + tmp.output);
+                                var inputFields = outputObj.find(".lightsheet-nested-input");
+                                for (var k = 0; k < inputFields.length; k++) {
+                                    if (k < nrItems) {
+                                        $(inputFields[k]).prop('disabled', false);
+                                    }
+                                    else {
+                                        $(inputFields[k]).prop('disabled', true);
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
+                });
 
-                  if (standardID.match("^--") || standardID.match("^-")){ //If it starts or ends with a - or --
-                      var lastIndex=standardID.lastIndexOf("_");
-                      let flagName = standardID.substr(0,lastIndex);
-                      if(dependencyToUpdateValue != null){
-                        if (isThisALoop!=null){//Then this needs to loop
-                          let splitString = dependencyToUpdateValue.split(" ");
-                          dependencyToUpdateValue = "";
-                          for(var k=0; k<splitString.length; k++){
-                            if(splitString[k]!=""){dependencyToUpdateValue = dependencyToUpdateValue + flagName + " " + splitString[k] + " ";}
-                          }
-                          loopedDependencyFound = "{"+ loopedDependencyFound + "}";
+                $('body').on('change', "input[id^='emptycheckbox_']", function (event) {
+                    var inputField = this.id.replace("emptycheckbox_", "");
+                    if (dimension_dependencies) {
+                        for (var d = 0; d < dimension_dependencies.length; d++) {
+                            var dep = dimension_dependencies[d];
+                            var fullFieldName = dep.step + "-" + dep.input;
+                            if (fullFieldName == inputField) {
+                                var stepPanel = $('#' + dep.step + '-card');
+                                var outputObj = stepPanel.find('#' + dep.step + "-" + dep.output);
+                                var inputFields = $(outputObj).find("input");
+                                if (this.checked) { // disable fields
+                                    inputFields.each(function () {
+                                        this.disabled = true;
+                                    })
+                                }
+                                else { // enable fields
+                                    inputFields.each(function () {
+                                        this.disabled = false;
+                                    })
+                                }
+                            }
                         }
-                        else{
-                          dependencyToUpdateValue = flagName + " " + dependencyToUpdateValue; 
-                        }
-                      }
-                      else{dependencyToUpdateValue="";}
-                  }
-                  updatedValue = updatedValue.replace(loopedDependencyFound,dependencyToUpdateValue);
-                };
-                updatedValue = updatedValue.replace(/\s\s+/g, ' '); //remove extra spaces
-                updatedValue = updatedValue.trim(); //remove leading/trailing spaces
-                $(currentID).val(updatedValue);
-          });
-          //initialize
-          $(currentDependency).trigger("focus");
-          $(currentDependency).trigger("keyup");
-          $(currentDependency).trigger("change");
-          };
-        };
-    });
-  });
+                    }
+                });
 
-  $('.selectpicker').selectpicker();
-</script>
+
+                $('#template-selector').on('change', function (event) {
+                    var template_id = $(this).find(":selected").val();
+                    window.location = window.origin + '/template/' + template_id;
+                });
+
+                $('#step-selector').on('change', function (event) {
+                    var step_id = $(this).find(":selected").val();
+                    window.location = window.origin + '/step/' + step_id;
+                });
+
+                $('.info-icon').on('click', function (event) {
+                    var elem = $(this.parentElement.parentElement.getElementsByClassName('parameter-hint')[0]);
+                    if (elem.css("display") == "none") {
+                        elem.css("display", "block");
+                    }
+                    else {
+                        elem.css("display", "none");
+                    }
+                });
+
+                $("input[id^='emptycheckbox_']").on('click', function (event) {
+                    if (this.checked) {
+                        // $($(this.closest('.input-group')).find('span')).attr('disabled',true);
+                        $($(this.closest('.lightsheet-fields')).find('input.form-control')).attr('disabled', true);
+                    }
+                    else {
+                        $($(this.closest('.lightsheet-fields')).find('input.form-control')).removeAttr('disabled');
+                    }
+                })
+
+                $.fn.dataTable.ext.errMode = 'throw';
+            }
+        )
+    </script>
+    <script>
+        $(document).ready(function () {
+            lightsheet.testAllCheckboxes()
+            $(':input[type=text]').each(function () { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
+                let currentValue = $(this).val();
+                let currentID = "#" + $(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
+                var dependenciesFound = currentValue.match(/{([^}]+)}/g);
+                if (dependenciesFound != null) {
+                    for (var i = 0; i < dependenciesFound.length; i++) {//Loop over dependencies
+                        let dependencyFound = dependenciesFound[i];
+                        var isThisALoop = dependencyFound.substr(1, dependencyFound.length - 1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
+                        if (isThisALoop != null) {
+                            dependencyFound = isThisALoop[0];
+                        }
+                        let dependencySubstring = dependencyFound.substr(1, dependencyFound.length - 2);
+                        stepName = dependencySubstring.split("_");
+                        stepName = stepName[stepName.length - 1];
+                        let currentDependency = "#" + dependencySubstring;
+                        if ($(currentDependency).prop('type') == "hidden") {
+                            temp = "select_" + dependencyFound.substr(1, dependencyFound.length - 2);
+                            currentDependency = '[data-id="' + temp + '"]'; //multiselect checkbox still acts weird... cant get it to react when clicked or anything
+                        }
+                        else if ($('input[name=' + dependencySubstring + ']').prop('type')) {
+                            //Radiobutton
+                            currentDependency = 'input[name=' + dependencySubstring + ']'
+                        }
+                        $(currentDependency).bind("focus click keyup change checked", function () {
+                            let updatedValue = currentValue;
+                            for (var j = 0; j < dependenciesFound.length; j++) {//Need to loop through dependencies to ensure that all values are updated, not just the one that was just changed
+                                loopedDependencyFound = dependenciesFound[j];
+                                var isThisALoop = loopedDependencyFound.substr(1, loopedDependencyFound.length - 1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
+                                if (isThisALoop != null) {
+                                    loopedDependencyFound = isThisALoop[0];
+                                }
+                                let standardID = loopedDependencyFound.substr(1, loopedDependencyFound.length - 2);
+                                let dependencyToUpdate = "#" + standardID; //Current one we are updating
+                                let type = $(dependencyToUpdate).prop('type');
+                                dependencyToUpdateValue = null; //Initialize dependencyToUpdateValue to null
+                                if (type == "checkbox") {//If check box is checked, then dependencyToUpdateValue equals empty string
+                                    if ($(dependencyToUpdate).prop('checked')) {
+                                        dependencyToUpdateValue = "";
+                                    }
+                                }
+                                else if (type == "hidden") {//Multiselect checkbox
+                                    dependencyToUpdate = "select_" + standardID;
+                                    dependencyToUpdateValue = $('[data-id="' + dependencyToUpdate + '"]').prop('title');
+                                    if (dependencyToUpdateValue == "Nothing selected" || dependencyToUpdateValue == undefined) {
+                                        dependencyToUpdateValue = null;
+                                    }
+                                }
+                                else if ($('input[name=' + standardID + ']').val()) {
+                                    //radiobutton
+                                    dependencyToUpdateValue = $('input[name=' + standardID + ']:checked').val()
+                                }
+                                else if (!($('input[id=emptycheckbox_' + stepName + '-' + standardID + ']').prop('checked'))) {//If it has an empty checkbox that is checked, then keep it empty. Otherwise, take the value
+                                    //dependencyToUpdateValue takes on the value of the dependency
+                                    dependencyToUpdateValue = $(dependencyToUpdate).val();
+                                    if (currentID.includes("parentOutputDirectory")) {
+                                        dependencyToUpdateValue = dependencyToUpdateValue.substring(0, dependencyToUpdateValue.lastIndexOf("/"));
+                                    }
+                                }
+
+                                if (standardID.match("^--") || standardID.match("^-")) { //If it starts or ends with a - or --
+                                    var lastIndex = standardID.lastIndexOf("_");
+                                    let flagName = standardID.substr(0, lastIndex);
+                                    if (dependencyToUpdateValue != null) {
+                                        if (isThisALoop != null) {//Then this needs to loop
+                                            let splitString = dependencyToUpdateValue.split(" ");
+                                            dependencyToUpdateValue = "";
+                                            for (var k = 0; k < splitString.length; k++) {
+                                                if (splitString[k] != "") {
+                                                    dependencyToUpdateValue = dependencyToUpdateValue + flagName + " " + splitString[k] + " ";
+                                                }
+                                            }
+                                            loopedDependencyFound = "{" + loopedDependencyFound + "}";
+                                        }
+                                        else {
+                                            dependencyToUpdateValue = flagName + " " + dependencyToUpdateValue;
+                                        }
+                                    }
+                                    else {
+                                        dependencyToUpdateValue = "";
+                                    }
+                                }
+                                updatedValue = updatedValue.replace(loopedDependencyFound, dependencyToUpdateValue);
+                            }
+                            ;
+                            updatedValue = updatedValue.replace(/\s\s+/g, ' '); //remove extra spaces
+                            updatedValue = updatedValue.trim(); //remove leading/trailing spaces
+                            $(currentID).val(updatedValue);
+                        });
+                        //initialize
+                        $(currentDependency).trigger("focus");
+                        $(currentDependency).trigger("keyup");
+                        $(currentDependency).trigger("change");
+                    }
+                    ;
+                }
+                ;
+            });
+        });
+
+        $('.selectpicker').selectpicker();
+    </script>
 {% endblock content %}

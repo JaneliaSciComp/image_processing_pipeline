@@ -443,39 +443,27 @@ def config(imageProcessingDB_id):
         return jsonify(output)
 
 
-@app.route('/download_settings/<unique_id>', methods=['GET', 'POST'])
+@app.route('/download_settings/', methods=['GET', 'POST'])
 @login_required
-def download_settings(unique_id):
-    unique_id = int(unique_id)
+def download_settings():
     if request.method == 'POST':
-        stepOrTemplateName = request.args.get('stepOrTemplateName')
         postedJson = request.json
         jobName = ''
         if 'jobName' in postedJson.keys():
             jobName = postedJson['jobName']
             del (postedJson['jobName'])
         reformattedData = reformatDataToPost(postedJson, False)
-        reformattedData = {'username': current_user.username,
-                           'unique_id': unique_id,
-                           'name': jobName,
-                           'stepOrTemplateName': stepOrTemplateName,
+        reformattedData = {'name': jobName,
                            'steps': reformattedData[0],
                            }
-        imageProcessingDB.downloadSettings.insert_one(reformattedData)
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-    else:
-        time.sleep(0.5)
-        output = list(
-            imageProcessingDB.downloadSettings.find({"unique_id": unique_id, 'username': current_user.username},
-                                                    {"_id": 0, "unique_id": 0, "username": 0}))
-        output = output[0]
-        name = output['name']
-        imageProcessingDB.downloadSettings.delete_many({'username': current_user.username})
-        # imageProcessingDB.downloadSettings.delete_one({"unique_id": unique_id})
-        return Response(json.dumps(OrderedDict(output), indent=2, separators=(',', ': ')),
-                        mimetype='application/json',
-                        headers={"Content-Disposition": "attachment;filename=" + name + ".json"})
-
+        #imageProcessingDB.downloadSettings.insert_one(reformattedData)
+        response = app.response_class(
+            response=json.dumps(reformattedData),
+            status=200,
+            mimetype='application/json'
+        )
+        #return json.dumps({{'success': True}, 200, {'ContentType': 'application/json'}})
+        return response
 
 @app.route('/delete_entries/', methods=['POST'])
 @login_required
