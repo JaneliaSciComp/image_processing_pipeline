@@ -20,37 +20,37 @@ lightsheet.testAllCheckboxes = function(){
   }
 };
 
-lightsheet.toggleDeleteButton = function(){
-  deleteCheckboxes = document.querySelectorAll("[id*='deleteCheckbox_']");
-  disableDeleteButton = true;
-  for(var i=0; i< deleteCheckboxes.length; i++){
-        if (deleteCheckboxes[i].checked){
-          disableDeleteButton = false;
+lightsheet.toggleHideButton = function(){
+  hideCheckboxes = document.querySelectorAll("[id*='hideCheckbox_']");
+  disableHideButton = true;
+  for(var i=0; i< hideCheckboxes.length; i++){
+        if (hideCheckboxes[i].checked){
+          disableHideButton = false;
           break;
         }
   }
-  deleteButton = document.getElementById("deleteEntries");
-  deleteButton.disabled = disableDeleteButton;
+  hideButton = document.getElementById("hideEntries");
+  hideButton.disabled = disableHideButton;
 };
 
-lightsheet.deleteEntries = function(){
-  var result= confirm('Are you sure you would like to delete from the database?');
+lightsheet.hideEntries = function(){
+  var result= confirm('Are you sure you would like to hide in display? (Note: This will not delete from the database)');
   if(result) {
-      deleteCheckboxes = document.querySelectorAll("[id*='deleteCheckbox_']");
-      job_ids_to_delete=[];
-      for(var i=0; i< deleteCheckboxes.length; i++){
-          //Get ids to delete and
-          if (deleteCheckboxes[i].checked) {
-              id = deleteCheckboxes[i].id;
+      hideCheckboxes = document.querySelectorAll("[id*='hideCheckbox_']");
+      job_ids_to_hide=[];
+      for(var i=0; i< hideCheckboxes.length; i++){
+          //Get ids to hide and
+          if (hideCheckboxes[i].checked) {
+              id = hideCheckboxes[i].id;
               splitted = id.split("_");
               job_id = splitted[1];
-              job_ids_to_delete.push(job_id)
+              job_ids_to_hide.push(job_id)
           }
       }
       var baseUrl = window.location.origin;
-      dataIo.fetch(baseUrl+'/delete_entries/', 'POST', job_ids_to_delete)
+      dataIo.fetch(baseUrl+'/hide_entries/', 'POST', job_ids_to_hide)
       var urlParams = new URLSearchParams(window.location.search)
-      if (job_ids_to_delete.indexOf(urlParams.get('lightsheetDB_id'))>=0) {//Then it was deleted and we need to reload an earlier verison of the page
+      if (job_ids_to_hide.indexOf(urlParams.get('lightsheetDB_id'))>=0) {//Then it was hidden and we need to reload an earlier verison of the page
           replaceURL = window.location.href.split('?')[0];
           if (replaceURL.indexOf('load/previousjob')>=0){//Then we have to redirect to host
               replaceURL = window.location.host;

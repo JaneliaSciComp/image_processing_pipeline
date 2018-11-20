@@ -16,11 +16,11 @@ $(document).ready(() => {
       data: table_data,
       pageLength: 25,
       columns: [
-      { title: 'Delete',
+      { title: 'Hide',
         data:   'id',
         render: function ( data, type, row ) {
           if ( type === 'display' ) {
-              return '<input type="checkbox" id = deleteCheckbox_' + data + ' class="editor-active" onclick="lightsheet.toggleDeleteButton()">';
+              return '<input type="checkbox" id = hideCheckbox_' + data + ' class="editor-active" onclick="lightsheet.toggleHideButton()">';
           }
           return data;
       },

@@ -120,7 +120,7 @@ def allJobsInJSON(imageProcessingDB):
     #                                                                                     "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
     #                                                                                     "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
     #else:
-    parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
+    parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username,"hideFromView":{"$ne":1}}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
                                                 "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
                                                 "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
     return list(map(mapJobsToDict, parentJobInfo))

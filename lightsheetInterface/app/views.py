@@ -465,13 +465,13 @@ def download_settings():
         #return json.dumps({{'success': True}, 200, {'ContentType': 'application/json'}})
         return response
 
-@app.route('/delete_entries/', methods=['POST'])
+@app.route('/hide_entries/', methods=['POST'])
 @login_required
-def delete_entries():
-    ids_to_delete = request.json
-    for i, id_to_delete in enumerate(ids_to_delete):
-        ids_to_delete[i] = ObjectId(id_to_delete)
-    imageProcessingDB.jobs.delete_many({"username": current_user.username, "_id": {"$in": ids_to_delete}})
+def hide_entries():
+    ids_to_hide = request.json
+    for i, id_to_hide in enumerate(ids_to_hide):
+        ids_to_hide[i] = ObjectId(id_to_hide)
+    imageProcessingDB.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}},{"$set":{"hideFromView":1}})
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
