@@ -1,0 +1,23 @@
+{% extends "branding.html" %}
+{% block content %}
+
+
+    <div class="row lightsheet-row">
+        <table class="table table-striped table-hover" id='job-table'/>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/table.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/submit.js') }}"></script>
+    <!-- template variables to be processed in JavaScript -->
+    <script>
+        allJobs=true;
+        var hideColumns = 0;
+        {% if jobsJson %}
+            var jacs_host = "{{jacs_host}}";
+            var table_data = {{ jobsJson|safe }};
+        {% else %}
+            var table_data = null;
+        {% endif %}
+
+    </script>
+{% endblock content %}

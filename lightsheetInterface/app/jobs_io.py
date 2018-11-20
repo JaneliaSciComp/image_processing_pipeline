@@ -273,6 +273,8 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
 
     pipelineSteps = OrderedDict()
     jobData = getJobStepData(imageProcessingDB_id, imageProcessingDB)  # get the data for all jobs
+    preexistingJobUsername = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},{"username": 1}))
+    username = preexistingJobUsername[0]["username"]
     ableToReparameterize = True
     succededButLatterStepFailed = []
     if jobData:
@@ -328,4 +330,4 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
     elif type(jobData) is dict:
         loadStatus = 'Job cannot be loaded.'
 
-    return pipelineSteps, loadStatus, jobName
+    return pipelineSteps, loadStatus, jobName, username

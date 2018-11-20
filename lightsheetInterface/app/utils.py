@@ -72,6 +72,8 @@ def mapJobsToDict(x):
         result['username'] = x['username'] if x['username'] is not None else ''
     if 'jobName' in x:
         result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
+    if 'username' in x:
+        result['username'] = x['username'] if x['username'] is not None else ''
     if 'submissionAddress' in x:
         result['submissionAddress'] = x['submissionAddress'] if x['submissionAddress'] is not None else ''
     else:
@@ -114,15 +116,15 @@ def mapJobsToDict(x):
 
 
 # get job information used by jquery datatable
-def allJobsInJSON(imageProcessingDB):
-    #if current_user.username == "ackermand":
-    #    parentJobInfo = imageProcessingDB.jobs.find({}, {"_id": 1, "jobName": 1, "submissionAddress": 1, "creationDate": 1,
-    #                                                                                     "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-    #                                                                                     "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
-    #else:
-    parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username,"hideFromView":{"$ne":1}}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
-                                                "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-                                                "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
+def allJobsInJSON(imageProcessingDB,showAllJobs=False):
+    if showAllJobs:
+        parentJobInfo = imageProcessingDB.jobs.find({"username": {"$exists": "true"}, "hideFromView":{"$ne":1}}, {"_id": 1, "username": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
+                                                                                                                  "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
+                                                                                                                  "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
+    else:
+        parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username, "hideFromView":{"$ne":1}}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
+                                                    "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
+                                                    "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
     return list(map(mapJobsToDict, parentJobInfo))
 
 
@@ -299,11 +301,14 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
 
 
 # get latest status information about jobs from db
-def updateDBStatesAndTimes(imageProcessingDB):
+def updateDBStatesAndTimes(imageProcessingDB,showAllJobs=False):
     if current_user.is_authenticated:
-        allJobInfoFromDB = list(imageProcessingDB.jobs.find(
-                            {"username": current_user.username,
-                             "state": {"$in": ["NOT YET QUEUED","RUNNING", "CREATED","QUEUED","DISPATCHED"]}}))
+        if showAllJobs:
+            allJobInfoFromDB = list(imageProcessingDB.jobs.find({"username": {"$exists": "true"},"state": {"$in": ["NOT YET QUEUED","RUNNING", "CREATED","QUEUED","DISPATCHED"]}}))
+        else:
+            allJobInfoFromDB = list(imageProcessingDB.jobs.find(
+                                {"username": current_user.username,
+                                 "state": {"$in": ["NOT YET QUEUED","RUNNING", "CREATED","QUEUED","DISPATCHED"]}}))
         for parentJobInfoFromDB in allJobInfoFromDB:
             if 'jacs_id' in parentJobInfoFromDB:  # TODO handle case, when jacs_id is missing
                 # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:

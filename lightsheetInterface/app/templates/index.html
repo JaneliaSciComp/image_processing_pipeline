@@ -74,8 +74,8 @@
         <div class="row lightsheet-row" style="margin-top: 2em;">
             <h4>Previous Jobs</h4>
         </div>
-        <input type="submit" id="hideEntries" class="btn btn-info hide-button" value="Hide Selected" disabled
-               onclick="lightsheet.hideEntries()">
+        <div>    <a href="{{ url_for('all_jobs')}}" target="_blank">View all jobs</a> </div>
+        <input type="submit" id="hideEntries" class="btn btn-info hide-button" value="Hide Selected" disabled onclick="lightsheet.hideEntries()">
     {% endif %}
 
     <div class="row lightsheet-row">
@@ -86,6 +86,8 @@
     <script src="{{ url_for('static', filename='js/submit.js') }}"></script>
     <!-- template variables to be processed in JavaScript -->
     <script>
+        var allJobs=false;
+        var hideColumns = 1;
         {% if jobsJson %}
             var jacs_host = "{{jacs_host}}";
             var table_data = {{ jobsJson|safe }};

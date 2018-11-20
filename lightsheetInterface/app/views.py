@@ -71,6 +71,11 @@ def step(step_name):
     pipelineSteps = None
     jobName = None
     posted = "false"
+    if lightsheetDB_id:
+        pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+        if reparameterize and current_user.username != username:
+            #Then don't allow because not the same user as the user who submitted the job
+            abort(404)
     if request.method == 'POST':
         posted = "true"
         if request.json:
@@ -79,9 +84,6 @@ def step(step_name):
                                          None, stepOrTemplateName)
         else:
             time.sleep(0.5)
-    if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
-                                                                configObj)
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
@@ -113,6 +115,11 @@ def template(template_name):
     pipelineSteps = None
     jobName = None
     posted = "false"
+    if lightsheetDB_id:
+        pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+        if reparameterize and current_user.username != username:
+            #Then don't allow because not the same user as the user who submitted the job
+            abort(404)
     if request.method == 'POST':
         posted = "true"
         if request.json:
@@ -122,9 +129,6 @@ def template(template_name):
                                          stepOrTemplateName)
         else:
             time.sleep(0.5)
-    if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize,
-                                                                configObj)
 
     global allStepNames, globalParameters, nonGlobalParameters
     allStepNames = []
@@ -183,6 +187,10 @@ def job_status():
         posted = "true"
         pausedJobInformation = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)}))
         pausedJobInformation = pausedJobInformation[0]
+        username = pausedJobInformation["username"]
+        if current_user.username != username:
+            #Then don't allow because not the same user as the user who submitted the job
+            abort(404)
         # Make sure that we pop off all steps that have completed and been approved, ie, ones that are no longer in remaining
         pausedStates = [step['parameters']['pause'] if ('pause' in step['parameters'] and step["name"] in pausedJobInformation["remainingStepNames"]) else 0 for step in pausedJobInformation["steps"]]
         pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
@@ -355,8 +363,10 @@ def load_configuration(config_name):
     jobName = None
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
-            pipelineSteps, submissionStatus, jobName = loadPreexistingJob(imageProcessingDB, lightsheetDB_id,
-                                                                          reparameterize, configObj)
+            pipelineSteps, submissionStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+            if reparameterize and current_user.username != username:
+                #Then don't allow because not the same user as the user who submitted the job
+                abort(404)
             for stepName in pipelineSteps:
                 allStepNames.append(stepName)
                 if "GLOBALPARAMETERS" in stepName.upper():
@@ -491,6 +501,15 @@ def createDependencyResults(dependencies):
               result.append(obj)
     return result
 
+@app.route('/all_jobs', methods=['GET'])
+@login_required
+def all_jobs():
+    showAllJobs=True
+    updateDBStatesAndTimes(imageProcessingDB,showAllJobs)
+    jobs = allJobsInJSON(imageProcessingDB,showAllJobs)
+    return render_template('all_jobs.html',
+                           jobsJson=jobs,  # used by the job table
+                           jacs_host = jacs_host)
 
 @app.context_processor
 def add_value_dependency_object():
