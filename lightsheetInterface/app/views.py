@@ -1,6 +1,6 @@
 # Contains routes and functions to pass content to the template layer
 import requests, json, os, math, bson, re, subprocess, ipdb, logging, time
-from flask import render_template, request, jsonify, abort, send_from_directory, Response
+from flask import render_template, request, jsonify, abort, send_from_directory, Response, flash
 from flask import send_from_directory, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
