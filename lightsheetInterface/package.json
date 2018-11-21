@@ -1,6 +1,6 @@
 {
   "name": "lightsheetinterface",
-  "version": "0.13.6",
+  "version": "0.13.7",
   "description": "LightSheet Pipeline Configurator",
   "main": "flightplan.js",
   "dependencies": {
