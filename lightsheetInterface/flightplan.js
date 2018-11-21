@@ -128,9 +128,14 @@ plan.remote('deploy', function(remote) {
   remote.exec('cp ' + config.projectDir + '/env_config.py ' + config.projectDir + '/current/');
 });
 
+// plan.remote('deploy', function(remote) {
+//   remote.log('Create upload folder');
+//   remote.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
+// });
+
 plan.remote('deploy', function(remote) {
-  remote.log('Create upload folder');
-  remote.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
+  remote.log('Restart application');
+  remote.exec('sudo /usr/local/bin/flask_restart.sh');
 });
 
 plan.remote('rollback', function(remote) {
