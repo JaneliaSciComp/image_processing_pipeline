@@ -5,8 +5,7 @@ var config = {
   projectDir: '/opt/projects/lightsheet',  // location on the remote server
   pythonPath: '/usr/bin/python3',
   keepReleases: 3,
-  username: 'kazimiersa',
-  root: 'root'
+  username: 'flask',
 };
 
 plan.target('local', {
@@ -20,6 +19,15 @@ plan.target('local', {
 
 plan.target('staging', {
   host: 'lightsheet',
+  username: config.username,
+  agent: process.env.SSH_AUTH_SOCK
+  },{
+    // Shouldn't be overridden, so please don't try.
+    gitCheck: true
+});
+
+plan.target('test', {
+  host: 'pipeline-test',
   username: config.username,
   agent: process.env.SSH_AUTH_SOCK
   },{
