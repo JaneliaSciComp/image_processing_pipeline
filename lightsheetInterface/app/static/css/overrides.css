@@ -169,6 +169,14 @@ fieldset {
   color: #BBBBBB;
 }
 
+.pause-check {
+  float: right;
+  margin-top: 0.5em;
+}
+.pause-check-label {
+  float: right;
+  margin-top: 0.15em;
+}
 .label-mount {
   background-color: #dce6ef;
 }

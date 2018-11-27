@@ -192,7 +192,7 @@ def job_status():
             #Then don't allow because not the same user as the user who submitted the job
             abort(404)
         # Make sure that we pop off all steps that have completed and been approved, ie, ones that are no longer in remaining
-        pausedStates = [step['parameters']['pause'] if ('pause' in step['parameters'] and step["name"] in pausedJobInformation["remainingStepNames"]) else 0 for step in pausedJobInformation["steps"]]
+        pausedStates = [step['pause'] if ('pause' in step and step["name"] in pausedJobInformation["remainingStepNames"]) else 0 for step in pausedJobInformation["steps"]]
         pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
         while pausedJobInformation["remainingStepNames"][0] != pausedJobInformation["steps"][pausedStepIndex]["name"]:
              pausedJobInformation["remainingStepNames"].pop(0)

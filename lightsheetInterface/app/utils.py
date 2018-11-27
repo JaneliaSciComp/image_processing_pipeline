@@ -21,7 +21,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
         _id = ObjectId(_id)
 
     if parentOrChild == "parent":
-        parentJobInfo = list(imageProcessingDB.jobs.find({"username": current_user.username}, {"configAddress": 1, "state": 1, "jobName": 1, "remainingStepNames":1,
+        parentJobInfo = list(imageProcessingDB.jobs.find({"username": current_user.username,"hideFromView":{"$ne":1}}, {"configAddress": 1, "state": 1, "jobName": 1, "remainingStepNames":1,
                                                               "creationDate": 1, "jacs_id": 1, "steps.name": 1,
                                                               "steps.state": 1}))
         for currentJobInfo in parentJobInfo:
@@ -44,7 +44,7 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
                                                     {"remainingStepNames":1,"stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
                                                      "steps.creationTime": 1, "steps.endTime": 1,
                                                      "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
-                                                     "steps.parameters.pause": 1, "steps._id":1}))
+                                                     "steps.pause": 1, "steps._id":1}))
         tempList = tempList[0]
         remainingStepNames = tempList["remainingStepNames"]
         for step in tempList["steps"]:
@@ -106,7 +106,7 @@ def mapJobsToDict(x):
             if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED", "DISPATCHED"]:
                 if step["name"] in x['remainingStepNames']:
                     result['selectedSteps']['states']=result['selectedSteps']['states']+ 'RESET,'
-            elif "pause" in step['parameters'] and step['parameters']['pause'] and step['state'] == "SUCCESSFUL":
+            elif "pause" in step and step['pause'] and step['state'] == "SUCCESSFUL":
                 if step["name"] in x['remainingStepNames']:
                     result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET,'
 
@@ -120,11 +120,11 @@ def allJobsInJSON(imageProcessingDB,showAllJobs=False):
     if showAllJobs:
         parentJobInfo = imageProcessingDB.jobs.find({"username": {"$exists": "true"}, "hideFromView":{"$ne":1}}, {"_id": 1, "username": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
                                                                                                                   "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-                                                                                                                  "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
+                                                                                                                  "steps.state": 1, "steps.name": 1, "steps.pause": 1})
     else:
         parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username, "hideFromView":{"$ne":1}}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
                                                     "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-                                                    "steps.state": 1, "steps.name": 1, "steps.parameters.pause": 1})
+                                                    "steps.state": 1, "steps.name": 1, "steps.pause": 1})
     return list(map(mapJobsToDict, parentJobInfo))
 
 
@@ -256,7 +256,7 @@ def getConfigurationsFromDB(imageProcessingDB_id, imageProcessingDB, globalParam
             else:
                 output = list(
                     imageProcessingDB.jobs.find({'_id': ObjectId(imageProcessingDB_id), 'steps.name': stepName},
-                                                {'_id': 0, "steps.$.parameters": 1}))
+                                                {'_id': 0, "steps.$":1}))
                 if output:
                     output = output[0]["steps"][0]["parameters"]
         else:
@@ -270,7 +270,7 @@ def getConfigurationsFromDB(imageProcessingDB_id, imageProcessingDB, globalParam
 # get the job parameter information from db
 def getArgumentsToRunJob(imageProcessingDB, _id):
     currentJobSteps = imageProcessingDB.jobs.find({'_id': ObjectId(_id)},
-                                                  {'_id': 0, 'steps.name': 1, 'steps.parameters.pause': 1})
+                                                  {'_id': 0, 'steps.name': 1, 'steps.pause': 1})
     temp = list(imageProcessingDB.jobs.find({"_id": ObjectId(_id)}, {'_id': 0, "remainingStepNames": 1}))
     if "remainingStepNames" in temp[0]:
         remainingStepNames = temp[0]["remainingStepNames"]
@@ -286,8 +286,8 @@ def getArgumentsToRunJob(imageProcessingDB, _id):
         if currentJobSteps[0]["steps"][currentStepIndex]["name"] in remainingStepNames:
             step = currentJobSteps[0]["steps"][currentStepIndex]
             output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"] + step["name"] + ','
-            if ("pause" in step["parameters"]):
-                pauseState = step["parameters"]["pause"]
+            if ("pause" in step):
+                pauseState = step["pause"]
         currentStepIndex = currentStepIndex + 1
     if output["currentJACSJobStepNames"]:
         output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"][:-1]

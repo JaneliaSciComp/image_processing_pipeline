@@ -76,7 +76,7 @@
                 <td></td>
               {% endif %}
             </tr>
-            {% if currentChildJob.parameters.pause and currentChildJob.state=="SUCCESSFUL"%}
+            {% if currentChildJob.pause and currentChildJob.state=="SUCCESSFUL"%}
               {% if loop.index<=childJobInfo|length and currentChildJob.name in remainingStepNames %}
                 <tr>
                   <td align="center" colspan=6>

@@ -19,11 +19,14 @@
                         {{ state }}>
                 {{ step.description }}
             </label>
-            <label class="step-type">
-                {% if step.steptype is not none %}
-                    {{ step.steptype }}
+            {% if step.steptype != "" %}
+                <label class="pause-check-label" for=pausecheck-{{ step.name }}" >Pause</label>
+                {% if pipelineStep.pause==1 %}
+                    <input class="pause-check" id="pausecheck-{{ step.name }}" type="checkbox" checked>
+                {% else %}
+                    <input class="pause-check" id="pausecheck-{{ step.name }}" type="checkbox" >
                 {% endif %}
-            </label>
+            {% endif %}
         </h5>
     </div>
     <div id="collapse{{ step.name }}" class="collapse {{ pipelineStep.collapseOrShow }}" aria-labelledby="headingOne"

@@ -33,6 +33,8 @@ def reformatDataToPost(postedData, forSubmission=True):
                 stepResult['type'] = postedData[step]['type']
             if 'bindPaths' in postedData[step].keys():
                 stepResult['bindPaths'] = postedData[step]['bindPaths']
+            if 'type' in postedData[step].keys():
+                stepResult['pause'] = postedData[step]['pause']
             if forSubmission:
                 stepResult['state'] = 'NOT YET QUEUED'
             stepParamResult = {}
@@ -283,8 +285,7 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                                         {"remainingStepNames": 1, "globalParameters": 1}))
         if "globalParameters" in globalParametersAndRemainingStepNames[0]:
             globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
-        if ("pause" in jobData[-1]["parameters"] and jobData[-1]["parameters"]["pause"] == 0 and jobData[-1][
-            "state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in jobData):
+        if ("pause" in jobData[-1] and jobData[-1]["pause"] == 0 and jobData[-1]["state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in jobData):
             ableToReparameterize = False
         errorStepIndex = next((i for i, step in enumerate(jobData) if step["state"] == "ERROR"), None)
         if errorStepIndex:
@@ -322,6 +323,7 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                         pipelineSteps[currentStep] = {
                             'stepName': currentStep,
                             'stepDescription': step.description,
+                            'pause': jobData[i]['pause'] if 'pause' in jobData[i] else 0,
                             'inputJson': None,
                             'checkboxState': checkboxState,
                             'collapseOrShow': collapseOrShow,
