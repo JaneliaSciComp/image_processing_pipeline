@@ -466,13 +466,11 @@ def download_settings():
         reformattedData = {'name': jobName,
                            'steps': reformattedData[0],
                            }
-        #imageProcessingDB.downloadSettings.insert_one(reformattedData)
         response = app.response_class(
             response=json.dumps(reformattedData),
             status=200,
             mimetype='application/json'
         )
-        #return json.dumps({{'success': True}, 200, {'ContentType': 'application/json'}})
         return response
 
 @app.route('/hide_entries/', methods=['POST'])
@@ -481,7 +479,7 @@ def hide_entries():
     ids_to_hide = request.json
     for i, id_to_hide in enumerate(ids_to_hide):
         ids_to_hide[i] = ObjectId(id_to_hide)
-    imageProcessingDB.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}},{"$set":{"hideFromView":1}})
+    output=imageProcessingDB.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}},{"$set":{"hideFromView":1}})
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
@@ -510,6 +508,21 @@ def all_jobs():
     return render_template('all_jobs.html',
                            jobsJson=jobs,  # used by the job table
                            jacs_host = jacs_host)
+
+@app.route('/table_data', methods=['GET'])
+@login_required
+def table_data():
+    showAllJobs = request.args.get('showAllJobs')=='True'
+    updateDBStatesAndTimes(imageProcessingDB,showAllJobs)
+    data = allJobsInJSON(imageProcessingDB,showAllJobs)
+    output={}
+    output['data'] = data
+    response = app.response_class(
+        response=json.dumps(output),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @app.context_processor
 def add_value_dependency_object():

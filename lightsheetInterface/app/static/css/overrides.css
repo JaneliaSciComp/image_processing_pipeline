@@ -104,10 +104,12 @@ fieldset {
 }
 
 .step-checkbox {
-  margin-top: -0.29em;
-  margin-right: 0.5em;
+  margin-left: 0.75em;
 }
 
+.expand-icon {
+  cursor: default;
+}
 .status-error {
   background-color: rgba(255,0,0,0.3)
 }
@@ -171,12 +173,8 @@ fieldset {
 
 .pause-check {
   float: right;
-  margin-top: 0.5em;
 }
-.pause-check-label {
-  float: right;
-  margin-top: 0.15em;
-}
+
 .label-mount {
   background-color: #dce6ef;
 }

@@ -6,7 +6,15 @@ var lightsheet = lightsheet || {};
 /*
  * Check, if there is a step checkbox checked, if not, disable submit button
 */
-lightsheet.testAllCheckboxes = function(){
+lightsheet.testAllCheckboxes = function(object){
+  if(object && !object.checked ){//minimize if unchecked
+      stepName = object.id.split("-")[1];
+      expandIcon = document.getElementById("expandIcon-"+stepName);
+      console.log(expandIcon.innerHTML)
+      if (expandIcon.innerHTML == "−") {
+          expandIcon.click();
+      }
+  }
   const checked_boxes = $('form :input[id^=check-]:checked');
   if (checked_boxes.length > 0) {
     $('.submit-button').each(function(){
@@ -17,6 +25,18 @@ lightsheet.testAllCheckboxes = function(){
     $('.submit-button').each(function(){
       this.disabled = true;
     });
+  }
+};
+
+lightsheet.expandStep = function(object){
+  stepName = object.id.split("-")[1];
+  if(object.innerHTML=="+") {
+      object.innerHTML = "&minus;";
+      document.getElementById("check-"+stepName).checked=true;
+      lightsheet.testAllCheckboxes();
+  }
+  else{
+    object.innerHTML="&plus;";
   }
 };
 
@@ -48,18 +68,8 @@ lightsheet.hideEntries = function(){
           }
       }
       var baseUrl = window.location.origin;
-      dataIo.fetch(baseUrl+'/hide_entries/', 'POST', job_ids_to_hide)
-      var urlParams = new URLSearchParams(window.location.search)
-      if (job_ids_to_hide.indexOf(urlParams.get('lightsheetDB_id'))>=0) {//Then it was hidden and we need to reload an earlier verison of the page
-          replaceURL = window.location.href.split('?')[0];
-          if (replaceURL.indexOf('load/previousjob')>=0){//Then we have to redirect to host
-              replaceURL = window.location.host;
-          }
-      }
-      else {
-        replaceURL = window.location.href;
-      }
-      window.location.replace(replaceURL)
+      dataIo.fetch(baseUrl+'/hide_entries/', 'POST', job_ids_to_hide);
+      $('#job-table').DataTable().ajax.reload(null, false);
   }
 }
 /*

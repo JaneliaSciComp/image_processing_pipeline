@@ -88,6 +88,8 @@
     <script>
         var allJobs=false;
         var hideColumns = 1;
+        var tableDataURL =  window.location.origin + "/table_data?showAllJobs=False";
+
         {% if jobsJson %}
             var jacs_host = "{{jacs_host}}";
             var table_data = {{ jobsJson|safe }};

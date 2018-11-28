@@ -1,31 +1,32 @@
 {% from "_formhelpers.html" import render_field %}
 <!-- This file contains the template code for each and every pipeline step and includes a separate template to render each parameter -->
-<div class="card" id="{{ step.name }}-card">
-    <div class="card-header" id="headingOne">
+<div class="card" id="{{ step.name }}-card" >
+    <div class="card-header" id="headingOne"  >
         <h5 class="mb-0">
+            <b data-toggle="collapse" class="expand-icon" data-target="#collapse{{ step.name }}" id="expandIcon-{{  step.name }}" onclick="lightsheet.expandStep(this)">&plus;</b>
             <label>
-                {% set state = False %}
                 <input
                         id="check-{{ step.name }}"
                         type="checkbox"
-                        class="btn btn-link step-name step-checkbox"
-                        data-toggle="collapse"
-                        data-target="#collapse{{ step.name }}"
-                        aria-expanded={{ state }}
+                        class="step-name step-checkbox"
                                 aria-controls="collapse{{ step.name }}"
                         value={{ step.name + "_checkbox" }}
-                                onclick="lightsheet.testAllCheckboxes()"
+                                onclick="lightsheet.testAllCheckboxes(this)"
                         {{ pipelineStep.checkboxState }}
-                        {{ state }}>
+                        style="cursor:default"
+                        >
                 {{ step.description }}
             </label>
             {% if step.steptype != "" %}
-                <label class="pause-check-label" for=pausecheck-{{ step.name }}" >Pause</label>
+                <div style="display: inline" class="pause-check">
+                <label>
                 {% if pipelineStep.pause==1 %}
-                    <input class="pause-check" id="pausecheck-{{ step.name }}" type="checkbox" checked>
+                    <input id="pausecheck-{{ step.name }}" type="checkbox" checked>
                 {% else %}
-                    <input class="pause-check" id="pausecheck-{{ step.name }}" type="checkbox" >
+                    <input id="pausecheck-{{ step.name }}" type="checkbox">
                 {% endif %}
+                    Pause</label>
+                </div>
             {% endif %}
         </h5>
     </div>

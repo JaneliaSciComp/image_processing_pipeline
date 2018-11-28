@@ -6,13 +6,13 @@
  * Generate jQuery datatables table
  */
 
-$(document).ready(()=>{let table = null;
-if (table_data) {
+$(document).ready(()=>{let table=null;
     table = $('#job-table').DataTable({
+        stateSave:false,
         order: [[3, "desc"]],
         responsive: true,
         autoWidth: false,
-        data: table_data,
+        ajax: tableDataURL,
         pageLength: 25,
         columnDefs: [{visible: false, targets: hideColumns}],
         columns: [
@@ -128,6 +128,30 @@ if (table_data) {
             }
         ],
     });
-}
+    var previousOrder=table.order().concat();
+    setInterval(function(){
+        //check if any hides are checked, in which case wait to refresh table
+        if ($('input:checkbox[id^="hideCheckbox_"]:checked').length==0){
+            //to prevent resorting that undoes previous sorting, need to keep current order and append the previous order
+            currentOrder = table.order().concat();
+            var  order = currentOrder.concat();
+            for (var i=0; i<previousOrder.length; i++){
+                appendToOrder=true;
+                for(var j=0; j<currentOrder.length; j++) {
+                    if (previousOrder[i][0] == currentOrder[j][0]) {//then referencing same column and only want to take that referring to differentOne
+                        appendToOrder = false;
+                        break;
+                    }
+                }
+                if(appendToOrder){
+                    order.push(previousOrder[i])
+                }
+            }
+            previousOrder=order.concat();
+            table.order(order);
+            table.ajax.reload(null, false);
+        }
+    }, 5000);
+
 })
 ;
