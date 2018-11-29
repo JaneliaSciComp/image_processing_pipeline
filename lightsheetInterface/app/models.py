@@ -1,4 +1,4 @@
-from mongoengine import (StringField, IntField, FloatField, ListField, BooleanField,
+from mongoengine import (StringField, IntField, IntField, FloatField, ListField, BooleanField,
                          DateTimeField, Document, ReferenceField)
 from flask_admin.contrib.mongoengine import ModelView
 from wtforms import TextAreaField
@@ -35,16 +35,18 @@ class Parameter(Document):
     formatting = StringField(max_length=20, choices=formats)
     readonly = BooleanField()
     empty = BooleanField()
+    startsEmpty = BooleanField()
     order = IntField()
     hint = StringField()
 
     # fields, which store default value information
-    number1 = FloatField()
-    number2 = FloatField()
-    number3 = FloatField()
-    number4 = FloatField()
-    number5 = FloatField()
-    number6 = FloatField()
+    number1 = IntField()
+    number2 = IntField()
+    number3 = IntField()
+    number4 = IntField()
+    number5 = IntField()
+    number6 = IntField()
+    float1 = FloatField()
     text1 = StringField(max_length=500)
     text2 = StringField(max_length=500)
     text3 = StringField(max_length=500)
@@ -92,12 +94,13 @@ class ConfigurationInstance(Document):
     creation_date = DateTimeField()
     step = ReferenceField(Step)
     parameter = ReferenceField(Parameter)
-    number1 = FloatField()
-    number2 = FloatField()
-    number3 = FloatField()
-    number4 = FloatField()
-    number5 = FloatField()
-    number6 = FloatField()
+    number1 = IntField()
+    number2 = IntField()
+    number3 = IntField()
+    number4 = IntField()
+    number5 = IntField()
+    number6 = IntField()
+    float1 = FloatField()
     text1 = StringField(max_length=500)
     text2 = StringField(max_length=500)
     text3 = StringField(max_length=500)
@@ -188,8 +191,8 @@ class CKTextAreaField(TextAreaField):
 
 class ExtendedParameterView(ModelView):
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1", "text2",
-                    "text3", "text4", "boolean", "readonly", "ignore", "mount", "empty", "frequency", "formatting",
+    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
+                    "text3", "text4", "boolean", "readonly", "ignore", "mount", "empty", "startsEmpty", "frequency", "formatting",
                     "order", "hint"]
     column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
                       "text2", "text3", "text4", "boolean", "mount", "frequency", "formatting", "ignore"]

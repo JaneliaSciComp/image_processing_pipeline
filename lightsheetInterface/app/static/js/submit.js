@@ -58,10 +58,7 @@ dataIo.grabData = function () {
     checked_boxes.each(function (index, element) {
         const step = this.id.replace('check-', '');
         const checked_boxes = $('form :input[id^=check-]:checked');
-        var stepType = $(this.closest('.card-header')).find('.step-type')[0];
-        if (stepType) {
-            stepType = stepType.innerText;
-        }
+        var stepType = document.getElementById("check-" + step).getAttribute("data-steptype");
 
         data[step] = {};
         pausecheck = document.getElementById('pausecheck-' + step);

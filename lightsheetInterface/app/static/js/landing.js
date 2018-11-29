@@ -10,8 +10,7 @@ lightsheet.testAllCheckboxes = function(object){
   if(object && !object.checked ){//minimize if unchecked
       stepName = object.id.split("-")[1];
       expandIcon = document.getElementById("expandIcon-"+stepName);
-      console.log(expandIcon.innerHTML)
-      if (expandIcon.innerHTML == "−") {
+      if (expandIcon.innerHTML == "▾") {
           expandIcon.click();
       }
   }
@@ -30,13 +29,13 @@ lightsheet.testAllCheckboxes = function(object){
 
 lightsheet.expandStep = function(object){
   stepName = object.id.split("-")[1];
-  if(object.innerHTML=="+") {
-      object.innerHTML = "&minus;";
+  if(object.innerHTML=="▸") {
+      object.innerHTML = "▾";
       document.getElementById("check-"+stepName).checked=true;
       lightsheet.testAllCheckboxes();
   }
   else{
-    object.innerHTML="&plus;";
+    object.innerHTML="▸";
   }
 };
 

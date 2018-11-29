@@ -1,31 +1,37 @@
 {% from "_formhelpers.html" import render_field %}
 <!-- This file contains the template code for each and every pipeline step and includes a separate template to render each parameter -->
-<div class="card" id="{{ step.name }}-card" >
-    <div class="card-header" id="headingOne"  >
+<div class="card" id="{{ step.name }}-card">
+    <div class="card-header" id="headingOne">
         <h5 class="mb-0">
-            <b data-toggle="collapse" class="expand-icon" data-target="#collapse{{ step.name }}" id="expandIcon-{{  step.name }}" onclick="lightsheet.expandStep(this)">&plus;</b>
+            {% if pipelineStep.collapseOrShow=="show" %}
+                <b data-toggle="collapse" class="expand-icon" data-target="#collapse{{ step.name }}"
+                   id="expandIcon-{{ step.name }}" onclick="lightsheet.expandStep(this)">&#x25BE</b>
+            {% else %}
+                <b data-toggle="collapse" class="expand-icon" data-target="#collapse{{ step.name }}"
+                   id="expandIcon-{{ step.name }}" onclick="lightsheet.expandStep(this)">&#x25B8</b>
+            {% endif %}
             <label>
                 <input
                         id="check-{{ step.name }}"
                         type="checkbox"
                         class="step-name step-checkbox"
-                                aria-controls="collapse{{ step.name }}"
+                        aria-controls="collapse{{ step.name }}"
                         value={{ step.name + "_checkbox" }}
                                 onclick="lightsheet.testAllCheckboxes(this)"
                         {{ pipelineStep.checkboxState }}
                         style="cursor:default"
-                        >
+                        data-steptype="{{ step.steptype }}">
                 {{ step.description }}
             </label>
             {% if step.steptype != "" %}
                 <div style="display: inline" class="pause-check">
-                <label>
-                {% if pipelineStep.pause==1 %}
-                    <input id="pausecheck-{{ step.name }}" type="checkbox" checked>
-                {% else %}
-                    <input id="pausecheck-{{ step.name }}" type="checkbox">
-                {% endif %}
-                    Pause</label>
+                    <label>
+                        {% if pipelineStep.pause==1 %}
+                            <input id="pausecheck-{{ step.name }}" type="checkbox" checked>
+                        {% else %}
+                            <input id="pausecheck-{{ step.name }}" type="checkbox">
+                        {% endif %}
+                        Pause</label>
                 </div>
             {% endif %}
         </h5>
@@ -50,6 +56,7 @@
                         {% set meta = value %}
                         {% set keyForProvidedStep = param.name.split("_")[0] %}
                         {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
+                            {% set usesDefaultStepValue=False %}
                             {% if param.text1 and '{' in param.text1 and '}' in param.text1 and not param.text2 %}
                                 {#Then is dependency, TODO: do this in a better way#}
                                 {% set data = param.text1 %}
@@ -57,6 +64,7 @@
                                 {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
                             {% endif %}
                         {% else %}
+                            {% set usesDefaultStepValue=True %}
                             {% if meta.formatting == 'C' and pipelineStep is none %}
                                 {% set data = [param.number1] %}
                                 {% elif meta.formatting == 'B' %}{#Radio Button#}
@@ -83,6 +91,8 @@
                                 {% endif %}
                             {% elif meta.type == "Text" or meta.formatting=='A' %}
                                 {% set data = param.text1 %}
+                            {% elif meta.type =="Float" %}
+                                {% set data = param.float1 %}
                             {% else %}
                                 {% if meta.count == '1' %}
                                     {% set data = param.number1 %}

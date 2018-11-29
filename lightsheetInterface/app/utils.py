@@ -135,7 +135,7 @@ def getParameters(parameter):
     rare = {}
     for param in parameter:
         if param.number1 != None:
-            param.type = 'Number'
+            param.type = 'Integer'
             if param.number2 == None:
                 param.count = '1'
             elif param.number3 == None:
@@ -148,6 +148,9 @@ def getParameters(parameter):
                 param.count = '5'
             else:
                 param.count = '6'
+        elif param.float1:
+            param.type = 'Float'
+            param.count = '1'
         elif param.text1:
             param.type = 'Text'
             if not param.text2:

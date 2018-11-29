@@ -46,7 +46,7 @@
             {% include "multiselect-parameter.html" ignore missing with context %}
         {% elif meta.formatting == 'B' %}
             {% include "radiobutton-parameter.html" ignore missing with context %}
-        {% elif meta.type == 'Number' %}
+        {% elif meta.type == 'Integer' or meta.type == 'Float' %}
             {% if meta.count == '1' %}
                 <input type="number" step="any" class="form-control lightsheet-number" value="{{ data }}" {{ addAttribute }} id="{{ param.name }}">
             {% elif meta.count == '2' %}
@@ -87,7 +87,7 @@
                 <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field value">
             {% endif %}
             <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ param }}" {{ addAttribute }} value=false onchange="lightsheet.passEmptyField(this)">
-            {% if not data %}
+            {% if (not data or (usesDefaultStepValue and meta.startsEmpty)) %}
                 {% set needsToBeChecked = True %}
             {% else %}
                 {% set needsToBeChecked = False %}

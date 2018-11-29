@@ -33,7 +33,7 @@ def reformatDataToPost(postedData, forSubmission=True):
                 stepResult['type'] = postedData[step]['type']
             if 'bindPaths' in postedData[step].keys():
                 stepResult['bindPaths'] = postedData[step]['bindPaths']
-            if 'type' in postedData[step].keys():
+            if 'pause' in postedData[step].keys():
                 stepResult['pause'] = postedData[step]['pause']
             if forSubmission:
                 stepResult['state'] = 'NOT YET QUEUED'
