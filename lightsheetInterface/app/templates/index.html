@@ -225,6 +225,13 @@
             lightsheet.testAllCheckboxes()
             $(':input[type=text]').each(function () { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
                 let currentValue = $(this).val();
+                var isThisAnEquation = false;
+                var mathFinderRegularExpression = /(.*{equation\s+)(.*)(\s+equation}.*)/;
+                var newText = currentValue.replace(mathFinderRegularExpression,"$2");
+                if (newText!=currentValue){
+                    isThisAnEquation =true;
+                    currentValue=newText;
+                }
                 let currentID = "#" + $(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
                 var dependenciesFound = currentValue.match(/{([^}]+)}/g);
                 if (dependenciesFound != null) {
@@ -309,16 +316,21 @@
                             ;
                             updatedValue = updatedValue.replace(/\s\s+/g, ' '); //remove extra spaces
                             updatedValue = updatedValue.trim(); //remove leading/trailing spaces
+                            if(isThisAnEquation){
+                                updatedValue = eval(updatedValue);
+                            }
                             $(currentID).val(updatedValue);
                         });
                         //initialize
                         $(currentDependency).trigger("focus");
                         $(currentDependency).trigger("keyup");
                         $(currentDependency).trigger("change");
-                    }
-                    ;
+                    };
+                };
+                console.log(isThisAnEquation)
+                if (isThisAnEquation){
+                    $(this).val(eval($(this).val()));
                 }
-                ;
             });
         });
 

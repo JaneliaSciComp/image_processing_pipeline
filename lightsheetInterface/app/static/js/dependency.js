@@ -185,14 +185,6 @@ dependency.addParameter = function (element) {
     }
 };
 
-tryToRoundIfNumber = function (currentVariableValue) {
-    tryAsNumber = Number(currentVariableValue);
-    if (!isNaN(tryAsNumber)) {
-        console.log(tryAsNumber);
-        currentVariableValue = JSON.stringify(tryAsNumber); //for rounding
-    }
-    return currentVariableValue;
-}
 getCheckboxVal = function (globalStepName, checkbox_id) {
     var stepCheckbox = $('select[id=select_' + checkbox_id.replace("divisionFor-", "") + ']');
     return stepCheckbox.val();

@@ -85,6 +85,7 @@ class Dependency(Document):
     outputField = ReferenceField(Parameter)
     outputStep = ReferenceField(Step)
     pattern = StringField(max_length=500)
+    equation = BooleanField()
     dependency_type = StringField(max_length=20, choices=dependency_type)
 
 
