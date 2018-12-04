@@ -62,7 +62,7 @@ dataIo.grabData = function () {
 
         data[step] = {};
         pausecheck = document.getElementById('pausecheck-' + step);
-        if(pausecheck) {
+        if (pausecheck) {
             data[step]['pause'] = 0;
             if (pausecheck.checked) {
                 data[step]['pause'] = 1;
@@ -122,6 +122,9 @@ dataIo.grabData = function () {
 }
 
 dataIo.customSubmit = function () {
+    //During submit, loop through jobLoop_params
+
+    dependency.applyGlobalParameter();
     data = dataIo.grabData();
     dataIo.fetch(window.location, 'POST', data)
         .catch(dataIo.handleError);
@@ -133,7 +136,6 @@ dataIo.reset = function (stepOrTemplateName, id) {
 };
 
 dataIo.downloadSettings = function (stepOrTemplateName) {
-
     link = document.getElementById("downloadURL");
     data = dataIo.grabData();
     var baseUrl = window.location.origin;
@@ -150,6 +152,28 @@ dataIo.downloadSettings = function (stepOrTemplateName) {
         a.click();
         a.href = "javascript:;";
     })
-
 };
+
+loopParameters = function () {
+    //Beginning to apply simple loop parameters
+    var jobLoopParameters = $('*[id^="jobLoop_"]');
+    var arrayOfJobLoopParameters = [];
+    for (var i in jobLoopParameters) {
+        if (jobLoopParameters[i].value) {//Then not empty
+            arrayOfJobLoopParameters = JSON.parse("[" + jobLoopParameters[i].value + "]");
+        }
+    }
+    console.log(arrayOfJobLoopParameters)
+    for (var loopNumber = 0; loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
+        replaceParameterId = jobLoopParameters[0].id.replace("jobLoop_", "");
+        var isSelectPicker = $('[id="select_' + replaceParameterId + '"]');
+        if (isSelectPicker.length) {
+            $('[id="select_' + replaceParameterId + '"]').selectpicker('val', arrayOfJobLoopParameters[loopNumber]);
+        }
+        else {
+            $('[id="' + replaceParameterId + '"]').val(arrayOfJobLoopParameters[loopNumber])
+        }
+        dependency.applyGlobalParameter()
+    }
+}
 

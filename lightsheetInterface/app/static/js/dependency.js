@@ -72,6 +72,10 @@ dependency.applyGlobalParameter = function () {
                             prefix = "SPM";
                             iterations = 1; //need this because this is a string and don't want to iterate through each character
                         }
+                        else if (currentVariableId.includes("angle")){
+                            prefix = "ANG";
+                            iterations = 1;
+                        }
                         else if (currentVariableId.includes("cameras")) {
                             prefix = "CM";
                             iterations = currentVariableValue.length;
@@ -82,7 +86,12 @@ dependency.applyGlobalParameter = function () {
                         }
                         var currentVariableValueFormatted = "";
                         for (var j = 0; j < iterations; j++) {
-                            currentVariableValueFormatted = currentVariableValueFormatted + (prefix + "0" + currentVariableValue[j].replace(".0", "") + "_");
+                            if(prefix=="ANG") {
+                                currentVariableValueFormatted = currentVariableValueFormatted + (prefix + ("000" + currentVariableValue[j].replace(".0", "")).slice(-3) + "_");
+                            }
+                            else{
+                                currentVariableValueFormatted = currentVariableValueFormatted + (prefix + "0" + currentVariableValue[j].replace(".0", "") + "_");
+                            }
                         }
                         currentVariableValue = currentVariableValueFormatted.slice(0, -1); //Remove trailing "_"
                     }

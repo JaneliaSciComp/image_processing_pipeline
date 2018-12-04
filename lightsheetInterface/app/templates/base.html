@@ -21,8 +21,8 @@
     <script src="{{url_for('static', filename='components/bootstrap-select/dist/js/bootstrap-select.js')}}"></script>
 
     <!-- custom scripts -->
-    <script src="{{url_for('static', filename='js/inputfields.js')}}"></script>
-    <script>
+      <script>document.write("<script src='{{ url_for('static', filename='js/inputfields.js') }}?time=" + Date.now() +"'><\/script>");</script>
+      <script>
   </script>
       <title>Image Processing Pipeline</title>
   </head>

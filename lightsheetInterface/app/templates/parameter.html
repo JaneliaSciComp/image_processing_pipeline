@@ -1,7 +1,7 @@
 <!-- 
   Contains the template for rendering a parameter, different types of parameter can exist
 -->
-{% set displayName = param.name %}
+{% set displayName = param.name.rpartition("_")[0] %}
 {% set addAttribute = '' %}
 {% set labelClass = 'lightsheet-label' %}
 {% set spanClass = 'input-group-text lightsheet-input' %}
@@ -29,8 +29,8 @@
 {% endif %}
 <div class="input-group-prepend lightsheet-area" title="{{ value.description }}">
       <span class="{{ spanClass }}" value="">
-        {{ displayName| trimend }}
-      </span>
+        {{ displayName}}
+       </span>
     <div class="input-group-prepend lightsheet-fields">
         {% if meta.formatting == 'F' %}
             {% if value.boolean == true %}

@@ -54,7 +54,7 @@
                     {% if key in config.parameterDictionary[panel] %}
                         {% set value = config.parameterDictionary[panel][key] %}
                         {% set meta = value %}
-                        {% set keyForProvidedStep = param.name.split("_")[0] %}
+                        {% set keyForProvidedStep = param.name.rpartition("_")[0] %}
                         {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
                             {% set usesDefaultStepValue=False %}
                             {% if param.text1 and '{' in param.text1 and '}' in param.text1 and not param.text2 %}

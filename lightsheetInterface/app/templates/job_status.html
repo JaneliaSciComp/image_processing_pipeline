@@ -1,6 +1,6 @@
 {% extends "branding.html" %}
 {% block content %}
-<script src="{{ url_for('static', filename='js/submit.js') }}"></script>
+    <script>document.write("<script src='{{ url_for('static', filename='js/submit.js') }}?time=" + Date.now() +"'><\/script>");</script>
 {% if posted=="true" %}
 <div class="alert" style="background-color:#4CAF50">
   <strong>Thank you for submitting a job! </strong>
