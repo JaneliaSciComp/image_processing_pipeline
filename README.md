@@ -99,6 +99,10 @@ Finally, deploy the application with
 ```bash
 $ fly deploy:production
 ```
+If this does not work, make sure ssh-agent is running. If not, run ssh-agent and set the resulting environment variables. Then, run:
+```bash
+ssh-add -k ~/.ssh/id_rsa
+```
 
 --------
 
