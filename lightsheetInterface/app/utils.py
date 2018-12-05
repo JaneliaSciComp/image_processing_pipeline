@@ -472,46 +472,55 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
     jobInfoFromDatabase=jobInfoFromDatabase[0]
     remainingSteps = []
     remainingStepNames  = jobInfoFromDatabase["remainingStepNames"]
-    for step in jobInfoFromDatabase["steps"]:
+    pauseState = False
+    currentStepIndex = 0
+    while pauseState == False and currentStepIndex < len(jobInfoFromDatabase["steps"]):
+        step = jobInfoFromDatabase["steps"][currentStepIndex]
         if step["name"] in remainingStepNames:
             remainingSteps.append(step)
-
+            if ("pause" in step):
+                pauseState = step["pause"]
+        currentStepIndex = currentStepIndex + 1
     postBody = {"ownerKey": "user:"+current_user.username if current_user.is_authenticated else ""}
     postBody["resources"] = {"gridAccountId": current_user.username}
+
+    pipelineServices = []
+    for step in remainingSteps:
+        if step["type"] == "LightSheet":
+            stepPostBody = step
+            stepPostBody["stepResources"]= {"softGridJobDurationInSeconds": "1200"}
+        elif step["type"] == "Sparks":
+            stepPostBody = {
+                "stepName": step["name"],
+                "serviceName": "sparkAppProcessor",
+                "serviceProcessingLocation": 'LSF_JAVA',
+                "serviceArgs": [
+                    "-appLocation", step["codeLocation"],
+                    "-appEntryPoint", step["entryPointForSpark"],
+                    "-appArgs", step["parameters"]["-appArgs"]
+                ]}
+            if "-numNodes" in step["parameters"]:
+                stepPostBody["serviceResources"] = {"sparkNumNodes": str(int(step["parameters"]["-numNodes"]))}
+        else:  # Singularity
+            stepPostBody = {
+                "stepName": step["name"],
+                "serviceName": "runSingularityContainer",
+                "serviceProcessingLocation": 'LSF_JAVA',
+                "serviceArgs": [
+                    "-containerLocation", step["codeLocation"],
+                    "-singularityRuntime", "/usr/bin/singularity",
+                    "-bindPaths", step["bindPaths"]
+                    # TODO NEED TO FINISH THIS !!!!#
+                ]
+            }
+        pipelineServices.append(stepPostBody)
     if remainingSteps[0]['type'] == "LightSheet":
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'
         postBody['processingLocation']= 'LSF_JAVA'
-        postBody['args']= ['-configAddress', configAddress]
+        postBody["dictionaryArgs"]={"pipelineConfig": {"steps": pipelineServices}}
     else:
-        pipelineServices = []
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/pipeline'
-        for step in remainingSteps:
-            if step["type"]=="Sparks":
-                stepPostBody={
-                    "stepName":step["name"],
-                    "serviceName": "sparkAppProcessor",
-                    "serviceProcessingLocation": 'LSF_JAVA',
-                    "serviceArgs":[
-                        "-appLocation", step["codeLocation"],
-                        "-appEntryPoint", step["entryPointForSpark"],
-                        "-appArgs", step["parameters"]["-appArgs"]
-                    ]}
-                if "-numNodes" in step["parameters"]:
-                    stepPostBody["serviceResources"]= { "sparkNumNodes": str(int(step["parameters"]["-numNodes"])) }
-            else: #Singularity
-                stepPostBody={
-                    "stepName":step["name"],
-                    "serviceName": "runSingularityContainer",
-                    "serviceProcessingLocation": 'LSF_JAVA',
-                    "serviceArgs":[
-                        "-containerLocation", step["codeLocation"],
-                        "-singularityRuntime","/usr/bin/singularity",
-                        "-bindPaths",step["bindPaths"]
-                        #TODO NEED TO FINISH THIS !!!!#
-                    ]
-                }
-            pipelineServices.append(stepPostBody)
-            postBody["dictionaryArgs"]={"pipelineConfig": {"pipelineServices": pipelineServices}}
+        postBody["dictionaryArgs"]={"pipelineConfig": {"pipelineServices": pipelineServices}}
     try:
         requestOutput = requests.post(postUrl,
                                       headers=getHeaders(),

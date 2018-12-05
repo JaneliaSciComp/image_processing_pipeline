@@ -33,4 +33,5 @@ UPLOAD_FOLDER = '/opt/projects/lightsheet/upload'
 # Dev auth service: https://jacs-dev.int.janelia.org/SCSW/AuthenticationService/v1/authenticate
 AUTH_SERVICE_URL = 'https://jacs-dev.int.janelia.org/SCSW/AuthenticationService/v1/authenticate'
 
-JACS_HOST =  'http://jacs-dev.int.janelia.org'#'http://10.37.6.38:9000/api/rest-v2' #'http://jacs-dev.int.janelia.org:9000/api/rest-v2' #'http://jacs2.int.janelia.org:9000/api/rest-v2' 'http://10.37.6.38:9000/api/rest-v2' #
+JACS_HOST =  'http://jacs-dev.int.janelia.org'
+#'http://10.37.6.38:9000/api/rest-v2' #'http://jacs-dev.int.janelia.org:9000/api/rest-v2' #'http://jacs2.int.janelia.org:9000/api/rest-v2' 'http://10.37.6.38:9000/api/rest-v2' #

@@ -434,7 +434,8 @@ def load_configuration(config_name):
                                currentStep=currentStep,
                                currentTemplate=currentTemplate,
                                posted=posted,
-                               jobName=None
+                               jobName=None,
+                               jacs_host=jacs_host
                                )
 
         updateDBStatesAndTimes(imageProcessingDB)
