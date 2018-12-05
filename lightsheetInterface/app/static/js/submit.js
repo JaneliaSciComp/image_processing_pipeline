@@ -124,7 +124,6 @@ dataIo.grabData = function () {
 dataIo.customSubmit = function () {
     //During submit, loop through jobLoop_params
 
-    dependency.applyGlobalParameter();
     data = dataIo.grabData();
     dataIo.fetch(window.location, 'POST', data)
         .catch(dataIo.handleError);
