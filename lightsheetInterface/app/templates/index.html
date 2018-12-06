@@ -223,16 +223,23 @@
         $(document).ready(function () {
             lightsheet.testAllCheckboxes()
             $(':input[type=text]').each(function () { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
-                let currentValue = $(this).val();
-                var isThisAnEquation = false;
-                var mathFinderRegularExpression = /(.*{equation\s+)(.*)(\s+equation}.*)/;
-                var newText = currentValue.replace(mathFinderRegularExpression,"$2");
-                if (newText!=currentValue){
-                    isThisAnEquation =true;
-                    currentValue=newText;
+                let currentValue = $(this).attr('data-defaultvalue');//val();
+                let currentID = "";
+                console.log(currentValue)
+                if (currentValue) {
+                    var isThisAnEquation = false;
+                    var mathFinderRegularExpression = /(.*{equation\s+)(.*)(\s+equation}.*)/;
+                    var newText = currentValue.replace(mathFinderRegularExpression, "$2");
+                    if (newText != currentValue) {
+                        isThisAnEquation = true;
+                        currentValue = newText;
+                    }
+                    currentID = "#" + $(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
+                    var dependenciesFound = currentValue.match(/{([^}]+)}/g);
                 }
-                let currentID = "#" + $(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
-                var dependenciesFound = currentValue.match(/{([^}]+)}/g);
+                else {
+                    dependenciesFound = null;
+                }
                 if (dependenciesFound != null) {
                     for (var i = 0; i < dependenciesFound.length; i++) {//Loop over dependencies
                         let dependencyFound = dependenciesFound[i];
@@ -321,9 +328,11 @@
                             $(currentID).val(updatedValue);
                         });
                         //initialize
-                        $(currentDependency).trigger("focus");
-                        $(currentDependency).trigger("keyup");
-                        $(currentDependency).trigger("change");
+                        {% if not pipelineSteps %} //Then don't initialize
+                            $(currentDependency).trigger("focus");
+                            $(currentDependency).trigger("keyup");
+                            $(currentDependency).trigger("change");
+                        {% endif %}
                     };
                 };
                 if (isThisAnEquation){

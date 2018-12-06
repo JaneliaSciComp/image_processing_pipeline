@@ -78,7 +78,7 @@
                 <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[3] }}" id="{{ param.name }}-3">
             {% endif %}
         {% elif meta.type == 'Text' or meta.formatting== 'A' or meta.formatting =='' %}
-            <input type="text" class="form-control lightsheet-text" {{ addAttribute }} value="{{ data }}" id="{{ param.name }}">
+            <input type="text" class="form-control lightsheet-text" {{ addAttribute }} data-defaultValue = "{{ defaultValue }}" value="{{ data }}" id="{{ param.name }}">
         {% endif %}
         {% if value.empty == True %}
             {% if meta.type == 'Text' %}

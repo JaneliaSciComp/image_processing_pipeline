@@ -151,7 +151,7 @@ $(document).ready(()=>{let table=null;
             table.order(order);
             table.ajax.reload(null, false);
         }
-    }, 5000);
+    }, 30000);
 
 })
 ;
