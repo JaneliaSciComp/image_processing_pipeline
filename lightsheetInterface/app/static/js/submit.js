@@ -124,7 +124,7 @@ dataIo.grabData = function () {
 dataIo.customSubmit = function () {
     //During submit, loop through jobLoop_params
    var jobLoopParameters = $('*[id^="jobLoop_"]');
-    if(jobLoopParameters.length !=0 && !jobLoopParameters.disabled && jobLoopParameters[0].value!="") {
+    if(jobLoopParameters.length !=0 && !jobLoopParameters[0].disabled && jobLoopParameters[0].value!="") {
         loopParametersJobSubmission();
     }
     else{
