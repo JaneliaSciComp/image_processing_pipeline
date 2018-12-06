@@ -123,10 +123,16 @@ dataIo.grabData = function () {
 
 dataIo.customSubmit = function () {
     //During submit, loop through jobLoop_params
-
-    data = dataIo.grabData();
-    dataIo.fetch(window.location, 'POST', data)
-        .catch(dataIo.handleError);
+   /* var jobLoopParameters = $('*[id^="jobLoop_"]');
+    console.log(jobLoopParameters)
+    if(jobLoopParameters.length ==0) {*/
+        data = dataIo.grabData();
+        dataIo.fetch(window.location, 'POST', data)
+            .catch(dataIo.handleError);
+    //}
+    /*else{
+        loopParametersJobSubmission();
+    }*/
 };
 
 dataIo.reset = function (stepOrTemplateName, id) {
@@ -135,6 +141,8 @@ dataIo.reset = function (stepOrTemplateName, id) {
 };
 
 dataIo.downloadSettings = function (stepOrTemplateName) {
+    var jobLoopParameters = $('*[id^="jobLoop_"]');
+    console.log(jobLoopParameters)
     link = document.getElementById("downloadURL");
     data = dataIo.grabData();
     var baseUrl = window.location.origin;
@@ -153,7 +161,7 @@ dataIo.downloadSettings = function (stepOrTemplateName) {
     })
 };
 
-loopParameters = function () {
+loopParametersJobSubmission = function () {
     //Beginning to apply simple loop parameters
     var jobLoopParameters = $('*[id^="jobLoop_"]');
     var arrayOfJobLoopParameters = [];
@@ -162,7 +170,6 @@ loopParameters = function () {
             arrayOfJobLoopParameters = JSON.parse("[" + jobLoopParameters[i].value + "]");
         }
     }
-    console.log(arrayOfJobLoopParameters)
     for (var loopNumber = 0; loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
         replaceParameterId = jobLoopParameters[0].id.replace("jobLoop_", "");
         var isSelectPicker = $('[id="select_' + replaceParameterId + '"]');
@@ -172,7 +179,11 @@ loopParameters = function () {
         else {
             $('[id="' + replaceParameterId + '"]').val(arrayOfJobLoopParameters[loopNumber])
         }
-        dependency.applyGlobalParameter()
+        dependency.applyGlobalParameter();
+        data = dataIo.grabData();
+        data.jobName = data.jobName + "_"+("000" + arrayOfJobLoopParameters[loopNumber]).slice(-3);
+        dataIo.fetch(window.location, 'POST', data)
+            .catch(dataIo.handleError);
     }
 }
 

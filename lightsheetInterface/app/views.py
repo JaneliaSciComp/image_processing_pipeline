@@ -361,6 +361,7 @@ def load_configuration(config_name):
     globalParameters = []
     nonGlobalParameters = []
     jobName = None
+    pipelineSteps=None
     if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
         if lightsheetDB_id:
             pipelineSteps, submissionStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)

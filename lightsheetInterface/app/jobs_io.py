@@ -64,7 +64,7 @@ def reformatDataToPost(postedData, forSubmission=True):
                 # Then check if stepname is part of parameter name
                 if '_' in parameterKey:
                     # TODO: check, if part after underscore is really a step name or _ part of parameter name
-                    split = parameterKey.split('_')
+                    split = parameterKey.rsplit('_',1)
                     parameter = split[0]
                 else:
                     parameter = parameterKey;

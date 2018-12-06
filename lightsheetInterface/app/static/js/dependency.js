@@ -87,7 +87,7 @@ dependency.applyGlobalParameter = function () {
                         var currentVariableValueFormatted = "";
                         for (var j = 0; j < iterations; j++) {
                             if(prefix=="ANG") {
-                                currentVariableValueFormatted = currentVariableValueFormatted + (prefix + ("000" + currentVariableValue[j].replace(".0", "")).slice(-3) + "_");
+                                currentVariableValueFormatted = currentVariableValueFormatted + (prefix + ("000" + currentVariableValue.replace(".0", "")).slice(-3) + "_");
                             }
                             else{
                                 currentVariableValueFormatted = currentVariableValueFormatted + (prefix + "0" + currentVariableValue[j].replace(".0", "") + "_");
