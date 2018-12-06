@@ -25,7 +25,7 @@
             {% set stepOrTemplateName = None %}
         {% endif %}
         <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled
-               onclick="dataIo.customSubmit()"/>
+               onclick="dataIo.customSubmit(event)"/>
         <a href="javascript:;" id="downloadURL">
             <button type="button" class="btn btn-info submit-button" onclick="dataIo.downloadSettings('{{ stepOrTemplateName }}')" value="value">Download Settings</button>
         </a>
@@ -64,7 +64,7 @@
             </div>
         </div>
         <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled
-               onclick="dataIo.customSubmit()"/>
+               onclick="dataIo.customSubmit(event)"/>
     </form>
 
     <!--
@@ -225,7 +225,6 @@
             $(':input[type=text]').each(function () { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
                 let currentValue = $(this).attr('data-defaultvalue');//val();
                 let currentID = "";
-                console.log(currentValue)
                 if (currentValue) {
                     var isThisAnEquation = false;
                     var mathFinderRegularExpression = /(.*{equation\s+)(.*)(\s+equation}.*)/;

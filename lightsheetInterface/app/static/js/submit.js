@@ -121,10 +121,11 @@ dataIo.grabData = function () {
     return data;
 }
 
-dataIo.customSubmit = function () {
+dataIo.customSubmit = function (event) {
     //During submit, loop through jobLoop_params
    var jobLoopParameters = $('*[id^="jobLoop_"]');
     if(jobLoopParameters.length !=0 && !jobLoopParameters[0].disabled && jobLoopParameters[0].value!="") {
+        event.preventDefault();
         loopParametersJobSubmission();
     }
     else{
@@ -159,7 +160,7 @@ dataIo.downloadSettings = function (stepOrTemplateName) {
     })
 };
 
-loopParametersJobSubmission = function () {
+function loopParametersJobSubmission () {
     //Beginning to apply simple loop parameters
     var jobLoopParameters = $('*[id^="jobLoop_"]');
     var arrayOfJobLoopParameters = [];
@@ -168,7 +169,8 @@ loopParametersJobSubmission = function () {
             arrayOfJobLoopParameters = JSON.parse("[" + jobLoopParameters[i].value + "]");
         }
     }
-    for (var loopNumber = 0; loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
+    response = Promise.resolve();
+    for (var loopNumber = 0, p = Promise.resolve(); loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
         replaceParameterId = jobLoopParameters[0].id.replace("jobLoop_", "");
         var isSelectPicker = $('[id="select_' + replaceParameterId + '"]');
         if (isSelectPicker.length) {
@@ -179,10 +181,9 @@ loopParametersJobSubmission = function () {
         }
         dependency.applyGlobalParameter();
         data = dataIo.grabData();
-        paramName = replaceParameterId.substring(0,replaceParameterId.lastIndexOf("_"));
-        data.jobName = data.jobName + "_"+paramName+("000" + arrayOfJobLoopParameters[loopNumber]).slice(-3);
-        dataIo.fetch(window.location, 'POST', data)
-            .catch(dataIo.handleError);
+        paramName = replaceParameterId.substring(0, replaceParameterId.lastIndexOf("_"));
+        data.jobName = data.jobName + "_" + paramName + ("000" + arrayOfJobLoopParameters[loopNumber]).slice(-3);
+        response=response.then(dataIo.fetch(window.location, 'POST', data)
+            .catch(dataIo.handleError));
     }
 }
-
