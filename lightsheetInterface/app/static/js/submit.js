@@ -22,7 +22,7 @@ dataIo.fetch = function (url, method, data, successText, errorText) {
 dataIo.handleSuccess = function(successText) {
     var thankYouMessage = document.getElementById("thankYouMessage");
     var thankYouMessageText = document.getElementById("thankYouMessage-text");
-    thankYouMessage.style.backgroundColor = "#2196F3";
+    thankYouMessage.style.backgroundColor = "#4CAF50";
     thankYouMessageText.innerHTML = successText;
     thankYouMessage.style.display = "block";
 }
