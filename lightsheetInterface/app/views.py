@@ -78,10 +78,10 @@ def step(step_name):
             abort(404)
     if request.method == 'POST':
         posted = "true"
-        if request.json:
-            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
-                                         lightsheetDB_id,
-                                         None, stepOrTemplateName)
+        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
+                                    lightsheetDB_id,
+                                    None, stepOrTemplateName)
+        return submissionStatusReturner(submissionStatus)
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
@@ -120,11 +120,11 @@ def template(template_name):
             abort(404)
     if request.method == 'POST':
         posted = "true"
-        if request.json:
-            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
-                                         lightsheetDB_id,
-                                         None,
-                                         stepOrTemplateName)
+        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
+                                    lightsheetDB_id,
+                                    None,
+                                    stepOrTemplateName)
+        return submissionStatusReturner(submissionStatus)
 
     global allStepNames, globalParameters, nonGlobalParameters
     allStepNames = []
@@ -414,9 +414,10 @@ def load_configuration(config_name):
         posted = "false"
         if request.method == 'POST':
             posted = "true"
-            if request.json:
-                doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
-                          stepOrTemplateName)
+            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
+                    stepOrTemplateName)
+            return submissionStatusReturner(submissionStatus)
+
 
         updateDBStatesAndTimes(imageProcessingDB)
         return render_template('index.html',
@@ -432,6 +433,7 @@ def load_configuration(config_name):
                                jacs_host=jacs_host
                                )
 
+    else:
         updateDBStatesAndTimes(imageProcessingDB)
         return 'No such configuration in the system.'
 
@@ -493,6 +495,12 @@ def createDependencyResults(dependencies):
               obj['step']=outputFieldName.split("_")[-1]
               result.append(obj)
     return result
+
+def submissionStatusReturner(submissionStatus):
+    if submissionStatus=="success":
+        return json.dumps({'status': submissionStatus}), 200, {'ContentType': 'application/json'}
+    else:
+        return json.dumps({'status': submissionStatus}), 404, {'ContentType': 'application/json'}
 
 @app.route('/all_jobs', methods=['GET'])
 @login_required

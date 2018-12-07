@@ -3,7 +3,7 @@
 */
 var dataIo = dataIo || {};
 
-dataIo.fetch = function (url, method, data, params) {
+dataIo.fetch = function (url, method, data, successText, errorText) {
     return fetch(url, {
         method: method,
         headers: {
@@ -12,14 +12,30 @@ dataIo.fetch = function (url, method, data, params) {
         body: JSON.stringify(data)
     }).then(function (response) {
         if (response.status == 200) {
+            dataIo.handleSuccess(successText);
             return response.json();
         }
-        throw new Error('Unexpected status code: ' + response.status);
+        throw new Error('Unexpected status code: ' + response.status + ". Error text_ " + errorText);
     });
 };
 
+dataIo.handleSuccess = function(successText) {
+    var thankYouMessage = document.getElementById("thankYouMessage");
+    var thankYouMessageText = document.getElementById("thankYouMessage-text");
+    thankYouMessage.style.backgroundColor = "#2196F3";
+    thankYouMessageText.innerHTML = successText;
+    thankYouMessage.style.display = "block";
+}
+
 dataIo.handleError = function (err) {
     console.log(err);
+    var errorText = err.valueOf().toString();
+    errorText = errorText.substring(errorText.indexOf("_") + 2);
+    var thankYouMessage = document.getElementById("thankYouMessage");
+    var thankYouMessageText = document.getElementById("thankYouMessage-text");
+    thankYouMessage.style.backgroundColor="#f44336";
+    thankYouMessageText.innerHTML= errorText;
+    thankYouMessage.style.display="block";
 };
 
 /*
@@ -124,27 +140,26 @@ dataIo.grabData = function () {
 dataIo.customSubmit = async function (event) {
     event.preventDefault();
     //During submit, loop through jobLoop_params
+    var thankYouMessage = document.getElementById("thankYouMessage");
+    var thankYouMessageText = document.getElementById("thankYouMessage-text");
     var jobLoopParameters = $('*[id^="jobLoop_"]');
-    if(jobLoopParameters.length !=0 && !jobLoopParameters[0].disabled && jobLoopParameters[0].value!="") {
-        await loopParametersJobSubmission().then(result=> {
-            document.getElementById("thankYouMessage").style.display="block";
+    jobName = $('#jobId')[0].value;
+    globalParametersCheckbox = document.querySelector('[id^="check-"][id$="globalParameters" i');//case insensitive
+    if(jobLoopParameters.length !=0 && !jobLoopParameters[0].disabled && jobLoopParameters[0].value!="" && globalParametersCheckbox.checked) {
+        await loopParametersJobSubmission(thankYouMessage,thankYouMessageText).then(result=> {
         }).catch(err=>{
-
         });
-        //response.then(document.getElementById("thankYouMessage").style.display="block");
-        //response = loopParametersJobSubmission();
     }
     else{
+        thankYouMessage.style.backgroundColor="#2196F3";
+        thankYouMessageText.innerHTML= "<strong> Submitting job "+ jobName + "...</strong>";
+        thankYouMessage.style.display="block";
         data = dataIo.grabData();
-       await dataIo.fetch(window.location, 'POST', data)
+        successText = "<strong> Submission of job "+ jobName + " complete! Thank you for your submission!</strong>";
+        errorText = "<strong> Submission of job "+ jobName + " failed.</strong>";
+        await dataIo.fetch(window.location, 'POST', data, successText, errorText)
            .catch(dataIo.handleError);
     }
-    document.getElementById("thankYouMessage").style.display="block";
-    document.getElementById("thankYouMessage-text").innerHTML= "<strong> Thank you for submitting. Submission Complete! </strong>"
-    //response.then(console.log("hi"))
-    //response.then($('#job-table').DataTable().ajax.reload(null, false))
-    //response.then(console.log("bye"))
-
 };
 
 dataIo.reset = function (stepOrTemplateName, id) {
@@ -172,7 +187,7 @@ dataIo.downloadSettings = function (stepOrTemplateName) {
     })
 };
 
-async function loopParametersJobSubmission () {
+async function loopParametersJobSubmission (thankYouMessage, thankYouMessageText) {
     //Beginning to apply simple loop parameters
     var jobLoopParameters = $('*[id^="jobLoop_"]');
     var arrayOfJobLoopParameters = [];
@@ -181,7 +196,6 @@ async function loopParametersJobSubmission () {
             arrayOfJobLoopParameters = JSON.parse("[" + jobLoopParameters[i].value + "]");
         }
     }
-
     for (var loopNumber = 0,response = Promise.resolve(); loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
         replaceParameterId = jobLoopParameters[0].id.replace("jobLoop_", "");
         var isSelectPicker = $('[id="select_' + replaceParameterId + '"]');
@@ -194,13 +208,13 @@ async function loopParametersJobSubmission () {
         dependency.applyGlobalParameter();
         data = dataIo.grabData();
         paramName = replaceParameterId.substring(0, replaceParameterId.lastIndexOf("_"));
+        thankYouMessage.style.backgroundColor="#2196F3";
+        thankYouMessageText.innerHTML= "<strong>Submitting " + data.jobName + " with " + paramName + " = " + arrayOfJobLoopParameters[loopNumber].toString() + "... </strong>";
+        thankYouMessage.style.display="block";
         data.jobName = data.jobName + "_" + paramName + ("000" + arrayOfJobLoopParameters[loopNumber]).slice(-3);
-        document.getElementById("thankYouMessage").style.display="block";
-        document.getElementById("thankYouMessage-text").innerHTML = "<strong>Submitting job with " + paramName+ " = " + arrayOfJobLoopParameters[loopNumber].toString()+" ... </strong>"
-        await dataIo.fetch(window.location, 'POST', data)
+        successText =  "<strong>Submission of " + data.jobName + " with " + paramName + " = " + arrayOfJobLoopParameters[loopNumber].toString() + " complete! Thank you for your submission!</strong>";
+        errorText = "<strong>Submission of " + data.jobName + " with " + paramName + " = " + arrayOfJobLoopParameters[loopNumber].toString() + " failed.</strong>"
+        await dataIo.fetch(window.location, 'POST', data, successText,errorText)
             .catch(dataIo.handleError);
-                /*response=response.then(dataIo.fetch(window.location, 'POST', data)
-            .catch(dataIo.handleError));*/
     }
-    //return response;
 }

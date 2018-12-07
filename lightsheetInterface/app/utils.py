@@ -545,7 +545,7 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
         print("success")
     except requests.exceptions.RequestException as e:
         print('Exception occured')
-        submissionStatus = e
+        submissionStatus = requests
         if not continueOrReparameterize:
             imageProcessingDB.jobs.remove({"_id": job_id})
     return submissionStatus
