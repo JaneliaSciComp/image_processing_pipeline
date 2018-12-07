@@ -82,8 +82,6 @@ def step(step_name):
             submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
                                          lightsheetDB_id,
                                          None, stepOrTemplateName)
-        else:
-            time.sleep(0.5)
 
     updateDBStatesAndTimes(imageProcessingDB)
     jobs = allJobsInJSON(imageProcessingDB)
@@ -127,8 +125,6 @@ def template(template_name):
                                          lightsheetDB_id,
                                          None,
                                          stepOrTemplateName)
-        else:
-            time.sleep(0.5)
 
     global allStepNames, globalParameters, nonGlobalParameters
     allStepNames = []
@@ -200,7 +196,6 @@ def job_status():
         imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
         if pausedJobInformation["remainingStepNames"]: #only submit if not empty
             submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
-        time.sleep(0.5)
         updateDBStatesAndTimes(imageProcessingDB)
     if imageProcessingDB_id is not None:
         jobType, stepOrTemplateName, childJobInfo, remainingStepNames = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
@@ -422,8 +417,6 @@ def load_configuration(config_name):
             if request.json:
                 doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
                           stepOrTemplateName)
-            else:
-                time.sleep(0.5)
 
         updateDBStatesAndTimes(imageProcessingDB)
         return render_template('index.html',

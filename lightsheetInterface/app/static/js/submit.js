@@ -121,18 +121,30 @@ dataIo.grabData = function () {
     return data;
 }
 
-dataIo.customSubmit = function (event) {
+dataIo.customSubmit = async function (event) {
+    event.preventDefault();
     //During submit, loop through jobLoop_params
-   var jobLoopParameters = $('*[id^="jobLoop_"]');
+    var jobLoopParameters = $('*[id^="jobLoop_"]');
     if(jobLoopParameters.length !=0 && !jobLoopParameters[0].disabled && jobLoopParameters[0].value!="") {
-        event.preventDefault();
-        loopParametersJobSubmission();
+        await loopParametersJobSubmission().then(result=> {
+            document.getElementById("thankYouMessage").style.display="block";
+        }).catch(err=>{
+
+        });
+        //response.then(document.getElementById("thankYouMessage").style.display="block");
+        //response = loopParametersJobSubmission();
     }
     else{
         data = dataIo.grabData();
-       dataIo.fetch(window.location, 'POST', data)
+       await dataIo.fetch(window.location, 'POST', data)
            .catch(dataIo.handleError);
     }
+    document.getElementById("thankYouMessage").style.display="block";
+    document.getElementById("thankYouMessage-text").innerHTML= "<strong> Thank you for submitting. Submission Complete! </strong>"
+    //response.then(console.log("hi"))
+    //response.then($('#job-table').DataTable().ajax.reload(null, false))
+    //response.then(console.log("bye"))
+
 };
 
 dataIo.reset = function (stepOrTemplateName, id) {
@@ -160,7 +172,7 @@ dataIo.downloadSettings = function (stepOrTemplateName) {
     })
 };
 
-function loopParametersJobSubmission () {
+async function loopParametersJobSubmission () {
     //Beginning to apply simple loop parameters
     var jobLoopParameters = $('*[id^="jobLoop_"]');
     var arrayOfJobLoopParameters = [];
@@ -169,8 +181,8 @@ function loopParametersJobSubmission () {
             arrayOfJobLoopParameters = JSON.parse("[" + jobLoopParameters[i].value + "]");
         }
     }
-    response = Promise.resolve();
-    for (var loopNumber = 0, p = Promise.resolve(); loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
+
+    for (var loopNumber = 0,response = Promise.resolve(); loopNumber < arrayOfJobLoopParameters.length; loopNumber++) {
         replaceParameterId = jobLoopParameters[0].id.replace("jobLoop_", "");
         var isSelectPicker = $('[id="select_' + replaceParameterId + '"]');
         if (isSelectPicker.length) {
@@ -183,7 +195,12 @@ function loopParametersJobSubmission () {
         data = dataIo.grabData();
         paramName = replaceParameterId.substring(0, replaceParameterId.lastIndexOf("_"));
         data.jobName = data.jobName + "_" + paramName + ("000" + arrayOfJobLoopParameters[loopNumber]).slice(-3);
-        response=response.then(dataIo.fetch(window.location, 'POST', data)
-            .catch(dataIo.handleError));
+        document.getElementById("thankYouMessage").style.display="block";
+        document.getElementById("thankYouMessage-text").innerHTML = "<strong>Submitting job with " + paramName+ " = " + arrayOfJobLoopParameters[loopNumber].toString()+" ... </strong>"
+        await dataIo.fetch(window.location, 'POST', data)
+            .catch(dataIo.handleError);
+                /*response=response.then(dataIo.fetch(window.location, 'POST', data)
+            .catch(dataIo.handleError));*/
     }
+    //return response;
 }
