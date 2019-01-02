@@ -3,7 +3,7 @@
 */
 var dataIo = dataIo || {};
 
-dataIo.fetch = function (url, method, data, successText, errorText) {
+dataIo.fetch = function (url, method, data, successText=null, errorText=null) {
     return fetch(url, {
         method: method,
         headers: {
@@ -12,7 +12,9 @@ dataIo.fetch = function (url, method, data, successText, errorText) {
         body: JSON.stringify(data)
     }).then(function (response) {
         if (response.status == 200) {
-            dataIo.handleSuccess(successText);
+            if(successText){//Then this isn't simply a download
+                dataIo.handleSuccess(successText);
+            }
             return response.json();
         }
         throw new Error('Unexpected status code: ' + response.status + ". Error text_ " + errorText);
@@ -25,6 +27,8 @@ dataIo.handleSuccess = function(successText) {
     thankYouMessage.style.backgroundColor = "#4CAF50";
     thankYouMessageText.innerHTML = successText;
     thankYouMessage.style.display = "block";
+    var table = document.getElementById("job-table");
+    table.ajax.reload(null,false);
 }
 
 dataIo.handleError = function (err) {
@@ -36,6 +40,8 @@ dataIo.handleError = function (err) {
     thankYouMessage.style.backgroundColor="#f44336";
     thankYouMessageText.innerHTML= errorText;
     thankYouMessage.style.display="block";
+    var table = document.getElementById("job-table");
+    table.ajax.reload(null,false);
 };
 
 /*
