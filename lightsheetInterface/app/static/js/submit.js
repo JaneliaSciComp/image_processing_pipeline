@@ -27,6 +27,7 @@ dataIo.handleSuccess = function(successText) {
     thankYouMessage.style.backgroundColor = "#4CAF50";
     thankYouMessageText.innerHTML = successText;
     thankYouMessage.style.display = "block";
+    $('#job-table').DataTable().ajax.reload(null, false);
 }
 
 dataIo.handleError = function (err) {
