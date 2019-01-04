@@ -31,7 +31,6 @@ dataIo.handleSuccess = function(successText) {
 }
 
 dataIo.handleError = function (err) {
-    console.log(err);
     var errorText = err.valueOf().toString();
     errorText = errorText.substring(errorText.indexOf("_") + 2);
     var thankYouMessage = document.getElementById("thankYouMessage");
