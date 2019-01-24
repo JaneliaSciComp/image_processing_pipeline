@@ -509,10 +509,12 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
                 "serviceArgs": [
                     "-containerLocation", step["codeLocation"],
                     "-singularityRuntime", "/usr/bin/singularity",
-                    "-bindPaths", step["bindPaths"]
-                    # TODO NEED TO FINISH THIS !!!!#
+                    "-bindPaths", step["bindPaths"],
+                    "-appArgs", step["parameters"]["-appArgs"]
                 ]
             }
+            if "numberOfProcessors" in step["parameters"]:
+                stepPostBody["serviceResources"] = {"nSlots": str(int(step["parameters"]["numberOfProcessors"]))}
         pipelineServices.append(stepPostBody)
     if remainingSteps[0]['type'] == "LightSheet":
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'

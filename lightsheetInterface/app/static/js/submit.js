@@ -27,6 +27,7 @@ dataIo.handleSuccess = function(successText) {
     thankYouMessage.style.backgroundColor = "#4CAF50";
     thankYouMessageText.innerHTML = successText;
     thankYouMessage.style.display = "block";
+    $('html,body').scrollTop(0);
     $('#job-table').DataTable().ajax.reload(null, false);
 }
 
@@ -105,8 +106,11 @@ dataIo.grabData = function () {
 
         var bindPath = [];
         inputFields.each(function (k, val) {
-            if (this.hasAttribute('mount')) {
-                bindPath.push(val.value);
+            if (this.hasAttribute('mount'))
+            {
+                var fullPath = val.value;
+                var parentDir = (fullPath).substring( 0, (fullPath).lastIndexOf( "/" ) + 1);
+                bindPath.push(parentDir);
             }
             if (!this.hasAttribute('ignore')) {
                 if (this.disabled) {
@@ -134,7 +138,7 @@ dataIo.grabData = function () {
                 }
             }
         });
-        data[step]['bindPaths'] = bindPath.join(', ');
+        data[step]['bindPaths'] = bindPath.join(',');
     });
     return data;
 }
