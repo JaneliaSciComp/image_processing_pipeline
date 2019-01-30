@@ -10,7 +10,7 @@ types = (('', None), ('S', 'Step'), ('D', 'Directory'))
 frequency = (('F', 'Frequent'), ('S', 'Sometimes'), ('R', 'Rare'))
 formats = (
     ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'), ('O', 'Option'), ('F', 'Flag'),
-    ('B', 'Radio Button'))
+    ('B', 'Radio Button'), ('D', 'Dropdown Menu'))
 dependency_type = (('V', 'Value'), ('D', 'Dimension'))
 templates = (('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal'))
 steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet'))

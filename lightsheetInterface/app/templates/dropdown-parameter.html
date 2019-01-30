@@ -1,0 +1,35 @@
+{% if data is not string %}
+    {% set data = data[0] %}
+{% endif %}
+<select name="{{ param.name }}">
+    {% if value.text1 %}
+        <option value="{{ value.text1 }}" {% if value.text1 == data %} selected="selected" {% endif %}> {{ value.text1 }}
+    {% endif %}
+    {% if value.text2 %}
+        <option value="{{ value.text2 }}" {% if value.text2 == data %} selected="selected" {% endif %}> {{ value.text2 }}
+    {% endif %}
+    {% if value.text3 %}
+        <option value="{{ value.text3 }}" {% if value.text3 == data %} selected="selected" {% endif %}> {{ value.text3 }}
+    {% endif %}
+    {% if value.text4 %}
+        <option value="{{ value.text4 }}" {% if value.text4 == data %} selected="selected" {% endif %}> {{ value.text4 }}
+    {% endif %}
+    {% if value.number1 %}
+        <option value="{{ value.number1 }}" {% if value.number1 == data %} selected="selected" {% endif %}> {{ value.number1 }}
+    {% endif %}
+    {% if value.number2 %}
+        <option value="{{ value.number2 }}" {% if value.number2 == data %} selected="selected" {% endif %}> {{ value.number2 }}
+    {% endif %}
+    {% if value.number3 %}
+        <option value="{{ value.number3 }}" {% if value.number3 == data %} selected="selected" {% endif %}> {{ value.number3 }}
+    {% endif %}
+    {% if value.number4 %}
+        <option value="{{ value.number4 }}" {% if value.number4 == data %} selected="selected" {% endif %}> {{ value.number4 }}
+    {% endif %}
+    {% if value.number5 %}
+        <option value="{{ value.number5 }}" {% if value.number5 == data %} selected="selected" {% endif %}> {{ value.number5 }}
+    {% endif %}
+    {% if value.number6 %}
+        <option value="{{ value.number6 }}" {% if value.number6 == data %} selected="selected" {% endif %}> {{ value.number6 }}
+    {% endif %}
+</select>

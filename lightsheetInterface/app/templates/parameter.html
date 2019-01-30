@@ -47,36 +47,40 @@
         {% elif meta.formatting == 'B' %}
             {% include "radiobutton-parameter.html" ignore missing with context %}
         {% elif meta.type == 'Integer' or meta.type == 'Float' %}
-            {% if meta.count == '1' %}
-                <input type="number" step="any" class="form-control lightsheet-number" value="{{ data }}" {{ addAttribute }} id="{{ param.name }}">
-            {% elif meta.count == '2' %}
-                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[0] }}" id="{{ param.name }}-0">
-                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[1] }}" id="{{ param.name }}-1">
-            {% elif meta.count == '3' %}
-                {% if meta.formatting == 'R' %}
-                    <div class="form-group form-inline">
-                        <label class="{{ labelClass }}" for="{{ param.name }}-number1">From: </label>
-                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-start" {{ addAttribute }} value="{{ data['start'] }}">
-                    </div>
-                    <div class="form-group form-inline">
-                        <label class="{{ labelClass }}" for="{{ param.name }}-number2">To: </label>
-                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-end" {{ addAttribute }} value="{{ data['end'] }}">
-                    </div>
-                    <div class="form-group form-inline">
-                        <label class="{{ labelClass }}" for="{{ param.name }}-number3">Every:</label>
-                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-every" {{ addAttribute }} value="{{ data['every'] }}">
-                    </div>
-                {% else %}
+                {% if meta.count == '1' %}
+                    {%  if meta.type== 'Integer' %}
+                    <input type="number" step="any" class="form-control lightsheet-number" value={{ data|int }} {{ addAttribute }} id="{{ param.name }}">
+                        {%   else %}
+                        <input type="number" step="any" class="form-control lightsheet-number" value={{ data}} {{ addAttribute }} id="{{ param.name }}">
+                    {% endif %}
+                {% elif meta.count == '2' %}
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[0] }}" id="{{ param.name }}-0">
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[1] }}" id="{{ param.name }}-1">
+                {% elif meta.count == '3' %}
+                    {% if meta.formatting == 'R' %}
+                        <div class="form-group form-inline">
+                            <label class="{{ labelClass }}" for="{{ param.name }}-number1">From: </label>
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-start" {{ addAttribute }} value="{{ data['start'] }}" >
+                        </div>
+                        <div class="form-group form-inline">
+                            <label class="{{ labelClass }}" for="{{ param.name }}-number2">To: </label>
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-end" {{ addAttribute }} value="{{ data['end'] }}">
+                        </div>
+                        <div class="form-group form-inline">
+                            <label class="{{ labelClass }}" for="{{ param.name }}-number3">Every:</label>
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-every" {{ addAttribute }} value="{{ data['every'] }}">
+                        </div>
+                    {% else %}
+                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[0] }}" id="{{ param.name }}-0">
+                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[1] }}" id="{{ param.name }}-1">
+                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[2] }}" id="{{ param.name }}-2">
+                    {% endif %}
+                {% elif meta.count == '4' %}
                     <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[0] }}" id="{{ param.name }}-0">
                     <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[1] }}" id="{{ param.name }}-1">
                     <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[2] }}" id="{{ param.name }}-2">
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[3] }}" id="{{ param.name }}-3">
                 {% endif %}
-            {% elif meta.count == '4' %}
-                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[0] }}" id="{{ param.name }}-0">
-                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[1] }}" id="{{ param.name }}-1">
-                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[2] }}" id="{{ param.name }}-2">
-                <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} value="{{ data[3] }}" id="{{ param.name }}-3">
-            {% endif %}
         {% elif meta.type == 'Text' or meta.formatting== 'A' or meta.formatting =='' %}
             <input type="text" class="form-control lightsheet-text" {{ addAttribute }} data-defaultValue = "{{ defaultValue }}" value="{{ data }}" id="{{ param.name }}">
         {% endif %}
@@ -115,4 +119,5 @@
             document.getElementById("emptycheckbox_{{ param }}").onchange();
         }
     })
+
 </script>
