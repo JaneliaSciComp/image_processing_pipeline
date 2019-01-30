@@ -51,12 +51,14 @@
                         {% endif %}
                         {% include "stepLoad.html" ignore missing with context %}
                     {% else %}
-                        {% for stepName in pipelineSteps %}
-                            {% set allStepNames = allStepNames.append(stepName) %}
-                            {% set pipelineStep = pipelineSteps[stepName] %}
-                            {% set step = config['stepsAllDict'][stepName] %}
-                            {% include "stepLoad.html" ignore missing with context %}
-                        {% endfor %}
+                        {% if pipelineSteps is not none %}
+                            {% for stepName in pipelineSteps %}
+                                {% set allStepNames = allStepNames.append(stepName) %}
+                                {% set pipelineStep = pipelineSteps[stepName] %}
+                                {% set step = config['stepsAllDict'][stepName] %}
+                                {% include "stepLoad.html" ignore missing with context %}
+                            {% endfor %}
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             </div>
