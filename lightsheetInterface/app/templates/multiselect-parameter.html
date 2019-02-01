@@ -1,22 +1,22 @@
 <div class="custom-multi-checkbox">
     <select class="selectpicker lightsheet-field" multiple onchange="dependency.addParameter(this)" id="select_{{ param.name }}">
       {% if value.number1 is not none %}
-        <option {% if value.number1 in data %} selected {% endif %}>{{ value.number1 }}</option>
+        <option {% if value.number1 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ value.number1 }}" id="select_{{ param.name }}_number1">{{ value.number1 }}</option>
       {% endif %}
       {% if value.number2 is not none %}
-        <option {% if value.number2 in data %} selected {% endif %}>{{ value.number2 }}</option>
+        <option {% if value.number2 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ value.number2 }}" id="select_{{ param.name }}_number2">{{ value.number2 }}</option>
       {% endif %}
       {% if value.number3 is not none %}
-        <option {% if value.number3 in data %} selected {% endif %}>{{ value.number3 }}</option>
+        <option {% if value.number3 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ value.number3 }}" id="select_{{ param.name }}_number3">{{ value.number3 }}</option>
       {% endif %}
       {% if value.number4 is not none %}
-        <option {% if value.number4 in data %} selected {% endif %}>{{ value.number4 }}</option>
+        <option {% if value.number4 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber4 }}" value="{{ value.number4 }}" id="select_{{ param.name }}_number4">{{ value.number4 }}</option>
       {% endif %}
         {% if value.number5 is not none %}
-            <option {% if value.number5 in data %} selected {% endif %}>{{ value.number5 }}</option>
+            <option {% if value.number5 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber5 }}" value="{{ value.number5 }}" id="select_{{ param.name }}_number5">{{ value.number5 }}</option>
         {% endif %}
         {% if value.number6 is not none %}
-            <option {% if value.number6 in data %} selected {% endif %}>{{ value.number6 }}</option>
+            <option {% if value.number6 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber6 }}" value="{{ value.number6 }}" id="select_{{ param.name }}_number6">{{ value.number6 }}</option>
         {% endif %}
     </select>
     <div id="hidden_{{ param.name }}">

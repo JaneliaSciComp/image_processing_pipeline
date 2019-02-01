@@ -230,8 +230,9 @@
     <script>
         $(document).ready(function () {
             lightsheet.testAllCheckboxes()
-            $(':input[type=text]').each(function () { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
-                let currentValue = $(this).attr('data-defaultvalue');//val();
+           document.querySelectorAll('[data-defaultValue]').forEach(
+           function (element) { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
+                let currentValue = $(element).attr('data-defaultValue');
                 let currentID = "";
                 if (currentValue) {
                     var isThisAnEquation = false;
@@ -241,13 +242,13 @@
                         isThisAnEquation = true;
                         currentValue = newText;
                     }
-                    currentID = "#" + $(this).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
+                    currentID = "#" + $(element).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
                     var dependenciesFound = currentValue.match(/{([^}]+)}/g);
                 }
                 else {
                     dependenciesFound = null;
                 }
-                if (dependenciesFound != null) {
+               if (dependenciesFound != null) {
                     for (var i = 0; i < dependenciesFound.length; i++) {//Loop over dependencies
                         let dependencyFound = dependenciesFound[i];
                         var isThisALoop = dependencyFound.substr(1, dependencyFound.length - 1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
@@ -301,7 +302,6 @@
                                         dependencyToUpdateValue = dependencyToUpdateValue.substring(0, dependencyToUpdateValue.lastIndexOf("/"));
                                     }
                                 }
-
                                 if (standardID.match("^--") || standardID.match("^-")) { //If it starts or ends with a - or --
                                     var lastIndex = standardID.lastIndexOf("_");
                                     let flagName = standardID.substr(0, lastIndex);
@@ -333,6 +333,7 @@
                                 updatedValue = eval(updatedValue);//TODO: Replace eval with Function
                             }
                             $(currentID).val(updatedValue);
+                            $(currentID).text(updatedValue);
                             $(currentID).change(); //So change is propagated
                         });
                         //initialize
@@ -343,9 +344,9 @@
                         {% endif %}
                     };
                 };
-                if (isThisAnEquation){
-                    $(this).val(eval($(this).val()));
-                }
+//                if (isThisAnEquation){
+//                    $(element).val(eval($(element).val()));
+//                }
             });
         });
 
