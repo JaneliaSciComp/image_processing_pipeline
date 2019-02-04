@@ -100,7 +100,7 @@ dataIo.grabData = function () {
         }
 
         // input fields
-        var inputFields = $('#collapse' + step).find('input:not([ignore])');
+        var inputFields = $('#collapse' + step).find('input:not([ignore]), select:not([ignore])');
         const p = 'parameters';
         data[step][p] = {};
 

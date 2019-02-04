@@ -101,7 +101,7 @@
         {% if jobsJson %}
             var jacs_host = "{{ jacs_host }}";
             var jacs_dashboard = "{{ jacs_dashboard }}";
-            var table_data = "{{ jobsJson|safe }}";
+            var table_data = {{ jobsJson|safe }};
         {% else %}
             var table_data = null;
         {% endif %}
@@ -231,7 +231,7 @@
     <script>
         $(document).ready(function () {
             lightsheet.testAllCheckboxes()
-           document.querySelectorAll('[data-defaultValue]').forEach(
+           document.querySelectorAll("[data-defaultValue*='{']").forEach(
            function (element) { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
                 let currentValue = $(element).attr('data-defaultValue');
                 let currentID = "";
@@ -264,7 +264,7 @@
                             temp = "select_" + dependencyFound.substr(1, dependencyFound.length - 2);
                             currentDependency = '[data-id="' + temp + '"]'; //multiselect checkbox still acts weird... cant get it to react when clicked or anything
                         }
-                        else if ($('input[name=' + dependencySubstring + ']').prop('type')) {
+                        else if ($('input[name=' + dependencySubstring + ']').prop("type")) {
                             //Radiobutton
                             currentDependency = 'input[name=' + dependencySubstring + ']'
                         }
@@ -280,6 +280,7 @@
                                 let dependencyToUpdate = "#" + standardID; //Current one we are updating
                                 let type = $(dependencyToUpdate).prop('type');
                                 dependencyToUpdateValue = null; //Initialize dependencyToUpdateValue to null
+
                                 if (type == "checkbox") {//If check box is checked, then dependencyToUpdateValue equals empty string
                                     if ($(dependencyToUpdate).prop('checked')) {
                                         dependencyToUpdateValue = "";
@@ -303,6 +304,7 @@
                                         dependencyToUpdateValue = dependencyToUpdateValue.substring(0, dependencyToUpdateValue.lastIndexOf("/"));
                                     }
                                 }
+
                                 if (standardID.match("^--") || standardID.match("^-")) { //If it starts or ends with a - or --
                                     var lastIndex = standardID.lastIndexOf("_");
                                     let flagName = standardID.substr(0, lastIndex);

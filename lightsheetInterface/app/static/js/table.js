@@ -121,7 +121,7 @@ $(document).ready(()=>{let table=null;
                         jacsLinks = jacsLinks.slice(0, -1);
                     }
                     else {
-                        jacsLinks = jacsLinks + "<a href=\"" + jacs_dashbaord + "/job/" + data + "\" target=\"_blank\">" + data + "</a>";
+                        jacsLinks = jacsLinks + "<a href=\"" + jacs_dashboard + "/job/" + data + "\" target=\"_blank\">" + data + "</a>";
                     }
                     return jacsLinks;
                 }

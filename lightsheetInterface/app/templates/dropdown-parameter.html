@@ -1,7 +1,7 @@
 {% if data is not string %}
     {% set data = data[0] %}
 {% endif %}
-<select name="{{ param.name }}">
+<select name="{{ param.name }}" id="{{ param.name }}">
     {% if value.text1 %}
         <option value="{{ value.text1 }}" {% if value.text1 == data %} selected="selected" {% endif %} data-defaultValue="{{ defaultValueText1 }}" value="{{ value.text1 }}" id="select_{{ param.name }}_text1"> {{ value.text1 }}
     {% endif %}
