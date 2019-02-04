@@ -15,6 +15,7 @@
         {% if jobsJson %}
             var jacs_host = "{{jacs_host}}";
             var table_data = {{ jobsJson|safe }};
+            var jacs_dashboard = "{{ jacs_dashboard }}";
         {% else %}
             var table_data = null;
         {% endif %}
