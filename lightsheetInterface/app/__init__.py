@@ -85,6 +85,13 @@ def get_app_version():
         package_data.close()
         return dict(version=data['version'])
 
+@app.context_processor
+def get_jacs_dashboard():
+    return dict(jacs_dashboard=app.config.get('JACS_DASHBOARD'))
+
+@app.context_processor
+def get_jacs_host():
+    return dict(jacs_host=app.config.get('JACS_HOST'))
 
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):

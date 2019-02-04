@@ -99,8 +99,9 @@
         var tableDataURL =  window.location.origin + "/table_data?showAllJobs=False";
 
         {% if jobsJson %}
-            var jacs_host = "{{jacs_host}}";
-            var table_data = {{ jobsJson|safe }};
+            var jacs_host = "{{ jacs_host }}";
+            var jacs_dashboard = "{{ jacs_dashboard }}";
+            var table_data = "{{ jobsJson|safe }}";
         {% else %}
             var table_data = null;
         {% endif %}

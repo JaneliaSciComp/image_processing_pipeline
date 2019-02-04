@@ -23,8 +23,6 @@ mongo_uri = app.config['MONGODB_HOST']
 mongo_user = app.config.get('MONGODB_USERNAME')
 mongo_password = app.config.get('MONGODB_PASSWORD')
 
-# JACS server
-jacs_host = app.config.get('JACS_HOST')
 
 if mongo_user:
     client = MongoClient(mongo_uri, username=mongo_user, password=mongo_password)
@@ -95,8 +93,7 @@ def step(step_name):
                            currentStep=step_name,
                            currentTemplate=None,
                            posted=posted,
-                           jobName=jobName,
-                           jacs_host = jacs_host)
+                           jobName=jobName)
 
 
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
@@ -155,8 +152,7 @@ def template(template_name):
                            submissionStatus=submissionStatus,
                            currentTemplate=template_name,
                            posted=posted,
-                           jobName=jobName,
-                           jacs_host = jacs_host)
+                           jobName=jobName)
 
 
 @app.route('/', methods=['GET'])
@@ -210,8 +206,7 @@ def job_status():
                            submissionStatus=submissionStatus,
                            jobType=jobType,
                            posted=posted,
-                           jacs_host=jacs_host,
-                           remainingStepNames = remainingStepNames)
+                           remainingStepNames=remainingStepNames)
 
 
 @app.route('/search')
@@ -429,8 +424,7 @@ def load_configuration(config_name):
                                currentStep=currentStep,
                                currentTemplate=currentTemplate,
                                posted=posted,
-                               jobName=None,
-                               jacs_host=jacs_host
+                               jobName=None
                                )
 
     else:
@@ -509,8 +503,7 @@ def all_jobs():
     updateDBStatesAndTimes(imageProcessingDB,showAllJobs)
     jobs = allJobsInJSON(imageProcessingDB,showAllJobs)
     return render_template('all_jobs.html',
-                           jobsJson=jobs,  # used by the job table
-                           jacs_host = jacs_host)
+                           jobsJson=jobs)  # used by the job table
 
 @app.route('/table_data', methods=['GET'])
 @login_required
