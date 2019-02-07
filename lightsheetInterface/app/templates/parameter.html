@@ -70,7 +70,7 @@
                         </div>
                         <div class="form-group form-inline">
                             <label class="{{ labelClass }}" for="{{ param.name }}-number3">Every:</label>
-                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-every" {{ addAttribute }} "{{ defaultValueNumber3 }}" value="{{ data['every'] }}">
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-every" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ data['every'] }}">
                         </div>
                     {% else %}
                         <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ data[0] }}" id="{{ param.name }}-0">

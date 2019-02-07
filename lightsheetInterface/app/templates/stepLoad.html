@@ -55,22 +55,22 @@
                         {% set value = config.parameterDictionary[panel][key] %}
                         {% set meta = value %}
                         {% set keyForProvidedStep = param.name.rpartition("_")[0] %}
+                        {% set defaultValueNumber1 = param.number1 %}
+                        {% set defaultValueNumber2 = param.number2 %}
+                        {% set defaultValueNumber3 = param.number3 %}
+                        {% set defaultValueNumber4 = param.number4 %}
+                        {% set defaultValueNumber5 = param.number5 %}
+                        {% set defaultValueNumber6 = param.number6 %}
+                        {% set defaultValueText1 = param.text1 %}
+                        {% set defaultValueText2 = param.text2 %}
+                        {% set defaultValueText3 = param.text3 %}
+                        {% set defaultValueText4 = param.text4 %}
+                        {% set defaultValueFloat1 = param.float1 %}
                         {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
                             {% set usesDefaultStepValue=False %}
                             {#Set defaults, useful for dependencies#}
                             {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
                         {% else %}
-                            {% set defaultValueNumber1 = param.number1 %}
-                            {% set defaultValueNumber2 = param.number2 %}
-                            {% set defaultValueNumber3 = param.number3 %}
-                            {% set defaultValueNumber4 = param.number4 %}
-                            {% set defaultValueNumber5 = param.number5 %}
-                            {% set defaultValueNumber6 = param.number6 %}
-                            {% set defaultValueText1 = param.text1 %}
-                            {% set defaultValueText2 = param.text2 %}
-                            {% set defaultValueText3 = param.text3 %}
-                            {% set defaultValueText4 = param.text4 %}
-                            {% set defaultValueFloat1 = param.float1 %}
                             {% set usesDefaultStepValue=True %}
                             {% if meta.formatting == 'C' and pipelineStep is none %}
                                 {% set data = [param.number1] %}

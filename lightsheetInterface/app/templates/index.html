@@ -126,7 +126,7 @@
             dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
         {% endif %}
     </script>
-    <script>document.write("<script src='{{ url_for('static', filename='js/dependency.js') }}?time=" + Date.now() +"'><\/script>");</script>
+    <script>document.write("<script src='{{ url_for('static', filename='js/globalParametersDependencies.js') }}?time=" + Date.now() +"'><\/script>");</script>
 
     <!-- script to set default job name -->
     <script>

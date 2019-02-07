@@ -515,6 +515,16 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
             }
             if "numberOfProcessors" in step["parameters"]:
                 stepPostBody["serviceResources"] = {"nSlots": str(int(step["parameters"]["numberOfProcessors"]))}
+            if "-expandDir" in step["parameters"]:
+                stepPostBody["serviceArgs"].extend(("-expandDir", step["parameters"]["-expandDir"]))
+            if "-expandPattern" in step["parameters"]:
+                stepPostBody["serviceArgs"].extend(("-expandPattern", step["parameters"]["-expandPattern"]))
+            if "-expandedArgFlag" in step["parameters"]:
+                stepPostBody["serviceArgs"].extend(("-expandedArgFlag", step["parameters"]["-expandedArgFlag"]))
+            if "-expandedArgList" in step["parameters"]:
+                stepPostBody["serviceArgs"].extend(("-expandedArgList", step["parameters"]["-expandedArgList"]))
+            if "-expandDepth" in step["parameters"]:
+                stepPostBody["serviceArgs"].extend(("-expandDepth", step["parameters"]["-expandDepth"]))
         pipelineServices.append(stepPostBody)
     if remainingSteps[0]['type'] == "LightSheet":
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'
