@@ -20,14 +20,40 @@ dependency.applyGlobalParameter = function () {
             if (value_dependencies[t].pattern) {
                 // Do something with the given pattern
                 var pattern = value_dependencies[t].pattern;
+
+                var isThisAnEquation = false;
+                var mathFinderRegularExpression = /(.*{equation\s+)(.*)(\s+equation}.*)/;
+                var newText = pattern.replace(mathFinderRegularExpression, "$2");
+                if (newText != pattern) {
+                    isThisAnEquation = true;
+                    pattern = newText;
+                }
+
                 var variables = pattern.match(/[^\{\]]+(?=\})/g);
                 for (var i = 0; i < variables.length; i++) {
                     var currentVariableId;
-                    loopVariable = false;
-                    if (variables[i].slice(-1) == "}") { //Hacky way to get loop variable
+                    filepathVariable = false; filenameVariable = false; basenameVariable = false; extensionVariable = false; loopVariable = false;
+                    if(variables[i].slice(-10) ==" filepath}"){//Hacky way to get filepath, filename, basename, extension, loop
+                        variables[i] = variables[i].slice(9,-10);
+                        filepathVariable = true;
+                    }
+                    else if(variables[i].slice(-10) ==" filename}"){
+                        variables[i] = variables[i].slice(9,-10);
+                        filenameVariable = true;
+                    }
+                    else if(variables[i].slice(-10) ==" basename}"){
+                        variables[i] = variables[i].slice(9,-10);
+                        basenameVariable = true
+                    }
+                    else if(variables[i].slice(-11) ==" extension}"){
+                        variables[i] = variables[i].slice(10,-11);
+                        extensionVariable = true;
+                    }
+                    else if (variables[i].slice(-1) == "}") {
                         variables[i] = variables[i].slice(0, -1);
                         loopVariable = true;
                     }
+
                     currentVariableId = "divisionFor-" + variables[i];
                     needToFormat = false;
                     if (currentVariableId.includes("_string") && isLightsheet) { //Specific to lightsheet
@@ -95,7 +121,26 @@ dependency.applyGlobalParameter = function () {
                         }
                         currentVariableValue = currentVariableValueFormatted.slice(0, -1); //Remove trailing "_"
                     }
-                    if (loopVariable) {
+
+                    if (filepathVariable){
+                        var filepath = currentVariableValue.substring(0,currentVariableValue.lastIndexOf('/')+1);
+                        pattern = pattern.replace("{{filepath " + variables[i] + " filepath}}", filepath)
+                    }
+                    else if(filenameVariable){
+                        var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/')+1);
+                        pattern = pattern.replace("{{filename " + variables[i] + " filename}}", filename)
+                    }
+                    else if(basenameVariable){
+                        var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/')+1);
+                        var basename = filename.split('.')[0];
+                        pattern = pattern.replace("{{basename " + variables[i] + " basename}}", basename)
+                    }
+                    else if (extensionVariable){
+                        var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/')+1);
+                        var extension = '.'+filename.split('.').slice(1).join('.');
+                        pattern = pattern.replace("{{extension " + variables[i] + " extension}}", extension)
+                    }
+                    else if (loopVariable) {
                         currentVariableValueSplit = currentVariableValue.split(" ");//Split on space
                         loopedPattern = "";
                         for (var loopVariableIndex = 0; loopVariableIndex < currentVariableValueSplit.length; loopVariableIndex++) {
@@ -106,7 +151,11 @@ dependency.applyGlobalParameter = function () {
                     else {
                         pattern = pattern.replace("{" + variables[i] + "}", currentVariableValue);
                     }
+
                 }
+                //if(isThisAnEquation){
+                //    pattern = eval(pattern);
+                //}
                 pattern = pattern.replace("//", "/");
                 var stepInputs = stepElem.getElementsByTagName('input');
                 stepInputs[0].value = pattern;

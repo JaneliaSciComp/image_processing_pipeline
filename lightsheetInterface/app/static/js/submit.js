@@ -33,7 +33,7 @@ dataIo.handleSuccess = function(successText) {
 
 dataIo.handleError = function (err) {
     var errorText = err.valueOf().toString();
-    errorText = errorText.substring(errorText.indexOf("_") + 2);
+    errorText = errorText.substring(errorText.indexOf("_") + 1);
     var thankYouMessage = document.getElementById("thankYouMessage");
     var thankYouMessageText = document.getElementById("thankYouMessage-text");
     thankYouMessage.style.backgroundColor="#f44336";
