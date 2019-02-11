@@ -96,9 +96,9 @@
         var hideColumns = 1;
         var tableDataURL =  window.location.origin + "/table_data?showAllJobs=False";
 
+        var jacs_host = "{{ jacs_host }}";
+        var jacs_dashboard = "{{ jacs_dashboard }}";
         {% if jobsJson %}
-            var jacs_host = "{{ jacs_host }}";
-            var jacs_dashboard = "{{ jacs_dashboard }}";
             var table_data = {{ jobsJson|safe }};
         {% else %}
             var table_data = null;

@@ -12,10 +12,10 @@
     <script>
         allJobs=true;
         var hideColumns = 0;
+        var jacs_host = "{{jacs_host}}";
+        var jacs_dashboard = "{{ jacs_dashboard }}";
         {% if jobsJson %}
-            var jacs_host = "{{jacs_host}}";
             var table_data = {{ jobsJson|safe }};
-            var jacs_dashboard = "{{ jacs_dashboard }}";
         {% else %}
             var table_data = null;
         {% endif %}
