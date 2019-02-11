@@ -7,6 +7,7 @@
  */
 
 $(document).ready(()=>{let table=null;
+    var jacs_dashboard = "{{ jacs_dashboard }}";
     table = $('#job-table').DataTable({
         stateSave:false,
         order: [[3, "desc"]],

@@ -158,11 +158,11 @@ dataIo.customSubmit = async function (event) {
     }
     else{
         thankYouMessage.style.backgroundColor="#2196F3";
-        thankYouMessageText.innerHTML= "<strong> Submitting job "+ jobName + "...</strong>";
+        thankYouMessageText.innerHTML= "<strong style=\"color:white\"> Submitting job "+ jobName + "...</strong>";
         thankYouMessage.style.display="block";
         data = dataIo.grabData();
-        successText = "<strong> Submission of job "+ jobName + " complete! Thank you for your submission!</strong>";
-        errorText = "<strong> Submission of job "+ jobName + " failed.</strong>";
+        successText = "<strong style=\"color:white\"> Submission of job "+ jobName + " complete! Thank you for your submission!</strong>";
+        errorText = "<strong style=\"color:white\"> Submission of job "+ jobName + " failed.</strong>";
         await dataIo.fetch(window.location, 'POST', data, successText, errorText)
            .catch(dataIo.handleError);
     }
