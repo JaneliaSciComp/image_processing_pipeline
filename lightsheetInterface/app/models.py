@@ -1,6 +1,8 @@
 from mongoengine import (StringField, IntField, IntField, FloatField, ListField, BooleanField,
                          DateTimeField, Document, ReferenceField)
 from flask_admin.contrib.mongoengine import ModelView
+from app import app
+from flask_login import current_user
 from wtforms import TextAreaField
 from wtforms.widgets import TextArea
 from app import admin
@@ -142,22 +144,52 @@ class PipelineInstance(Document):
 
 # Customized admin views
 class ConfigView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['name']
 
 
 class StepView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['name', 'description']
 
 
 class ParameterView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['name', 'description', 'frequency', 'formatting']
 
 
 class TemplateView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['name']
 
 
 class DependecyView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['inputField', 'outputField', 'pattern']
     column_labels = dict(inputField='Input',
                          outputField='Output',
@@ -166,14 +198,32 @@ class DependecyView(ModelView):
 
 
 class ConfigurationView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['name']
 
 
 class ConfigurationInstanceView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['creation_date']
 
 
 class PipelineInstanceView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     column_filters = ['creation_date']
 
 
@@ -191,6 +241,12 @@ class CKTextAreaField(TextAreaField):
 
 
 class ExtendedParameterView(ModelView):
+    def is_accessible(self):
+        if current_user.username in app.config.get('ADMINS'):
+            return True
+        else:
+            return False
+
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
     form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
                     "text3", "text4", "boolean", "readonly", "ignore", "mount", "empty", "startsEmpty", "frequency", "formatting",
