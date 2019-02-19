@@ -45,6 +45,7 @@
         var allDependentValues = $(dropdown).find("[data-defaultValue*='{']");
         if(allDependentValues[0]) {
             $(allDependentValues[0]).text("{{ data }}");
+            $(allDependentValues[0]).attr('selected',true);
         }
     }
 </script>
