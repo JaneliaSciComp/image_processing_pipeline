@@ -389,7 +389,9 @@
                                     updatedValue = updatedValue.replace(loopingOverAllDependenciesCurrentOneBeingProcessed + "}", dependencyToUpdateValue);
                                 }
                                 else {
-                                    updatedValue = updatedValue.replace(loopingOverAllDependenciesCurrentOneBeingProcessed, dependencyToUpdateValue);
+                                    stringToReplace = loopingOverAllDependenciesCurrentOneBeingProcessed;
+                                    var regex = new RegExp(stringToReplace, "g"); //Global replacement
+                                    updatedValue = updatedValue.replace(regex, dependencyToUpdateValue);
                                 }
                             }
                             updatedValue = updatedValue.replace(/\s\s+/g, ' '); //remove extra spaces

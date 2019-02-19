@@ -68,26 +68,39 @@ dependency.applyGlobalParameter = function () {
                         var globalInputs = globalElem.getElementsByTagName('input');
                         var currentVariableValue = globalInputs[0].value;
 
-                        checkboxId = globalId.split("-")[1];
-                        if (globalId.includes("useOutputFolderForClusterPT") && isLightsheet) { //Specific to lightsheet
-                            if (document.getElementById(checkboxId).checked) {
-                                if (currentVariableId.includes("inputFolder")) {
-                                    currentVariableValue = "/" + globalInputs[0].value.match(/([^\/]*)\/*$/)[1]; //get last folder
+
+                        if(document.getElementById(variables[i]) && document.getElementById(variables[i]).type == "checkbox") { //Then generic checkbox
+                            if (document.getElementById(variables[i]).checked) {
+                                currentVariableValue = variables[i].substring(0, variables[i].lastIndexOf('_'));
+                            }
+                            else {
+                                currentVariableValue = "";
+                            }
+                        }
+
+                        //Lightsheet specific checkboxes:
+                        if(isLightsheet) {
+                            checkboxId = globalId.split("-")[1];
+                            if (globalId.includes("useOutputFolderForClusterPT")) { //Specific to lightsheet
+                                if (document.getElementById(checkboxId).checked) {
+                                    if (currentVariableId.includes("inputFolder")) {
+                                        currentVariableValue = "/" + globalInputs[0].value.match(/([^\/]*)\/*$/)[1]; //get last folder
+                                    }
+                                }
+                                else {
+                                    currentVariableValue = ""
                                 }
                             }
                             else {
-                                currentVariableValue = ""
-                            }
-                        }
-                        else if (isLightsheet) {
-                            if (currentVariableId.includes("inputFolder")) {//If useOutputFolderForClusterPT checkbox is checked need to do this so that the correct directory is used
-                                checkboxId = document.querySelector('[id*="useOutputFolderForClusterPT"]').id.split("-")[1];
-                                if (document.getElementById(checkboxId).checked) {
-                                    outputFolderId = "outputFolder_" + globalStepName.slice(0, -1);
-                                    inputFolderId = "inputFolder_" + globalStepName.slice(0, -1);
-                                    outputFolder = document.getElementById(outputFolderId).value;
-                                    inputFolderLastDir = document.getElementById(inputFolderId).value.match(/([^\/]*)\/*$/)[1]
-                                    currentVariableValue = outputFolder + "/" + inputFolderLastDir;
+                                if (currentVariableId.includes("inputFolder")) {//If useOutputFolderForClusterPT checkbox is checked need to do this so that the correct directory is used
+                                    checkboxId = document.querySelector('[id*="useOutputFolderForClusterPT"]').id.split("-")[1];
+                                    if (document.getElementById(checkboxId).checked) {
+                                        outputFolderId = "outputFolder_" + globalStepName.slice(0, -1);
+                                        inputFolderId = "inputFolder_" + globalStepName.slice(0, -1);
+                                        outputFolder = document.getElementById(outputFolderId).value;
+                                        inputFolderLastDir = document.getElementById(inputFolderId).value.match(/([^\/]*)\/*$/)[1]
+                                        currentVariableValue = outputFolder + "/" + inputFolderLastDir;
+                                    }
                                 }
                             }
                         }
@@ -149,13 +162,15 @@ dependency.applyGlobalParameter = function () {
                         pattern = loopedPattern.slice(0, -1);
                     }
                     else {
-                        pattern = pattern.replace("{" + variables[i] + "}", currentVariableValue);
+                        stringToReplace = "{" + variables[i] + "}";
+                        var regex = new RegExp(stringToReplace, "g");
+                        pattern = pattern.replace(regex, currentVariableValue); //Global replacement
                     }
 
                 }
-                //if(isThisAnEquation){
-                //    pattern = eval(pattern);
-                //}
+                if(isThisAnEquation){
+                    pattern = eval(pattern);
+                }
                 pattern = pattern.replace("//", "/");
                 var stepInputs = stepElem.getElementsByTagName('input');
                 stepInputs[0].value = pattern;
