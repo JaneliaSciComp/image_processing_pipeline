@@ -65,6 +65,7 @@
                         {% set defaultValueText2 = param.text2 %}
                         {% set defaultValueText3 = param.text3 %}
                         {% set defaultValueText4 = param.text4 %}
+                        {% set defaultValueText5 = param.text5 %}
                         {% set defaultValueFloat1 = param.float1 %}
                         {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
                             {% set usesDefaultStepValue=False %}
@@ -75,7 +76,9 @@
                             {% if meta.formatting == 'C' and pipelineStep is none %}
                                 {% set data = [param.number1] %}
                             {% elif meta.formatting == 'B' or meta.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
-                                {% if param.text4 %}
+                                {% if param.text5 %}
+                                    {% set data = [param.text1, param.text2, param.text3, param.text4, param.text5] %}
+                                {% elif param.text4 %}
                                     {% set data = [param.text1, param.text2, param.text3, param.text4] %}
                                 {% elif param.text3 %}
                                     {% set data = [param.text1, param.text2, param.text3] %}

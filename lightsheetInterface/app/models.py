@@ -53,6 +53,7 @@ class Parameter(Document):
     text2 = StringField(max_length=500)
     text3 = StringField(max_length=500)
     text4 = StringField(max_length=500)
+    text5 = StringField(max_length=500)
     boolean = BooleanField()
 
     def __unicode__(self):
@@ -108,6 +109,7 @@ class ConfigurationInstance(Document):
     text2 = StringField(max_length=500)
     text3 = StringField(max_length=500)
     text4 = StringField(max_length=500)
+    text5 = StringField(max_length=500)
     boolean = BooleanField()
 
     def __unicode__(self):
@@ -249,10 +251,10 @@ class ExtendedParameterView(ModelView):
 
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
     form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
-                    "text3", "text4", "boolean", "readonly", "ignore", "mount", "empty", "startsEmpty", "frequency", "formatting",
+                    "text3", "text4", "text5", "boolean", "readonly", "ignore", "mount", "empty", "startsEmpty", "frequency", "formatting",
                     "order", "hint"]
     column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
-                      "text2", "text3", "text4", "boolean", "mount", "frequency", "formatting", "ignore"]
+                      "text2", "text3", "text4","text5", "boolean", "mount", "frequency", "formatting", "ignore"]
     form_overrides = {
         'hint': CKTextAreaField
     }

@@ -15,6 +15,9 @@
     {% if value.text4 %}
         <option value="{{ value.text4 }}" {% if value.text4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText4 }}" id="select_{{ param.name }}_text4"> {{ value.text4 }}
     {% endif %}
+    {% if value.text5 %}
+        <option value="{{ value.text5 }}" {% if value.text5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText5 }}" id="select_{{ param.name }}_text5"> {{ value.text5 }}
+    {% endif %}
     {% if value.number1 %}
         <option value="{{ value.number1 }}" {% if value.number1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber1 }}" id="select_{{ param.name }}_number1"> {{ value.number1 }}
     {% endif %}
@@ -47,5 +50,6 @@
             $(allDependentValues[0]).text("{{ data }}");
             $(allDependentValues[0]).attr('selected',true);
         }
+
     }
 </script>

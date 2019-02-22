@@ -13,6 +13,9 @@
 {% if value.text4 %}
   <input type="radio" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText4 }}" value="{{ value.text4 }}" id="select_{{ param.name }}_text4" {% if value.text4 == data %} checked {% endif %}> {{ value.text4 }}
 {% endif %}
+{% if value.text5 %}
+    <input type="radio" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText5 }}" value="{{ value.text5 }}" id="select_{{ param.name }}_text5" {% if value.text5 == data %} checked {% endif %}> {{ value.text5 }}
+{% endif %}
 {% if value.number1 %}
   <input type="radio" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ value.number1 }}"  id="select_{{ param.name }}_number1" {% if value.number1 == data %} checked {% endif %}> {{ value.number1 }}
 {% endif %}
