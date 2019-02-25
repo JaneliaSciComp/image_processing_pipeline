@@ -402,7 +402,7 @@ def createDBentries(content):
                 except:
                     message.append('There was an error creating a template')
                     pass
-        elif key == 'parameter':
+        elif key == 'parameters':
             for o in obj:
                 p = Parameter(**o)
                 try:
