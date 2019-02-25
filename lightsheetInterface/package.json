@@ -4,11 +4,13 @@
   "description": "LightSheet Pipeline Configurator",
   "main": "flightplan.js",
   "dependencies": {
+    "bootstrap": "^4.3.1",
     "bootstrap-select": "^1.13.2",
     "datatables.net": "^1.10.16",
     "datatables.net-bs4": "^1.10.16",
     "flightplan": "^0.6.19",
-    "font-awesome": "^4.7.0"
+    "font-awesome": "^4.7.0",
+    "popper": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^5.5.0",
