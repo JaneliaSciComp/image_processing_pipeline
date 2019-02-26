@@ -378,7 +378,63 @@ def createDBentries(content):
     keys = content.keys()
     for key in keys:
         obj = content[key]
-        if key == 'template':
+        if key == 'parameters':
+            for o in obj:
+                p = Parameter()
+                p.name = o
+                p.displayName = o
+                value = obj[o]
+                if type(value) is dict:
+                    if 'start' in value and 'end' in value and 'every' in value:
+                        p.frequency = 'F'
+                        p.formatting = 'R'
+                        p.number1 = value['start']
+                        p.number2 = value['end']
+                        p.number3 = value['every']
+                else:
+                    p.frequency = 'F'
+                    if type(value) == str:
+                        p.text1 = value
+                    elif type(value) == float:
+                        p.number1 = value
+                    elif type(value) == list:
+                        #TODO: distinguish in between the different types
+                        continue
+                try:
+                    p.save()
+                except OSError as e:
+                    message.append('Error creating the parameter: ' + str(e))
+                    pass
+                except ValidationError as e:
+                    message.append('Error creating the parameter: ' + str(e))
+                    pass
+                except NotUniqueError as e:
+                    message.append('Parameter with the name "{0}" has already been added: '.format(p['name']))
+                    pass
+        elif key == 'steps':
+            for o in obj:
+                s = Step()
+                if 'name' in o:
+                    s['name'] = o['name']
+                if 'order' in o:
+                    s['order'] = o['order']
+                if 'description' in o:
+                    s['description'] = o['description']
+                if 'parameters' in o:
+                    # Query for steps and associate them with template
+                    for param in o['parameters']:
+                        pObj = Parameter.objects.filter(name=param).first()
+                        if pObj:
+                            s['parameter'].append(pObj.pk)
+                try:
+                    s.save()
+                except ValidationError as e:
+                    message.append('Error creating the parameter: ' + str(e))
+                    pass
+                except NotUniqueError as e:
+                    message.append('Step with the name "{0}" has already been added.'.format(o['name']))
+                    pass
+        elif key == 'template':
             for o in obj:
                 t = Template()
                 if 'name' in o:
@@ -401,42 +457,6 @@ def createDBentries(content):
                     pass
                 except:
                     message.append('There was an error creating a template')
-                    pass
-        elif key == 'parameter':
-            for o in obj:
-                p = Parameter(**o)
-                try:
-                    p.save()
-                except OSError as e:
-                    message.append('Error creating the parameter: ' + str(e))
-                    pass
-                except ValidationError as e:
-                    message.append('Error creating the parameter: ' + str(e))
-                    pass
-                except NotUniqueError as e:
-                    message.append('Parameter with the name "{0}" has already been added: '.format(p['name']))
-                    pass
-
-        elif key == 'steps':
-            for o in obj:
-                s = Step()
-                if 'name' in o:
-                    s['name'] = o['name']
-                if 'order' in o:
-                    s['order'] = o['order']
-                if 'parameter' in o:
-                    # Query for steps and associate them with template
-                    for param in o['parameter']:
-                        pObj = Parameter.objects.filter(name=param).first()
-                        if pObj:
-                            s['parameter'].append(pObj)
-                try:
-                    s.save()
-                except ValidationError as e:
-                    message.append('Error creating the parameter: ' + str(e))
-                    pass
-                except NotUniqueError as e:
-                    message.append('Step with the name "{0}" has already been added.'.format(o['name']))
                     pass
 
     if len(message) == 0:
