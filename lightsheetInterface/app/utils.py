@@ -1,4 +1,4 @@
-import datetime, json, requests, operator
+import datetime, json, requests, operator, time
 
 from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
@@ -9,6 +9,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from app import app
 from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
 from collections import OrderedDict
+from itertools import repeat
 
 # JACS server
 jacs_host = app.config.get('JACS_HOST')
@@ -63,9 +64,9 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
 
 
 # build result object of existing job information
-def mapJobsToDict(x):
-    allSteps = Step.objects.all()
+def mapJobsToDict(x, allSteps):
     result = {}
+
     if '_id' in x:
         result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
     if 'username' in x:
@@ -109,7 +110,6 @@ def mapJobsToDict(x):
             elif "pause" in step and step['pause'] and step['state'] == "SUCCESSFUL":
                 if step["name"] in x['remainingStepNames']:
                     result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET,'
-
     result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
     result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
     return result
@@ -120,12 +120,14 @@ def allJobsInJSON(imageProcessingDB,showAllJobs=False):
     if showAllJobs:
         parentJobInfo = imageProcessingDB.jobs.find({"username": {"$exists": "true"}, "hideFromView":{"$ne":1}}, {"_id": 1, "username": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
                                                                                                                   "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-                                                                                                                  "steps.state": 1, "steps.name": 1, "steps.pause": 1})
+                                                                                                                 "steps.state": 1, "steps.name": 1, "steps.pause": 1})
     else:
         parentJobInfo = imageProcessingDB.jobs.find({"username":current_user.username, "hideFromView":{"$ne":1}}, {"_id": 1, "jobName": 1, "remainingStepNames":1, "submissionAddress": 1, "creationDate": 1,
                                                     "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
                                                     "steps.state": 1, "steps.name": 1, "steps.pause": 1})
-    return list(map(mapJobsToDict, parentJobInfo))
+    allSteps = Step.objects.all()
+    listToReturn = list(map(mapJobsToDict, parentJobInfo, repeat(allSteps)))
+    return listToReturn
 
 
 # build object with meta information about parameters from the admin interface

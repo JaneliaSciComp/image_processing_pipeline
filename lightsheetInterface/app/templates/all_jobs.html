@@ -14,7 +14,7 @@
         var hideColumns = 0;
         var jacs_host = "{{jacs_host}}";
         var jacs_dashboard = "{{ jacs_dashboard }}";
-        {% if jobsJson %}
+        {% if jobsJson is defined and jobsJson %}
             var table_data = {{ jobsJson|safe }};
         {% else %}
             var table_data = null;

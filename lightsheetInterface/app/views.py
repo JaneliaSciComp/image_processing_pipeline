@@ -81,14 +81,12 @@ def step(step_name):
                                     None, stepOrTemplateName)
         return submissionStatusReturner(submissionStatus)
 
-    updateDBStatesAndTimes(imageProcessingDB)
-    jobs = allJobsInJSON(imageProcessingDB)
     global allStepNames
     allStepNames = step_name
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            config=configObj,
-                           jobsJson=jobs,  # used by the job table
+                           jobsJson=[],  # used by the job table
                            submissionStatus=None,
                            currentStep=step_name,
                            currentTemplate=None,
@@ -143,12 +141,11 @@ def template(template_name):
                     globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
                 else:
                     nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
-    updateDBStatesAndTimes(imageProcessingDB)
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            parentJobInfo=None,
                            config=configObj,
-                           jobsJson=allJobsInJSON(imageProcessingDB),
+                           jobsJson=[],
                            submissionStatus=submissionStatus,
                            currentTemplate=template_name,
                            posted=posted,
@@ -414,12 +411,11 @@ def load_configuration(config_name):
             return submissionStatusReturner(submissionStatus)
 
 
-        updateDBStatesAndTimes(imageProcessingDB)
         return render_template('index.html',
                                pipelineSteps=pipelineSteps,
                                pipeline_config=config_name,
                                parentJobInfo=None,
-                               jobsJson=allJobsInJSON(imageProcessingDB),
+                               jobsJson=[],
                                config=configObj,
                                currentStep=currentStep,
                                currentTemplate=currentTemplate,
@@ -428,7 +424,6 @@ def load_configuration(config_name):
                                )
 
     else:
-        updateDBStatesAndTimes(imageProcessingDB)
         return 'No such configuration in the system.'
 
 
@@ -500,8 +495,7 @@ def submissionStatusReturner(submissionStatus):
 @login_required
 def all_jobs():
     showAllJobs=True
-    updateDBStatesAndTimes(imageProcessingDB,showAllJobs)
-    jobs = allJobsInJSON(imageProcessingDB,showAllJobs)
+    jobs = []
     return render_template('all_jobs.html',
                            jobsJson=jobs)  # used by the job table
 
