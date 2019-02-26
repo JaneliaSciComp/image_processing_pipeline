@@ -170,7 +170,7 @@ $(document).ready(function () {
                         updatedValue = updatedValue.trim(); //remove leading/trailing spaces
                         if(isThisAnEquation){
                             updatedValue = eval(updatedValue);//TODO: Replace eval with Function
-                            if(updatedValue.includes("undefined")){
+                            if(updatedValue.toString().indexOf("undefined")>-1){
                                 updatedValue = "";
                             }
                         }

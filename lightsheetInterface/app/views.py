@@ -40,13 +40,17 @@ nonGlobalParameters = []
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
+"""
+ Url to return the favicon
+"""
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico')
 
-
+"""
+ Logout functionality
+"""
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
@@ -54,7 +58,9 @@ def logout():
     auth_service.logout()
     return redirect(url_for('.index'))
 
-
+"""
+ View Function to load a given step
+"""
 @app.route('/step/<step_name>', methods=['GET', 'POST'])
 @login_required
 def step(step_name):
@@ -95,7 +101,9 @@ def step(step_name):
                            posted=posted,
                            jobName=jobName)
 
-
+"""
+ View Function to load the steps of a given template
+"""
 @app.route('/template/<template_name>', methods=['GET', 'POST'])
 @login_required
 def template(template_name):
@@ -154,13 +162,17 @@ def template(template_name):
                            posted=posted,
                            jobName=jobName)
 
-
+"""
+ Root view function
+"""
 @app.route('/', methods=['GET'])
 @login_required
 def index():
     return redirect(url_for('template', template_name="LightSheet"))
 
-
+"""
+ View Function to the the status of jobs
+"""
 @app.route('/job_status', methods=['GET', 'POST'])
 @login_required
 def job_status():
@@ -223,7 +235,6 @@ def login_form():
                            form=form,
                            next=next_page_param if next_page_param else '')
 
-
 @app.route('/login', methods=['POST'])
 def login():
     if request.args.get('next'):
@@ -247,7 +258,9 @@ def login():
                                form=form,
                                next=next_page if next_page else ''), 401
 
-
+"""
+ View Function for loading a pipeline from a json file
+"""
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -278,6 +291,9 @@ def upload():
         return 'error'
 
 
+"""
+ View Function for creating pipeline model records from a pipeline json file
+"""
 @app.route('/upload/<filename>', methods=['GET', 'POST'])
 @login_required
 def uploaded_file(filename=None):
@@ -291,11 +307,22 @@ def uploaded_file(filename=None):
     return render_template('upload.html', filename=filename, message=message)
 
 
+"""
+ View Function for loading the configuration of an existing pipeline from a json file
+"""
 @app.route('/upload_config', methods=['GET', 'POST'])
 @login_required
 def upload_config(filename=None):
-    if request.method == 'GET':
-        return render_template('upload_config.html')
+    if request.method == "GET":
+        steps = Step.objects.all()
+        empty = False
+        if len(steps) == 0:
+            empty = True
+        return render_template(
+            'upload_config.html',
+            empty=empty
+        )
+
     # Handle uploaded file
     if request.method == "POST":
         # check if the post request has the file part
@@ -320,7 +347,9 @@ def upload_config(filename=None):
             return render_template('upload.html', message=message)
         return 'error'
 
-
+"""
+ View Function for creating a configuration record in the database of an existing pipeline from a json file
+"""
 @app.route('/upload_conf/<filename>', methods=['GET', 'POST'])
 @login_required
 def uploaded_configfile(filename=None):
@@ -334,6 +363,9 @@ def uploaded_configfile(filename=None):
     ##return render_template('upload.html', filename=filename, message=message)
 
 
+"""
+ View Function to look at a configuration file
+"""
 @app.route('/load/<config_name>', methods=['GET', 'POST'])
 @login_required
 def load_configuration(config_name):
