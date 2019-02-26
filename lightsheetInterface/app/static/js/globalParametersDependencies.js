@@ -93,13 +93,15 @@ dependency.applyGlobalParameter = function () {
                             }
                             else {
                                 if (currentVariableId.includes("inputFolder")) {//If useOutputFolderForClusterPT checkbox is checked need to do this so that the correct directory is used
-                                    checkboxId = document.querySelector('[id*="useOutputFolderForClusterPT"]').id.split("-")[1];
-                                    if (document.getElementById(checkboxId).checked) {
-                                        outputFolderId = "outputFolder_" + globalStepName.slice(0, -1);
-                                        inputFolderId = "inputFolder_" + globalStepName.slice(0, -1);
-                                        outputFolder = document.getElementById(outputFolderId).value;
-                                        inputFolderLastDir = document.getElementById(inputFolderId).value.match(/([^\/]*)\/*$/)[1]
-                                        currentVariableValue = outputFolder + "/" + inputFolderLastDir;
+                                    if(document.querySelector('[id*="useOutputFolderForClusterPT"]')) {
+                                        checkboxId = document.querySelector('[id*="useOutputFolderForClusterPT"]').id.split("-")[1];
+                                        if (document.getElementById(checkboxId).checked) {
+                                            outputFolderId = "outputFolder_" + globalStepName.slice(0, -1);
+                                            inputFolderId = "inputFolder_" + globalStepName.slice(0, -1);
+                                            outputFolder = document.getElementById(outputFolderId).value;
+                                            inputFolderLastDir = document.getElementById(inputFolderId).value.match(/([^\/]*)\/*$/)[1]
+                                            currentVariableValue = outputFolder + "/" + inputFolderLastDir;
+                                        }
                                     }
                                 }
                             }

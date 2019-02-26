@@ -165,7 +165,7 @@ def template(template_name):
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return redirect(url_for('template', template_name="LightSheet"))
+    return redirect(url_for('template', template_name="AIC SimView Single Camera"))
 
 """
  View Function to the the status of jobs

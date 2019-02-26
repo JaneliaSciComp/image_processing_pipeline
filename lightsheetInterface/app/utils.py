@@ -181,7 +181,7 @@ def getParameters(parameter):
 def buildConfigObject():
     try:
         sorted_steps = {}
-        templates = Template.objects.all()
+        templates = Template.objects.all().order_by('order')
         allSteps = Step.objects.all()
         allStepsDict = {}
 
@@ -213,7 +213,7 @@ def getStepNames():
 
 
 def getTemplateNames():
-    return Template.objects.all().values_list('name')
+    return Template.objects.all().order_by('order').values_list('name')
 
 
 # Header for post request
