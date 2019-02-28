@@ -2,7 +2,7 @@
     {% set data = data[0] %}
 {% endif %}
 {% set selected = false %}
-<select name="{{ param.name }}" id="{{ param.name }}">
+<select name="{{ param.name }}" id="{{ param.name }}" class="lightsheet-field" >
     {% if value.text1 %}
         <option value="{{ value.text1 }}" {% if value.text1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText1 }}" id="select_{{ param.name }}_text1"> {{ value.text1 }}
     {% endif %}

@@ -593,3 +593,64 @@ def stepOrTemplateNamePathMaker(stepOrTemplateName):
     else:
         stepOrTemplateName = "/template/" + stepOrTemplateName[10:]
     return stepOrTemplateName
+
+def copyStepInDatabase(imageProcessingDB, originalStepName, newStepName, newStepDescription = None):
+    originalStep = list(imageProcessingDB.step.find({"name": originalStepName}, {'_id' : 0}))
+    if originalStep:
+        originalStep=originalStep[0]
+        newStep = originalStep
+        newStep["name"] = newStepName
+        originalParameters=originalStep['parameter']
+        newParameterIds = copyParameterInDatabase(imageProcessingDB, originalParameters, originalStepName, newStepName)
+        if newStepDescription:
+            newStep['Description'] = newStepDescription
+        newStep['parameter'] = newParameterIds
+        imageProcessingDB.step.insert_one(newStep)
+
+def copyParameterInDatabase(imageProcessingDB, parameterIds, originalStepName, newStepName):
+    newParameterIds = parameterIds
+    for i,currentParameterId in enumerate(parameterIds):
+        newParameter = list(imageProcessingDB.parameter.find({"_id": currentParameterId} , {'_id': 0}))[0]
+        newParameter['name']=newParameter['name'].replace('_'+originalStepName, '_'+newStepName)
+        textIndex = 1
+        while textIndex<5 and newParameter["text"+str(textIndex)]:
+            newParameter["text"+str(textIndex)] = newParameter["text"+str(textIndex)].replace('_'+originalStepName, '_'+newStepName)
+            textIndex=textIndex+1
+        #Insert new parameter and store Ids
+        newParameterIds[i]=imageProcessingDB.parameter.insert_one(newParameter).inserted_id
+        dependencies = list(imageProcessingDB.dependency.find({"outputField": currentParameterId} , {'_id': 1 }))
+        if dependencies:
+            dependencyIds = [d['_id'] for d in dependencies]
+            copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName)
+    return newParameterIds
+
+def copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName):
+    for currentDependencyId in dependencyIds:
+        currentDependency = list(imageProcessingDB.dependency.find({"_id": currentDependencyId} , {'_id': 0}))[0]
+        outputFieldName = list(imageProcessingDB.parameter.find({'_id': currentDependency['outputField']}))[0]['name']
+        newOutputFieldName = outputFieldName.replace('_'+originalStepName, '_'+newStepName)
+        newOutputFieldId = list(imageProcessingDB.parameter.find({'name': newOutputFieldName} , {'_id':1}))[0]['_id']
+        newDependency = currentDependency
+        newDependency['outputField'] = newOutputFieldId
+        newDependency['pattern'] = newDependency['pattern'].replace('_'+originalStepName, '_'+newStepName)
+        imageProcessingDB.dependency.insert_one(newDependency)
+
+def deleteStepAndReferencesFromDatabase(imageProcessingDB, stepName):
+    step = list(imageProcessingDB.step.find({"name": stepName}))[0]
+    stepId = step['_id']
+    #delete from templates
+    templatesReferencingStep = list(imageProcessingDB.template.find({"steps": step['_id']} ))
+    if templatesReferencingStep:
+        for templateReferencingStep in templatesReferencingStep:
+            updatedSteps = templateReferencingStep['steps']
+            updatedSteps.remove(stepId)
+            imageProcessingDB.template.update_one({'_id': templateReferencingStep['_id']}, {'$set': {"steps" : updatedSteps}})
+    #Delete parameters and dependencies based on it
+    parameterIds = step['parameter']
+    for currentParameterId in parameterIds:
+        temp=1
+        imageProcessingDB.dependency.remove({"outputField": currentParameterId})
+        imageProcessingDB.parameter.remove({'_id': currentParameterId})
+    #Delete step
+    imageProcessingDB.step.remove({'_id': stepId})
+

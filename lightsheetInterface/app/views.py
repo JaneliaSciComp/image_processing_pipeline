@@ -546,6 +546,33 @@ def table_data():
     )
     return response
 
+@app.route('/copy_step', methods=['GET','POST'])
+@login_required
+def copy_step():
+    if current_user.username in app.config.get('ADMINS'):
+        originalStepName = request.args.get('from')
+        newStepName = request.args.get('to')
+        description = request.args.get('description')
+        copyStepInDatabase(imageProcessingDB, originalStepName, newStepName, description)
+        response = app.response_class(
+            status=200,
+            mimetype='application/json'
+        )
+    return response
+
+@app.route('/delete_step_and_references/<stepName>', methods=['GET','POST'])
+@login_required
+def delete_step_and_references(stepName):
+    if current_user.username in app.config.get('ADMINS'):
+        if stepName:
+            deleteStepAndReferencesFromDatabase(imageProcessingDB, stepName)
+        response = app.response_class(
+            status=200,
+            mimetype='application/json'
+        )
+    return response
+
+#TODO Delete parameters
 @app.context_processor
 def add_value_dependency_object():
     dep = Dependency.objects.filter(dependency_type='V')
