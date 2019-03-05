@@ -618,20 +618,25 @@ def copyParameterInDatabase(imageProcessingDB, parameterIds, originalStepName, n
             textIndex=textIndex+1
         #Insert new parameter and store Ids
         newParameterIds[i]=imageProcessingDB.parameter.insert_one(newParameter).inserted_id
-        dependencies = list(imageProcessingDB.dependency.find({"outputField": currentParameterId} , {'_id': 1 }))
+        isGlobalParameter = ("globalparameters" in originalStepName.lower())
+        if isGlobalParameter:
+            field = 'inputField'
+        else:
+            field = 'outputField'
+        dependencies = list(imageProcessingDB.dependency.find({field: currentParameterId} , {'_id': 1 }))
         if dependencies:
             dependencyIds = [d['_id'] for d in dependencies]
-            copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName)
+            copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName, field)
     return newParameterIds
 
-def copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName):
+def copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName, field):
     for currentDependencyId in dependencyIds:
         currentDependency = list(imageProcessingDB.dependency.find({"_id": currentDependencyId} , {'_id': 0}))[0]
-        outputFieldName = list(imageProcessingDB.parameter.find({'_id': currentDependency['outputField']}))[0]['name']
-        newOutputFieldName = outputFieldName.replace('_'+originalStepName, '_'+newStepName)
-        newOutputFieldId = list(imageProcessingDB.parameter.find({'name': newOutputFieldName} , {'_id':1}))[0]['_id']
+        fieldName = list(imageProcessingDB.parameter.find({'_id': currentDependency[field]}))[0]['name']
+        newFieldName = fieldName.replace('_'+originalStepName, '_'+newStepName)
+        newFieldId = list(imageProcessingDB.parameter.find({'name': newFieldName} , {'_id':1}))[0]['_id']
         newDependency = currentDependency
-        newDependency['outputField'] = newOutputFieldId
+        newDependency[field] = newFieldId
         newDependency['pattern'] = newDependency['pattern'].replace('_'+originalStepName, '_'+newStepName)
         imageProcessingDB.dependency.insert_one(newDependency)
 

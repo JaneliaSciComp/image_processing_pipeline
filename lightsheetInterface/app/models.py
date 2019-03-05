@@ -19,8 +19,8 @@ steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightShe
 
 
 class AppConfig(Document):
-    name = StringField(max_length=500)
-    value = StringField(max_length=500)
+    name = StringField(max_length=1000)
+    value = StringField(max_length=1000)
 
     def __repr__(self):
         return self.name
@@ -28,9 +28,9 @@ class AppConfig(Document):
 
 class Parameter(Document):
     # fields, which store the descriptive data of a parameter
-    name = StringField(max_length=500, unique=True, required=True)
-    displayName = StringField(max_length=500)
-    description = StringField(max_length=500)
+    name = StringField(max_length=1000, unique=True, required=True)
+    displayName = StringField(max_length=1000)
+    description = StringField(max_length=1000)
     ignore = BooleanField()
     mount = BooleanField()
     frequency = StringField(max_length=20, choices=frequency)
@@ -49,11 +49,11 @@ class Parameter(Document):
     number5 = IntField()
     number6 = IntField()
     float1 = FloatField()
-    text1 = StringField(max_length=500)
-    text2 = StringField(max_length=500)
-    text3 = StringField(max_length=500)
-    text4 = StringField(max_length=500)
-    text5 = StringField(max_length=500)
+    text1 = StringField(max_length=2000)
+    text2 = StringField(max_length=2000)
+    text3 = StringField(max_length=2000)
+    text4 = StringField(max_length=2000)
+    text5 = StringField(max_length=2000)
     boolean = BooleanField()
 
     def __unicode__(self):
@@ -87,7 +87,7 @@ class Dependency(Document):
     inputField = ReferenceField(Parameter)
     outputField = ReferenceField(Parameter)
     outputStep = ReferenceField(Step)
-    pattern = StringField(max_length=500)
+    pattern = StringField(max_length=2000)
     equation = BooleanField()
     dependency_type = StringField(max_length=20, choices=dependency_type)
 
@@ -105,11 +105,11 @@ class ConfigurationInstance(Document):
     number5 = IntField()
     number6 = IntField()
     float1 = FloatField()
-    text1 = StringField(max_length=500)
-    text2 = StringField(max_length=500)
-    text3 = StringField(max_length=500)
-    text4 = StringField(max_length=500)
-    text5 = StringField(max_length=500)
+    text1 = StringField(max_length=2000)
+    text2 = StringField(max_length=2000)
+    text3 = StringField(max_length=2000)
+    text4 = StringField(max_length=2000)
+    text5 = StringField(max_length=2000)
     boolean = BooleanField()
 
     def __unicode__(self):
