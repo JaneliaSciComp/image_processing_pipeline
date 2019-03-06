@@ -49,10 +49,9 @@
                     {% else %}
                         <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
                     {% endif %}
-                {% for param in step.parameter %}
-                    {% set key=param.name %}
-                    {% if key in config.parameterDictionary[panel] %}
-                        {% set value = config.parameterDictionary[panel][key] %}
+                {% for param in step.parameter %} <!-- TODO: Loop over parameters in outer loop --!>
+                    {% if param.frequency == panel[0].upper() %}
+                        {% set value = param %}
                         {% set meta = value %}
                         {% set keyForProvidedStep = param.name.rpartition("_")[0] %}
                         {% set defaultValueNumber1 = param.number1 %}
@@ -75,7 +74,7 @@
                             {% set usesDefaultStepValue=True %}
                             {% if meta.formatting == 'C' and pipelineStep is none %}
                                 {% set data = [param.number1] %}
-                            {% elif meta.formatting == 'B' or meta.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
+                                {% elif meta.formatting == 'B' or meta.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
                                 {% if param.text5 %}
                                     {% set data = [param.text1, param.text2, param.text3, param.text4, param.text5] %}
                                 {% elif param.text4 %}

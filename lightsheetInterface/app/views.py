@@ -14,6 +14,9 @@ from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
 from collections import OrderedDict
 
+# This file contains all the view components necessary for routing and loading the correct webpages
+
+
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
 
 global_error = None
@@ -30,6 +33,7 @@ else:
     client = MongoClient(mongo_uri)
 
 # imageProcessingDB is the database containing lightsheet job information and parameters
+# The current database is called "lightsheet" but should be renamed to better reflect all its functionality
 imageProcessingDB = client.lightsheet
 
 # All step names and globalParameters and nonGlobalParameters for current config
@@ -65,13 +69,12 @@ def logout():
 @login_required
 def step(step_name):
     stepOrTemplateName = "Step: " + step_name
-    configObj = buildConfigObject()
+    configObj = buildConfigObject({'step':step_name})
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     reparameterize = request.args.get('reparameterize')
     if lightsheetDB_id == 'favicon.ico':
         lightsheetDB_id = None
 
-    submissionStatus = None
     pipelineSteps = None
     jobName = None
     posted = "false"
@@ -93,7 +96,6 @@ def step(step_name):
                            pipelineSteps=pipelineSteps,
                            config=configObj,
                            jobsJson=[],  # used by the job table
-                           submissionStatus=None,
                            currentStep=step_name,
                            currentTemplate=None,
                            posted=posted,
@@ -106,13 +108,12 @@ def step(step_name):
 @login_required
 def template(template_name):
     stepOrTemplateName = "Template: " + template_name
-    configObj = buildConfigObject()
+    configObj = buildConfigObject({'template':template_name})
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     reparameterize = request.args.get('reparameterize')
     if lightsheetDB_id == 'favicon.ico':
         lightsheetDB_id = None
 
-    submissionStatus = None
     pipelineSteps = None
     jobName = None
     posted = "false"
@@ -135,26 +136,24 @@ def template(template_name):
     nonGlobalParameters = []
     if configObj.get('steps'):
         # only populate step names if steps is set
-        if template_name in configObj["steps"]:
-            for step in configObj["steps"][template_name]:
-                allStepNames.append(step.name)
-                if "GLOBALPARAMETERS" in step.name.upper():
-                    globalParameters = [parameter.name for parameter in step.parameter]
-                else:
-                    nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
-        else: #old template name or something
-            for stepName in pipelineSteps:
-                allStepNames.append(stepName)
-                if "GLOBALPARAMETERS" in stepName.upper():
-                    globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
-                else:
-                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
+        for step in configObj["steps"]:
+            allStepNames.append(step.name)
+            if "GLOBALPARAMETERS" in step.name.upper():
+                globalParameters = [parameter.name for parameter in step.parameter]
+            else:
+                nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
+    else: #old template name or something
+        for stepName in pipelineSteps:
+            allStepNames.append(stepName)
+            if "GLOBALPARAMETERS" in stepName.upper():
+                globalParameters = [parameter.name for parameter in configObj["allSteps"][stepName].parameter]
+            else:
+                nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            parentJobInfo=None,
                            config=configObj,
                            jobsJson=[],
-                           submissionStatus=submissionStatus,
                            currentTemplate=template_name,
                            posted=posted,
                            jobName=jobName)
@@ -173,7 +172,6 @@ def index():
 @app.route('/job_status', methods=['GET', 'POST'])
 @login_required
 def job_status():
-    submissionStatus = None
     imageProcessingDB_id = request.args.get('lightsheetDB_id')
     # Mongo client
     updateDBStatesAndTimes(imageProcessingDB)
@@ -212,7 +210,6 @@ def job_status():
                            childJobInfo=childJobInfo,
                            lightsheetDB_id=imageProcessingDB_id,
                            stepOrTemplateName=stepOrTemplateName,
-                           submissionStatus=submissionStatus,
                            jobType=jobType,
                            posted=posted,
                            remainingStepNames=remainingStepNames)
@@ -390,9 +387,9 @@ def load_configuration(config_name):
             for stepName in pipelineSteps:
                 allStepNames.append(stepName)
                 if "GLOBALPARAMETERS" in stepName.upper():
-                    globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
+                    globalParameters = [parameter.name for parameter in configObj["allSteps"][stepName].parameter]
                 else:
-                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
+                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["allSteps"][stepName].parameter]
 
         else:
             content = json.loads(pInstance.content)
@@ -406,7 +403,7 @@ def load_configuration(config_name):
                     # Pipeline steps is passed to index.html for formatting the html based
                     pipelineSteps[name] = {
                         'stepName': name,
-                        'stepDescription': configObj['stepsAllDict'][name].description,
+                        'stepDescription': configObj['allSteps'][name].description,
                         'inputJson': None,
                         'state': False,
                         'checkboxState': 'checked',
@@ -414,9 +411,9 @@ def load_configuration(config_name):
                         'jobs': jobs
                     }
                     if "GLOBALPARAMETERS" in name.upper():
-                        globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
+                        globalParameters = [parameter.name for parameter in configObj["allSteps"][name].parameter]
                     else:
-                        nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
+                        nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["allSteps"][name].parameter]
 
             if "stepOrTemplateName" in content:
                 stepOrTemplateName = content["stepOrTemplateName"]

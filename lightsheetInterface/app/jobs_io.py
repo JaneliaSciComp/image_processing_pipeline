@@ -169,6 +169,11 @@ def parseJsonDataNoForms(data, stepName, config):
     else:
         parameterData = data
     keys = parameterData.keys()
+    fsrDictionary = {'F':'frequent','S':'sometimes','R':'rare'}
+    result = {}
+    result['frequent'] = {}
+    result['sometimes'] = {}
+    result['rare'] = {}
     if keys != None:
         pFrequent = {}
         pSometimes = {}
@@ -179,38 +184,17 @@ def parseJsonDataNoForms(data, stepName, config):
             if param == None:  # key doesn't exist, try extended key
                 extendedKey = key + "_" + stepName
                 param = Parameter.objects.filter(name=extendedKey).first()
-            if param != None:  # check if key now exists
+            if param and key:  # check if key now exists
+                keyWithAppendedStepNameAssured = key.rsplit('_',1)[0] + '_' + stepName
                 if type(parameterData[key]) is list and len(parameterData[key]) == 0:
                     parameterData[key] = ''
                 elif parameterData[key] == 'None':
                     parameterData[key] = ''
-                if param.frequency == 'F':
-                    pFrequent[key] = {}
-                    if key in config['parameterDictionary']['frequent'].keys():
-                        pFrequent[key]['config'] = config['parameterDictionary']['frequent'][key]
-                    else:
-                        pFrequent[key]['config'] = config['parameterDictionary']['frequent'][key + '_' + stepName]
-                    pFrequent[key]['data'] = parameterData[key]
-                elif param.frequency == 'S':
-                    pSometimes[key] = {}
-                    if key in config['parameterDictionary']['sometimes'].keys():
-                        pSometimes[key]['config'] = config['parameterDictionary']['sometimes'][key]
-                    else:
-                        pSometimes[key]['config'] = config['parameterDictionary']['sometimes'][key + '_' + stepName]
-                    pSometimes[key]['data'] = parameterData[key]
-                elif param.frequency == 'R':
-                    pRare[key] = {}
-                    # Either look up value of key itself or for the extended key with the stepname and store it into result object
-                    if key in config['parameterDictionary']['rare'].keys():
-                        pRare[key]['config'] = config['parameterDictionary']['rare'][key]
-                    else:
-                        pRare[key]['config'] = config['parameterDictionary']['rare'][key + '_' + stepName]
-                    pRare[key]['data'] = parameterData[key]
+                frequency = fsrDictionary[param.frequency]
+                result[frequency][key] = {}
+                result[frequency][key]['config'] = config['parameterDictionary'][frequency][keyWithAppendedStepNameAssured]
+                result[frequency][key]['data'] = parameterData[key]
 
-    result = {}
-    result['frequent'] = pFrequent
-    result['sometimes'] = pSometimes
-    result['rare'] = pRare
     return result
 
 

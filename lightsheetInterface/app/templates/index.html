@@ -30,9 +30,8 @@
         <div class="row lightsheet-row">
             <div id="steps">
                 {% set allStepNames = [] %}
-                {% if config['steps'] is not none %}
-                    {% if currentTemplate is defined and currentTemplate is not none and currentTemplate in config['steps'] %}
-                        {% for step in config['steps'][currentTemplate] %}
+                    {% if currentTemplate is defined and currentTemplate is not none and config['steps'] %}
+                        {% for step in config['steps'] %}
                             {% set allStepNames = allStepNames.append(step.name) %}
                             {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
                                 {% set pipelineStep = pipelineSteps[step.name] %}
@@ -41,8 +40,8 @@
                             {% endif %}
                             {% include "stepLoad.html" ignore missing with context %}
                         {% endfor %}
-                    {% elif currentStep is defined and currentStep is not none and currentStep in config['stepsAllDict'] %}
-                        {% set step = config['stepsAllDict'][currentStep] %}
+                    {% elif currentStep is defined and currentStep is not none and config['steps'] %}
+                        {% set step = config['steps'] %}
                         {% set allStepNames = allStepNames.append(step.name) %}
                         {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
                             {% set pipelineStep = pipelineSteps[step.name] %}
@@ -50,17 +49,16 @@
                             {% set pipelineStep = none %}
                         {% endif %}
                         {% include "stepLoad.html" ignore missing with context %}
-                    {% else %}
+                    {% else %} <!-- LOADING DEPRECATED STEP/TEMPLATE --!>
                         {% if pipelineSteps is not none %}
                             {% for stepName in pipelineSteps %}
                                 {% set allStepNames = allStepNames.append(stepName) %}
                                 {% set pipelineStep = pipelineSteps[stepName] %}
-                                {% set step = config['stepsAllDict'][stepName] %}
+                                {% set step = config['allSteps'][stepName] %}
                                 {% include "stepLoad.html" ignore missing with context %}
                             {% endfor %}
                         {% endif %}
                     {% endif %}
-                {% endif %}
             </div>
         </div>
         <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled

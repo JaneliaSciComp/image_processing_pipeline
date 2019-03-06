@@ -178,31 +178,45 @@ def getParameters(parameter):
 
 
 # build object with information about steps and parameters about admin interface
-def buildConfigObject():
+def buildConfigObject(stepOrTemplateDictionary=None):
     try:
         sorted_steps = {}
-        templates = Template.objects.all().order_by('order')
-        allSteps = Step.objects.all()
         allStepsDict = {}
-
-        for step in allSteps:
-            allStepsDict[step.name] = step
-
-        for template in templates:
-            #sorted_steps[template.name] = template.steps
-            steps = template.steps
-            sorted_steps[template.name] = sorted(steps, key=operator.attrgetter('order'))
-
-        p = Parameter.objects.all()
+        p = []
+        currentSteps = None
+        #Check if we are loading a default step/template in which case we just need to load the corresponding information
+        #Else, we need to load all possible settings since we are loading a deprecated step/template name which may contain steps in order we don't expect
+        if stepOrTemplateDictionary:
+            if 'step' in stepOrTemplateDictionary:
+                stepName = stepOrTemplateDictionary['step']
+                currentSteps = Step.objects.all().filter(name=stepName)[0]
+                p = currentSteps.parameter
+            elif 'template' in stepOrTemplateDictionary:
+                templateName = stepOrTemplateDictionary['template']
+                template = Template.objects.all().filter(name=templateName)
+                currentSteps = sorted(template[0].steps, key=operator.attrgetter('order'))
+                for step in currentSteps:
+                    p = p + step.parameter
+        else:
+            allSteps = Step.objects.all()
+            for step in allSteps:
+                allStepsDict[step.name] = step
+            p = Parameter.objects.all()
         paramDict = getParameters(p)
 
+        #config['steps'] contains steps grouped based on template name, ordered how their order is defined in the database
+        #config['allSteps'] contains all the step information referenced by the step name
+        #config['parameterDictionary'] contains all of the parameter information
+        #config['stepNames'] contains all the step names
+        #config['templateNames'] contains all the template names
         config = {
-            'steps': sorted_steps,
-            'stepsAllDict': allStepsDict,
+            'steps': currentSteps,
+            'allSteps': allStepsDict,
             'parameterDictionary': paramDict,
             'stepNames': getStepNames(),
             'templateNames': getTemplateNames()
         }
+        print(config)
     except ServerSelectionTimeoutError:
         return 404
     return config
@@ -578,7 +592,6 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
         # updateLightsheetDatabaseStatus
         updateDBStatesAndTimes(imageProcessingDB)
         submissionStatus = "success"
-        print("success")
     except requests.exceptions.RequestException as e:
         print('Exception occured')
         submissionStatus = requests
