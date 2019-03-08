@@ -7,7 +7,7 @@ from mongoengine.queryset.visitor import Q
 from app.models import Step, Parameter
 from enum import Enum
 from app import app
-from app.utils import submitToJACS, getJobStepData
+from app.utils import submitToJACS, getJobStepData, getParameters
 from bson.objectid import ObjectId
 from collections import OrderedDict
 
@@ -163,6 +163,8 @@ def reformatDataToPost(postedData, forSubmission=True):
 
 # new parse data, don't create any flask forms
 def parseJsonDataNoForms(data, stepName, config):
+    step = [step for step in config['steps'] if step['name'] == stepName]
+    stepParameters = getParameters(step[0].parameter)
     # Check structure of incoming data
     if 'parameters' in data:
         parameterData = data['parameters']
@@ -175,24 +177,19 @@ def parseJsonDataNoForms(data, stepName, config):
     result['sometimes'] = {}
     result['rare'] = {}
     if keys != None:
-        pFrequent = {}
-        pSometimes = {}
-        pRare = {}
         # For each key, look up the parameter type and add parameter to the right type of form based on that:
         for key in keys:
-            param = Parameter.objects.filter(name=key).first()
-            if param == None:  # key doesn't exist, try extended key
-                extendedKey = key + "_" + stepName
-                param = Parameter.objects.filter(name=extendedKey).first()
+            keyWithAppendedStepNameAssured = key.rsplit('_',1)[0] + '_' + stepName
+            param = [param for param in stepParameters if param['name']==keyWithAppendedStepNameAssured]
             if param and key:  # check if key now exists
-                keyWithAppendedStepNameAssured = key.rsplit('_',1)[0] + '_' + stepName
+                param=param[0]
                 if type(parameterData[key]) is list and len(parameterData[key]) == 0:
                     parameterData[key] = ''
                 elif parameterData[key] == 'None':
                     parameterData[key] = ''
-                frequency = fsrDictionary[param.frequency]
+                frequency = fsrDictionary[param['frequency']]
                 result[frequency][key] = {}
-                result[frequency][key]['config'] = config['parameterDictionary'][frequency][keyWithAppendedStepNameAssured]
+                result[frequency][key]['config'] = param
                 result[frequency][key]['data'] = parameterData[key]
 
     return result
@@ -287,7 +284,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
         reparameterize = False
 
     # match data on step name
-    matchNameIndex = {}
     if type(jobData) is list:
         if imageProcessingDB_id != None:  # load data for an existing job
             for i in range(len(jobData)):

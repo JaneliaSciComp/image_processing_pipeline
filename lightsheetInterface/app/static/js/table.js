@@ -36,7 +36,7 @@ $(document).ready(()=>{let table=null;
                 data: 'jobName',
                 render(data, type, row, meta) {
                     var baseUrl = window.location.origin
-                    return data ? "<a href=\"" + baseUrl + row.stepOrTemplateName + "?lightsheetDB_id=" + row.id + "\">" + data + "</a>" : '';
+                    return data ? "<a href=\"" + baseUrl + row.stepOrTemplateName + "&lightsheetDB_id=" + row.id + "\">" + data + "</a>" : '';
                 }
             },
             {

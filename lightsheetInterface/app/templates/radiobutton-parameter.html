@@ -1,37 +1,37 @@
 {% if data is not string %} 
 	{% set data = data[0] %}
 {% endif %}
-{% if value.text1 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText1 }}" value="{{ value.text1 }}"  id="select_{{ param.name }}_text1" {% if value.text1 == data %} checked {% endif %}> {{ value.text1 }}
+{% if parameter.text1 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueText1 }}" value="{{ parameter.text1 }}"  id="select_{{ parameter.name }}_text1" {% if parameter.text1 == data %} checked {% endif %}> {{ parameter.text1 }}
 {% endif %}
-{% if value.text2 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText2 }}" value="{{ value.text2 }}"  id="select_{{ param.name }}_text2" {% if value.text2 == data %} checked {% endif %}> {{ value.text2 }}
+{% if parameter.text2 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueText2 }}" value="{{ parameter.text2 }}"  id="select_{{ parameter.name }}_text2" {% if parameter.text2 == data %} checked {% endif %}> {{ parameter.text2 }}
 {% endif %}
-{% if value.text3 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText3 }}" value="{{ value.text3 }}" id="select_{{ param.name }}_text3" {% if value.text3 == data %} checked {% endif %}> {{ value.text3 }}
+{% if parameter.text3 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueText3 }}" value="{{ parameter.text3 }}" id="select_{{ parameter.name }}_text3" {% if parameter.text3 == data %} checked {% endif %}> {{ parameter.text3 }}
 {% endif %}
-{% if value.text4 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText4 }}" value="{{ value.text4 }}" id="select_{{ param.name }}_text4" {% if value.text4 == data %} checked {% endif %}> {{ value.text4 }}
+{% if parameter.text4 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueText4 }}" value="{{ parameter.text4 }}" id="select_{{ parameter.name }}_text4" {% if parameter.text4 == data %} checked {% endif %}> {{ parameter.text4 }}
 {% endif %}
-{% if value.text5 %}
-    <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueText5 }}" value="{{ value.text5 }}" id="select_{{ param.name }}_text5" {% if value.text5 == data %} checked {% endif %}> {{ value.text5 }}
+{% if parameter.text5 %}
+    <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueText5 }}" value="{{ parameter.text5 }}" id="select_{{ parameter.name }}_text5" {% if parameter.text5 == data %} checked {% endif %}> {{ parameter.text5 }}
 {% endif %}
-{% if value.number1 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ value.number1 }}"  id="select_{{ param.name }}_number1" {% if value.number1 == data %} checked {% endif %}> {{ value.number1 }}
+{% if parameter.number1 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ parameter.number1 }}"  id="select_{{ parameter.name }}_number1" {% if parameter.number1 == data %} checked {% endif %}> {{ parameter.number1 }}
 {% endif %}
-{% if value.number2 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ value.number2 }}"  id="select_{{ param.name }}_number2" {% if value.number2 == data %} checked {% endif %}> {{ value.number2 }}
+{% if parameter.number2 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ parameter.number2 }}"  id="select_{{ parameter.name }}_number2" {% if parameter.number2 == data %} checked {% endif %}> {{ parameter.number2 }}
 {% endif %}
-{% if value.number3 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ value.number3 }}"  id="select_{{ param.name }}_number3" {% if value.number3 == data %} checked {% endif %}> {{ value.number3 }}
+{% if parameter.number3 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ parameter.number3 }}"  id="select_{{ parameter.name }}_number3" {% if parameter.number3 == data %} checked {% endif %}> {{ parameter.number3 }}
 {% endif %}
-{% if value.number4 %}
-  <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber4 }}" value="{{ value.number4 }}"  id="select_{{ param.name }}_number4" {% if value.number4 == data %} checked {% endif %}> {{ value.number4 }}
+{% if parameter.number4 %}
+  <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueNumber4 }}" value="{{ parameter.number4 }}"  id="select_{{ parameter.name }}_number4" {% if parameter.number4 == data %} checked {% endif %}> {{ parameter.number4 }}
 {% endif %}
-{% if value.number5 %}
-    <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber5 }}" value="{{ value.number5 }}"  id="select_{{ param.name }}_number5" {% if value.number5 == data %} checked {% endif %}> {{ value.number5 }}
+{% if parameter.number5 %}
+    <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueNumber5 }}" value="{{ parameter.number5 }}"  id="select_{{ parameter.name }}_number5" {% if parameter.number5 == data %} checked {% endif %}> {{ parameter.number5 }}
 {% endif %}
-{% if value.number6 %}
-    <input type="radio" class="lightsheet-field" name="{{ param.name }}" data-defaultValue = "{{ defaultValueNumber6 }}" value="{{ value.number6 }}"  id="select_{{ param.name }}_number6" {% if value.number6 == data %} checked {% endif %}> {{ value.number6 }}
+{% if parameter.number6 %}
+    <input type="radio" class="lightsheet-field" name="{{ parameter.name }}" data-defaultValue = "{{ defaultValueNumber6 }}" value="{{ parameter.number6 }}"  id="select_{{ parameter.name }}_number6" {% if parameter.number6 == data %} checked {% endif %}> {{ parameter.number6 }}
 {% endif %}
 

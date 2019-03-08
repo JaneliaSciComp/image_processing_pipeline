@@ -1,5 +1,5 @@
 import datetime, json, requests, operator, time
-
+from flask import url_for
 from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
 from datetime import datetime
@@ -131,50 +131,39 @@ def allJobsInJSON(imageProcessingDB,showAllJobs=False):
 
 
 # build object with meta information about parameters from the admin interface
-def getParameters(parameter):
-    frequent = {}
-    sometimes = {}
-    rare = {}
-    for param in parameter:
-        if param.number1 != None:
-            param.type = 'Integer'
-            if param.number2 == None:
-                param.count = '1'
-            elif param.number3 == None:
-                param.count = '2'
-            elif param.number4 == None:
-                param.count = '3'
-            elif param.number5 == None:
-                param.count = '4'
-            elif param.number6 == None:
-                param.count = '5'
+def getParameters(parameters):
+    for parameter in parameters:
+        if parameter.number1 != None:
+            parameter.type = 'Integer'
+            if parameter.number2 == None:
+                parameter.count = '1'
+            elif parameter.number3 == None:
+                parameter.count = '2'
+            elif parameter.number4 == None:
+                parameter.count = '3'
+            elif parameter.number5 == None:
+                parameter.count = '4'
+            elif parameter.number6 == None:
+                parameter.count = '5'
             else:
-                param.count = '6'
-        elif param.float1:
-            param.type = 'Float'
-            param.count = '1'
-        elif param.text1:
-            param.type = 'Text'
-            if not param.text2:
-                param.count = '1'
-            elif not param.text3:
-                param.count = '2'
-            elif not param.text4:
-                param.count = '3'
-            elif not param.text5:
-                param.count = '4'
+                parameter.count = '6'
+        elif parameter.float1:
+            parameter.type = 'Float'
+            parameter.count = '1'
+        elif parameter.text1:
+            parameter.type = 'Text'
+            if not parameter.text2:
+                parameter.count = '1'
+            elif not parameter.text3:
+                parameter.count = '2'
+            elif not parameter.text4:
+                parameter.count = '3'
+            elif not parameter.text5:
+                parameter.count = '4'
             else:
-                param.count = '5'
+                parameter.count = '5'
 
-        if param.frequency == 'F':
-            frequent[param.name] = param
-        elif param.frequency == 'S':
-            sometimes[param.name] = param
-        elif param.frequency == 'R':
-            rare[param.name] = param
-
-    result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
-    return result
+    return parameters
 
 
 # build object with information about steps and parameters about admin interface
@@ -183,26 +172,35 @@ def buildConfigObject(stepOrTemplateDictionary=None):
         sorted_steps = {}
         allStepsDict = {}
         p = []
-        currentSteps = None
+        currentSteps = []
         #Check if we are loading a default step/template in which case we just need to load the corresponding information
         #Else, we need to load all possible settings since we are loading a deprecated step/template name which may contain steps in order we don't expect
         if stepOrTemplateDictionary:
             if 'step' in stepOrTemplateDictionary:
                 stepName = stepOrTemplateDictionary['step']
                 currentSteps = Step.objects.all().filter(name=stepName)[0]
-                p = currentSteps.parameter
+                currentSteps['parameter'] = getParameters(currentSteps.parameter)
+                currentSteps = [currentSteps]
             elif 'template' in stepOrTemplateDictionary:
                 templateName = stepOrTemplateDictionary['template']
                 template = Template.objects.all().filter(name=templateName)
                 currentSteps = sorted(template[0].steps, key=operator.attrgetter('order'))
                 for step in currentSteps:
-                    p = p + step.parameter
+                    step['parameter'] = getParameters(step['parameter'])
+            elif 'steps' in stepOrTemplateDictionary:
+                for tempStep in stepOrTemplateDictionary['steps']:
+                    if 'name' in tempStep:
+                        stepName = tempStep['name']
+                    else:
+                        stepName = tempStep
+                    step = Step.objects.all().filter(name=stepName)[0]
+                    step['parameter'] = getParameters(step['parameter'])
+                    currentSteps.append(step)
         else:
             allSteps = Step.objects.all()
             for step in allSteps:
-                allStepsDict[step.name] = step
-            p = Parameter.objects.all()
-        paramDict = getParameters(p)
+                step['parameter'] = getParameters(step['parameter'])
+                currentSteps.append(step)
 
         #config['steps'] contains steps grouped based on template name, ordered how their order is defined in the database
         #config['allSteps'] contains all the step information referenced by the step name
@@ -211,12 +209,10 @@ def buildConfigObject(stepOrTemplateDictionary=None):
         #config['templateNames'] contains all the template names
         config = {
             'steps': currentSteps,
-            'allSteps': allStepsDict,
-            'parameterDictionary': paramDict,
             'stepNames': getStepNames(),
             'templateNames': getTemplateNames()
         }
-        print(config)
+
     except ServerSelectionTimeoutError:
         return 404
     return config
@@ -602,9 +598,9 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
 
 def stepOrTemplateNamePathMaker(stepOrTemplateName):
     if stepOrTemplateName.find("Step: ", 0, 6) != -1:
-        stepOrTemplateName = "/step/" + stepOrTemplateName[6:]
+        stepOrTemplateName = url_for('workflow', step=stepOrTemplateName[6:])
     else:
-        stepOrTemplateName = "/template/" + stepOrTemplateName[10:]
+        stepOrTemplateName = url_for('workflow', template=stepOrTemplateName[10:])
     return stepOrTemplateName
 
 def copyStepInDatabase(imageProcessingDB, originalStepName, newStepName, newStepDescription = None):

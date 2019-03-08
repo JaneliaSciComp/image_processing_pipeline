@@ -63,65 +63,55 @@ def logout():
     return redirect(url_for('.index'))
 
 """
- View Function to load a given step
-"""
-@app.route('/step/<step_name>', methods=['GET', 'POST'])
-@login_required
-def step(step_name):
-    stepOrTemplateName = "Step: " + step_name
-    configObj = buildConfigObject({'step':step_name})
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = request.args.get('reparameterize')
-    if lightsheetDB_id == 'favicon.ico':
-        lightsheetDB_id = None
-
-    pipelineSteps = None
-    jobName = None
-    posted = "false"
-    if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-        if reparameterize and current_user.username != username:
-            #Then don't allow because not the same user as the user who submitted the job
-            abort(404)
-    if request.method == 'POST':
-        posted = "true"
-        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
-                                    lightsheetDB_id,
-                                    None, stepOrTemplateName)
-        return submissionStatusReturner(submissionStatus)
-
-    global allStepNames
-    allStepNames = step_name
-    return render_template('index.html',
-                           pipelineSteps=pipelineSteps,
-                           config=configObj,
-                           jobsJson=[],  # used by the job table
-                           currentStep=step_name,
-                           currentTemplate=None,
-                           posted=posted,
-                           jobName=jobName)
-
-"""
  View Function to load the steps of a given template
 """
-@app.route('/template/<template_name>', methods=['GET', 'POST'])
+@app.route('/workflow', methods=['GET', 'POST'])
 @login_required
-def template(template_name):
-    stepOrTemplateName = "Template: " + template_name
-    configObj = buildConfigObject({'template':template_name})
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = request.args.get('reparameterize')
-    if lightsheetDB_id == 'favicon.ico':
-        lightsheetDB_id = None
-
+def workflow():
     pipelineSteps = None
     jobName = None
     posted = "false"
+
+    step_name = request.args.get('step')
+    template_name = request.args.get('template')
+    config_name = request.args.get('config_name')
+    lightsheetDB_id = request.args.get('lightsheetDB_id')
+    reparameterize = request.args.get('reparameterize')
+
+    #Check if the step_name or template_name are valid, if not will need to load it separately
+    allTemplates =  list(imageProcessingDB.template.find({},{'name':1,'_id':0}))
+    allTemplateNames = [template['name'] for template in allTemplates]
+    pInstance = PipelineInstance.objects.filter(name=config_name).first()
+
+    deprecated = False
+    if step_name or (template_name in allTemplateNames) or pInstance:
+        if template_name:
+            stepOrTemplateName = "Template: " + template_name
+            configObj = buildConfigObject({'template':template_name})
+        else:
+            stepOrTemplateName = "Step: " + step_name
+            configObj = buildConfigObject({'step':step_name})
+        if pInstance:  # Then a previously submitted job is loaded
+            content = json.loads(pInstance.content)
+            configObj = buildConfigObject({'steps':content['steps']})
+    else:
+        deprecated=True
+        configObj = buildConfigObject()
+
     if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-        if reparameterize and current_user.username != username:
-            #Then don't allow because not the same user as the user who submitted the job
-            abort(404)
+        if lightsheetDB_id == 'favicon.ico':
+            lightsheetDB_id = None
+        else:
+            pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+            pipelineStepsWithConfig=[]
+            if deprecated:
+                for pipelineStepName in pipelineSteps:
+                    pipelineStepsWithConfig.append([step for step in configObj['steps'] if step.name==pipelineStepName][0])
+                configObj['steps'] = pipelineStepsWithConfig
+            if reparameterize and current_user.username != username:
+                #Then don't allow because not the same user as the user who submitted the job
+                abort(404)
+
     if request.method == 'POST':
         posted = "true"
         submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
@@ -134,26 +124,19 @@ def template(template_name):
     allStepNames = []
     globalParameters = []
     nonGlobalParameters = []
-    if configObj.get('steps'):
-        # only populate step names if steps is set
-        for step in configObj["steps"]:
-            allStepNames.append(step.name)
-            if "GLOBALPARAMETERS" in step.name.upper():
-                globalParameters = [parameter.name for parameter in step.parameter]
-            else:
-                nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
-    else: #old template name or something
-        for stepName in pipelineSteps:
-            allStepNames.append(stepName)
-            if "GLOBALPARAMETERS" in stepName.upper():
-                globalParameters = [parameter.name for parameter in configObj["allSteps"][stepName].parameter]
-            else:
-                nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
+    for step in configObj["steps"]:
+        allStepNames.append(step.name)
+        if "GLOBALPARAMETERS" in step.name.upper():
+            globalParameters = [parameter.name for parameter in step.parameter]
+        else:
+            nonGlobalParameters=nonGlobalParameters+[parameter.name for parameter in step.parameter]
+
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            parentJobInfo=None,
                            config=configObj,
                            jobsJson=[],
+                           currentStep=step_name,
                            currentTemplate=template_name,
                            posted=posted,
                            jobName=jobName)
@@ -164,7 +147,7 @@ def template(template_name):
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return redirect(url_for('template', template_name="AIC SimView Single Camera"))
+    return redirect(url_for('workflow', template='AIC SimView Single Camera'))
 
 """
  View Function to the the status of jobs
@@ -363,11 +346,7 @@ def uploaded_configfile(filename=None):
 @app.route('/load/<config_name>', methods=['GET', 'POST'])
 @login_required
 def load_configuration(config_name):
-    configObj = buildConfigObject()
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
     reparameterize = request.args.get('reparameterize')
-    if lightsheetDB_id == 'favicon.ico':
-        lightsheetDB_id = None
     currentStep = None
     currentTemplate = None
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
@@ -378,42 +357,32 @@ def load_configuration(config_name):
     nonGlobalParameters = []
     jobName = None
     pipelineSteps=None
-    if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
-        if lightsheetDB_id:
-            pipelineSteps, submissionStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-            if reparameterize and current_user.username != username:
-                #Then don't allow because not the same user as the user who submitted the job
-                abort(404)
-            for stepName in pipelineSteps:
-                allStepNames.append(stepName)
-                if "GLOBALPARAMETERS" in stepName.upper():
-                    globalParameters = [parameter.name for parameter in configObj["allSteps"][stepName].parameter]
+    if pInstance:  # Then a previously submitted job is loaded
+        content = json.loads(pInstance.content)
+        configObj = buildConfigObject({'steps':content['steps']})
+        pipelineSteps = OrderedDict()
+        if 'steps' in content:
+            steps = content['steps']
+            for s in steps:
+                name = s['name']
+                stepConfig = [step for step in configObj['steps'] if step['name'] == name]
+                stepConfig = stepConfig[0]
+                allStepNames.append(name)
+                jobs = parseJsonDataNoForms(s, name, configObj)
+                # Pipeline steps is passed to index.html for formatting the html based
+                pipelineSteps[name] = {
+                    'stepName': name,
+                    'stepDescription': stepConfig,
+                    'inputJson': None,
+                    'state': False,
+                    'checkboxState': 'checked',
+                    'collapseOrShow': 'show',
+                    'jobs': jobs
+                }
+                if "GLOBALPARAMETERS" in name.upper():
+                    globalParameters = [parameter.name for parameter in stepConfig.parameter]
                 else:
-                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["allSteps"][stepName].parameter]
-
-        else:
-            content = json.loads(pInstance.content)
-            pipelineSteps = OrderedDict()
-            if 'steps' in content:
-                steps = content['steps']
-                for s in steps:
-                    name = s['name']
-                    allStepNames.append(name)
-                    jobs = parseJsonDataNoForms(s, name, configObj)
-                    # Pipeline steps is passed to index.html for formatting the html based
-                    pipelineSteps[name] = {
-                        'stepName': name,
-                        'stepDescription': configObj['allSteps'][name].description,
-                        'inputJson': None,
-                        'state': False,
-                        'checkboxState': 'checked',
-                        'collapseOrShow': 'show',
-                        'jobs': jobs
-                    }
-                    if "GLOBALPARAMETERS" in name.upper():
-                        globalParameters = [parameter.name for parameter in configObj["allSteps"][name].parameter]
-                    else:
-                        nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["allSteps"][name].parameter]
+                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in stepConfig.parameter]
 
             if "stepOrTemplateName" in content:
                 stepOrTemplateName = content["stepOrTemplateName"]

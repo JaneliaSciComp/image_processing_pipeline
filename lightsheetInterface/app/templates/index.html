@@ -30,18 +30,8 @@
         <div class="row lightsheet-row">
             <div id="steps">
                 {% set allStepNames = [] %}
-                    {% if currentTemplate is defined and currentTemplate is not none and config['steps'] %}
-                        {% for step in config['steps'] %}
-                            {% set allStepNames = allStepNames.append(step.name) %}
-                            {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
-                                {% set pipelineStep = pipelineSteps[step.name] %}
-                            {% else %}
-                                {% set pipelineStep = none %}
-                            {% endif %}
-                            {% include "stepLoad.html" ignore missing with context %}
-                        {% endfor %}
-                    {% elif currentStep is defined and currentStep is not none and config['steps'] %}
-                        {% set step = config['steps'] %}
+                {% if (currentTemplate or currentStep) and config['steps'] %}
+                    {% for step in config['steps'] %}
                         {% set allStepNames = allStepNames.append(step.name) %}
                         {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
                             {% set pipelineStep = pipelineSteps[step.name] %}
@@ -49,7 +39,8 @@
                             {% set pipelineStep = none %}
                         {% endif %}
                         {% include "stepLoad.html" ignore missing with context %}
-                    {% else %} <!-- LOADING DEPRECATED STEP/TEMPLATE --!>
+                    {% endfor %}
+                {% else %} <!-- LOADING DEPRECATED STEP/TEMPLATE --!>
                         {% if pipelineSteps is not none %}
                             {% for stepName in pipelineSteps %}
                                 {% set allStepNames = allStepNames.append(stepName) %}
@@ -58,7 +49,7 @@
                                 {% include "stepLoad.html" ignore missing with context %}
                             {% endfor %}
                         {% endif %}
-                    {% endif %}
+                {% endif %}
             </div>
         </div>
         <input type="submit" name="postJob" class="btn btn-info submit-button" value="Submit Job" disabled
@@ -118,7 +109,7 @@
             // var currentTemplate = String("{{ currentTemplate|safe }}").replace(/ /g, "%20");
             var currentTemplate = String("{{ currentTemplate|safe }}");
 
-            dataIo.currentUrl = "{{ url_for('template', template_name='placeholder') }}";
+            dataIo.currentUrl = "{{ url_for('workflow', template='placeholder') }}";
             dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
         {% endif %}
     </script>
@@ -192,12 +183,12 @@
 
                 $('#template-selector').on('change', function (event) {
                     var template_id = $(this).find(":selected").val();
-                    window.location = window.origin + '/template/' + template_id;
+                    window.location = window.origin + '/workflow?template=' + template_id;
                 });
 
                 $('#step-selector').on('change', function (event) {
                     var step_id = $(this).find(":selected").val();
-                    window.location = window.origin + '/step/' + step_id;
+                    window.location = window.origin + '/workflow?step=' + step_id;
                 });
 
                 $('.info-icon').on('click', function (event) {

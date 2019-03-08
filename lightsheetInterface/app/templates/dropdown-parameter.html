@@ -2,39 +2,39 @@
     {% set data = data[0] %}
 {% endif %}
 {% set selected = false %}
-<select name="{{ param.name }}" id="{{ param.name }}" class="lightsheet-field" >
-    {% if value.text1 %}
-        <option value="{{ value.text1 }}" {% if value.text1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText1 }}" id="select_{{ param.name }}_text1"> {{ value.text1 }}
+<select name="{{ parameter.name }}" id="{{ parameter.name }}" class="lightsheet-field" >
+    {% if parameter.text1 %}
+        <option value="{{ parameter.text1 }}" {% if parameter.text1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText1 }}" id="select_{{ parameter.name }}_text1"> {{ parameter.text1 }}
     {% endif %}
-    {% if value.text2 %}
-        <option value="{{ value.text2 }}" {% if value.text2 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText2 }}" id="select_{{ param.name }}_text2"> {{ value.text2 }}
+    {% if parameter.text2 %}
+        <option value="{{ parameter.text2 }}" {% if parameter.text2 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText2 }}" id="select_{{ parameter.name }}_text2"> {{ parameter.text2 }}
     {% endif %}
-    {% if value.text3 %}
-        <option value="{{ value.text3 }}" {% if value.text3 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText3 }}" id="select_{{ param.name }}_text3"> {{ value.text3 }}
+    {% if parameter.text3 %}
+        <option value="{{ parameter.text3 }}" {% if parameter.text3 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText3 }}" id="select_{{ parameter.name }}_text3"> {{ parameter.text3 }}
     {% endif %}
-    {% if value.text4 %}
-        <option value="{{ value.text4 }}" {% if value.text4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText4 }}" id="select_{{ param.name }}_text4"> {{ value.text4 }}
+    {% if parameter.text4 %}
+        <option value="{{ parameter.text4 }}" {% if parameter.text4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText4 }}" id="select_{{ parameter.name }}_text4"> {{ parameter.text4 }}
     {% endif %}
-    {% if value.text5 %}
-        <option value="{{ value.text5 }}" {% if value.text5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText5 }}" id="select_{{ param.name }}_text5"> {{ value.text5 }}
+    {% if parameter.text5 %}
+        <option value="{{ parameter.text5 }}" {% if parameter.text5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText5 }}" id="select_{{ parameter.name }}_text5"> {{ parameter.text5 }}
     {% endif %}
-    {% if value.number1 %}
-        <option value="{{ value.number1 }}" {% if value.number1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber1 }}" id="select_{{ param.name }}_number1"> {{ value.number1 }}
+    {% if parameter.number1 %}
+        <option value="{{ parameter.number1 }}" {% if parameter.number1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber1 }}" id="select_{{ parameter.name }}_number1"> {{ parameter.number1 }}
     {% endif %}
-    {% if value.number2 %}
-        <option value="{{ value.number2 }}" {% if value.number2 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber2 }}" id="select_{{ param.name }}_number2"> {{ value.number2 }}
+    {% if parameter.number2 %}
+        <option value="{{ parameter.number2 }}" {% if parameter.number2 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber2 }}" id="select_{{ parameter.name }}_number2"> {{ parameter.number2 }}
     {% endif %}
-    {% if value.number3 %}
-        <option value="{{ value.number3 }}" {% if value.number3 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber3 }}" id="select_{{ param.name }}_number3"> {{ value.number3 }}
+    {% if parameter.number3 %}
+        <option value="{{ parameter.number3 }}" {% if parameter.number3 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber3 }}" id="select_{{ parameter.name }}_number3"> {{ parameter.number3 }}
     {% endif %}
-    {% if value.number4 %}
-        <option value="{{ value.number4 }}" {% if value.number4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber4 }}" id="select_{{ param.name }}_number4"> {{ value.number4 }}
+    {% if parameter.number4 %}
+        <option value="{{ parameter.number4 }}" {% if parameter.number4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber4 }}" id="select_{{ parameter.name }}_number4"> {{ parameter.number4 }}
     {% endif %}
-    {% if value.number5 %}
-        <option value="{{ value.number5 }}" {% if value.number5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber5 }}" id="select_{{ param.name }}_number5"> {{ value.number5 }}
+    {% if parameter.number5 %}
+        <option value="{{ parameter.number5 }}" {% if parameter.number5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber5 }}" id="select_{{ parameter.name }}_number5"> {{ parameter.number5 }}
     {% endif %}
-    {% if value.number6 %}
-        <option value="{{ value.number6 }}" {% if value.number6 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber6 }}" id="select_{{ param.name }}_number6"> {{ value.number6 }}
+    {% if parameter.number6 %}
+        <option value="{{ parameter.number6 }}" {% if parameter.number6 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber6 }}" id="select_{{ parameter.name }}_number6"> {{ parameter.number6 }}
     {% endif %}
 
 </select>
@@ -44,7 +44,7 @@
         //If one loads a job where the dropdox is usually dependent on other fields,
         //then the value loaded will not match. So here we set it to be the first dependent value based on data-defaultValue
         //Can then click on other fields to update dropdown
-        var dropdown = document.getElementById("{{ param.name }}");
+        var dropdown = document.getElementById("{{ parameter.name }}");
         var allDependentValues = $(dropdown).find("[data-defaultValue*='{']");
         if(allDependentValues[0]) {
             $(allDependentValues[0]).text("{{ data }}");
