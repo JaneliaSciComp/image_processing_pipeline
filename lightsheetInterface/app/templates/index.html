@@ -29,10 +29,8 @@
         </a>
         <div class="row lightsheet-row">
             <div id="steps">
-                {% set allStepNames = [] %}
                 {% if (currentTemplate or currentStep) and config['steps'] %}
                     {% for step in config['steps'] %}
-                        {% set allStepNames = allStepNames.append(step.name) %}
                         {% if pipelineSteps is defined and pipelineSteps is not none and pipelineSteps[step.name] is defined and pipelineSteps[step.name] is not none %}
                             {% set pipelineStep = pipelineSteps[step.name] %}
                         {% else %}

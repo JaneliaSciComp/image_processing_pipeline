@@ -93,7 +93,7 @@
                 <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field parameter">
             {% endif %}
             <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ parameter }}" {{ addAttribute }} value = false onchange="lightsheet.passEmptyField(this)">
-            {% if (not data or (usesDefaultStepparameter and parameter.startsEmpty)) %}
+            {% if (not data or (usesDefaultStepValue and parameter.startsEmpty)) %}
                 {% set needsToBeChecked = True %}
             {% else %}
                 {% set needsToBeChecked = False %}

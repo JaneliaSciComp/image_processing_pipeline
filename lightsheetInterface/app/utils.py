@@ -66,36 +66,25 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
 # build result object of existing job information
 def mapJobsToDict(x, allSteps):
     result = {}
-
-    if '_id' in x:
-        result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
-    if 'username' in x:
-        result['username'] = x['username'] if x['username'] is not None else ''
-    if 'jobName' in x:
-        result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
-    if 'username' in x:
-        result['username'] = x['username'] if x['username'] is not None else ''
-    if 'submissionAddress' in x:
-        result['submissionAddress'] = x['submissionAddress'] if x['submissionAddress'] is not None else ''
-    else:
-        result['submissionAddress'] = ''
-
-    if 'creationDate' in x:
-        result['creationDate'] = x['creationDate'] if x['creationDate'] is not None else ''
-    if 'state' in x:
-        result['state'] = x['state'] if x['state'] is not None else ''
-    if 'jacs_id' in x:
-        result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
-    if 'stepOrTemplateName' in x:
-        if x['stepOrTemplateName'] is not None:
-            result['stepOrTemplateName'] = stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
-            result["jobType"] = x['stepOrTemplateName']
-        else:
-            result['stepOrTemplateName'] = '/load/previousjob'  # default loading
+    allParameters = ['username', 'jobName', 'username', 'creationDate', 'state', 'jacs_id', '_id', 'submissionAddress', 'stepOrTemplateName' ]
+    for currentParameter in allParameters:
+        if currentParameter in x:
+            if currentParameter == '_id':
+                result['id'] = str(x[currentParameter]) if str(x[currentParameter]) is not None else ''
+            elif currentParameter == 'stepOrTemplateName':
+                if x['stepOrTemplateName'] is not None:
+                    result['stepOrTemplateName'] = stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
+                    result["jobType"] = x['stepOrTemplateName']
+                else:
+                    result['stepOrTemplateName'] = ''
+                    result["jobType"] = ''
+            else:
+                result[currentParameter] = x[currentParameter] if x[currentParameter] is not None else ''
+        elif currentParameter == 'submissionAddress':
+            result['submissionAddress'] = ''
+        elif currentParameter == 'stepOrTemplateName':
+            result['stepOrTemplateName'] = ''
             result["jobType"] = ''
-    else:
-        result['stepOrTemplateName'] = '/load/previousjob'  # default loading
-        result["jobType"] = ''
 
     result['selectedSteps'] = {'names': '', 'states': '', 'submissionAddress': ''}
     for i, step in enumerate(x["steps"]):
@@ -199,11 +188,6 @@ def buildConfigObject(stepOrTemplateDictionary=None):
                 step['parameter'] = getParameters(step['parameter'])
                 currentSteps.append(step)
         
-        #config['steps'] contains steps grouped based on template name, ordered how their order is defined in the database
-        #config['allSteps'] contains all the step information referenced by the step name
-        #config['parameterDictionary'] contains all of the parameter information
-        #config['stepNames'] contains all the step names
-        #config['templateNames'] contains all the template names
         config = {
             'steps': currentSteps,
             'stepNames': getStepNames(),
@@ -546,16 +530,10 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
             }
             if "numberOfProcessors" in step["parameters"]:
                 stepPostBody["serviceResources"] = {"nSlots": str(int(step["parameters"]["numberOfProcessors"]))}
-            if "-expandDir" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandDir", step["parameters"]["-expandDir"]))
-            if "-expandPattern" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandPattern", step["parameters"]["-expandPattern"]))
-            if "-expandedArgFlag" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandedArgFlag", step["parameters"]["-expandedArgFlag"]))
-            if "-expandedArgList" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandedArgList", step["parameters"]["-expandedArgList"]))
-            if "-expandDepth" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandDepth", step["parameters"]["-expandDepth"]))
+            for argName in ["-expandDir", "-expandPattern", "-expandedArgFlag", "-expandedArgList", "-expandDepth"]:
+                if argName in step["parameters"]:
+                    stepPostBody["serviceArgs"].extend((argName, step["parameters"][argName]))
+
         pipelineServices.append(stepPostBody)
     if remainingSteps[0]['type'] == "LightSheet":
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'

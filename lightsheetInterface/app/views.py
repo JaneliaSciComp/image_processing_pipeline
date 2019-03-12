@@ -36,11 +36,6 @@ else:
 # The current database is called "lightsheet" but should be renamed to better reflect all its functionality
 imageProcessingDB = client.lightsheet
 
-# All step names and globalParameters and nonGlobalParameters for current config
-allStepNames = []
-globalParameters = []
-nonGlobalParameters = []
-
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -63,7 +58,7 @@ def logout():
     return redirect(url_for('.index'))
 
 """
- View Function to load the steps of a given template
+ View Function to configure jobs
 """
 @app.route('/workflow', methods=['GET', 'POST'])
 @login_required
@@ -72,27 +67,27 @@ def workflow():
     jobName = None
     posted = "false"
 
+    #Get HTML query values
     step_name = request.args.get('step')
     template_name = request.args.get('template')
     config_name = request.args.get('config_name')
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     reparameterize = request.args.get('reparameterize')
-
-    #Check if the step_name or template_name are valid, if not will need to load it separately
-    allTemplates =  list(imageProcessingDB.template.find({},{'name':1,'_id':0}))
-    allTemplateNames = [template['name'] for template in allTemplates]
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
 
-    if pInstance:  # Then a previously submitted job is loaded
+    if pInstance:  # Then an uploaded config has been loaded
         uploadedContent = json.loads(pInstance.content)
         configObj = buildConfigObject({'steps':uploadedContent['steps']})
         pipelineSteps, step_name, template_name = loadUploadedConfig(uploadedContent, configObj)
         if not (step_name or template_name):
             template_name = 'Deprecated Workflow'
 
+    #Get the appropriate step or template name and build corresponding config objects
     deprecated = False
     stepOrTemplateName = ''
     if template_name:
+        allTemplates =  list(imageProcessingDB.template.find({},{'name':1,'_id':0}))
+        allTemplateNames = [template['name'] for template in allTemplates]
         stepOrTemplateName = "Template: " + template_name
         if template_name in allTemplateNames:
             configObj = buildConfigObject({'template':template_name})
@@ -100,12 +95,11 @@ def workflow():
             deprecated=True
             if not pInstance:
                 configObj = buildConfigObject()
-
     elif step_name:
         stepOrTemplateName = "Step: " + step_name
         configObj = buildConfigObject({'step':step_name})
 
-    if lightsheetDB_id:
+    if lightsheetDB_id: #Then a previous job has been loaded
         if lightsheetDB_id == 'favicon.ico':
             lightsheetDB_id = None
         else:
@@ -127,24 +121,15 @@ def workflow():
                                     stepOrTemplateName)
         return submissionStatusReturner(submissionStatus)
 
-    global allStepNames, globalParameters, nonGlobalParameters
-    allStepNames = []
-    globalParameters = []
-    nonGlobalParameters = []
-    for step in configObj["steps"]:
-        allStepNames.append(step.name)
-        if "GLOBALPARAMETERS" in step.name.upper():
-            globalParameters = [parameter.name for parameter in step.parameter]
-        else:
-            nonGlobalParameters=nonGlobalParameters+[parameter.name for parameter in step.parameter]
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
-                           parentJobInfo=None,
                            config=configObj,
                            currentStep=step_name,
                            currentTemplate=template_name,
                            posted=posted,
-                           jobName=jobName)
+                           jobName=jobName,
+                           value_dependency = add_value_dependency_object(configObj),
+                           dimension_dependency = add_dimension_dependency_object(configObj))
 
 """
  Root view function
@@ -169,6 +154,7 @@ def job_status():
     stepOrTemplateName = []
     posted="false"
     remainingStepNames = None
+
     if request.method == 'POST':
         #Find pause that is in remaining steps
         posted = "true"
@@ -188,10 +174,11 @@ def job_status():
         if pausedJobInformation["remainingStepNames"]: #only submit if not empty
             submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
         updateDBStatesAndTimes(imageProcessingDB)
+
     if imageProcessingDB_id is not None:
         jobType, stepOrTemplateName, childJobInfo, remainingStepNames = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
         if not stepOrTemplateName:
-            stepOrTemplateName = "/load/previousjob"
+            stepOrTemplateName = "Deprecated Workflow"
     # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html',
                            parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
@@ -288,20 +275,34 @@ def uploaded_file(filename=None):
     message.append('Error uploading the file {0}'.format(filename))
     return render_template('upload.html', filename=filename, message=message)
 
+"""
+ View Function for creating a configuration record in the database of an existing pipeline from a json file
+"""
+@app.route('/upload_config/<filename>', methods=['GET', 'POST'])
+@login_required
+def upload_config(filename=None):
+    with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
+        c = json.loads(file.read())
+        result = createConfig(c)
+        return redirect(url_for('workflow', config_name=result['name']))
+        # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
+    message = []
+    message.append('Error uploading the file {0}'.format(filename))
+    ##return render_template('upload.html', filename=filename, message=message)
 
 """
  View Function for loading the configuration of an existing pipeline from a json file
 """
-@app.route('/upload_config', methods=['GET', 'POST'])
+@app.route('/load_config', methods=['GET', 'POST'])
 @login_required
-def upload_config(filename=None):
+def load_config(filename=None):
     if request.method == "GET":
         steps = Step.objects.all()
         empty = False
         if len(steps) == 0:
             empty = True
         return render_template(
-            'upload_config.html',
+            'load_config.html',
             empty=empty
         )
 
@@ -320,7 +321,7 @@ def upload_config(filename=None):
         if file and _allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_configfile',
+            return redirect(url_for('upload_config',
                                     filename=filename))
         else:
             # allowed_ext = print(', '.join(ALLOWED_EXTENSIONS[:-1]) + " or " + ALLOWED_EXTENSIONS[-1])
@@ -329,20 +330,6 @@ def upload_config(filename=None):
             return render_template('upload.html', message=message)
         return 'error'
 
-"""
- View Function for creating a configuration record in the database of an existing pipeline from a json file
-"""
-@app.route('/upload_conf/<filename>', methods=['GET', 'POST'])
-@login_required
-def uploaded_configfile(filename=None):
-    with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
-        c = json.loads(file.read())
-        result = createConfig(c)
-        return redirect(url_for('workflow', config_name=result['name']))
-        # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
-    message = []
-    message.append('Error uploading the file {0}'.format(filename))
-    ##return render_template('upload.html', filename=filename, message=message)
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
 def config(imageProcessingDB_id):
@@ -386,7 +373,15 @@ def hide_entries():
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
-def createDependencyResults(dependencies):
+def createDependencyResults(dependencies, configObj):
+    globalParameters = []
+    nonGlobalParameters = []
+    for step in configObj["steps"]:
+        if "GLOBALPARAMETERS" in step.name.upper():
+            globalParameters = [parameter.name for parameter in step.parameter]
+        else:
+            nonGlobalParameters=nonGlobalParameters+[parameter.name for parameter in step.parameter]
+
     result = []
     for d in dependencies:
         inputFieldName = d.inputField.name
@@ -454,20 +449,18 @@ def delete_step_and_references(stepName):
         )
     return response
 
-#TODO Delete parameters
-@app.context_processor
-def add_value_dependency_object():
+def add_value_dependency_object(configObj):
     dep = Dependency.objects.filter(dependency_type='V')
     result = []
     if dep is not None:
-        result = createDependencyResults(dep)
-    return dict(value_dependency=result)
+        result = createDependencyResults(dep, configObj)
+    return result
 
 
-@app.context_processor
-def add_dimension_dependency_object():
+def add_dimension_dependency_object(configObj):
     dep = Dependency.objects.filter(dependency_type='D')
     result = []
     if dep is not None:
-        result = createDependencyResults(dep)
-    return dict(dimension_dependency=result)
+        result = createDependencyResults(dep, configObj)
+    return result
+
