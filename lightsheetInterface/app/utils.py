@@ -169,9 +169,6 @@ def getParameters(parameters):
 # build object with information about steps and parameters about admin interface
 def buildConfigObject(stepOrTemplateDictionary=None):
     try:
-        sorted_steps = {}
-        allStepsDict = {}
-        p = []
         currentSteps = []
         #Check if we are loading a default step/template in which case we just need to load the corresponding information
         #Else, we need to load all possible settings since we are loading a deprecated step/template name which may contain steps in order we don't expect
@@ -201,7 +198,7 @@ def buildConfigObject(stepOrTemplateDictionary=None):
             for step in allSteps:
                 step['parameter'] = getParameters(step['parameter'])
                 currentSteps.append(step)
-
+        
         #config['steps'] contains steps grouped based on template name, ordered how their order is defined in the database
         #config['allSteps'] contains all the step information referenced by the step name
         #config['parameterDictionary'] contains all of the parameter information

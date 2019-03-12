@@ -40,15 +40,6 @@
                         {% endif %}
                         {% include "stepLoad.html" ignore missing with context %}
                     {% endfor %}
-                {% else %} <!-- LOADING DEPRECATED STEP/TEMPLATE --!>
-                        {% if pipelineSteps is not none %}
-                            {% for stepName in pipelineSteps %}
-                                {% set allStepNames = allStepNames.append(stepName) %}
-                                {% set pipelineStep = pipelineSteps[stepName] %}
-                                {% set step = config['allSteps'][stepName] %}
-                                {% include "stepLoad.html" ignore missing with context %}
-                            {% endfor %}
-                        {% endif %}
                 {% endif %}
             </div>
         </div>

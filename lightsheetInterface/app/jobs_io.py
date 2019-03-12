@@ -264,8 +264,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
         globalParametersAndRemainingStepNames = list(
             imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},
                                         {"remainingStepNames": 1, "globalParameters": 1}))
-        if "globalParameters" in globalParametersAndRemainingStepNames[0]:
-            globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
         if ("pause" in jobData[-1] and jobData[-1]["pause"] == 0 and jobData[-1]["state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in jobData):
             ableToReparameterize = False
         errorStepIndex = next((i for i, step in enumerate(jobData) if step["state"] == "ERROR"), None)
@@ -298,7 +296,7 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                         checkboxState = 'unchecked'
                         collapseOrShow = ''
                     if stepData:
-                        jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
+                        loadedParameters = parseJsonDataNoForms(stepData, currentStep, configObj)
                         # Pipeline steps is passed to index.html for formatting the html based
                         pipelineSteps[currentStep] = {
                             'stepName': currentStep,
@@ -307,9 +305,38 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                             'inputJson': None,
                             'checkboxState': checkboxState,
                             'collapseOrShow': collapseOrShow,
-                            'jobs': jobs
+                            'loadedParameters': loadedParameters
                         }
     elif type(jobData) is dict:
         loadStatus = 'Job cannot be loaded.'
 
     return pipelineSteps, loadStatus, jobName, username
+
+def loadUploadedConfig(uploadedContent, configObj):
+    pipelineSteps = OrderedDict()
+    if 'steps' in uploadedContent:
+        steps = uploadedContent['steps']
+        for s in steps:
+            name = s['name']
+            stepConfig = [step for step in configObj['steps'] if step['name'] == name]
+            stepConfig = stepConfig[0]
+            loadedParameters = parseJsonDataNoForms(s, name, configObj)
+            # Pipeline steps is passed to index.html for formatting the html based
+            pipelineSteps[name] = {
+                'stepName': name,
+                'stepDescription': stepConfig,
+                'inputJson': None,
+                'state': False,
+                'checkboxState': 'checked',
+                'collapseOrShow': 'show',
+                'loadedParameters': loadedParameters
+            }
+    step_name = None
+    template_name = None
+    if 'stepOrTemplateName' in uploadedContent:
+        stepOrTemplateName = uploadedContent["stepOrTemplateName"]
+        if stepOrTemplateName.find("Step: ", 0, 6) != -1:
+            step_name = stepOrTemplateName[6:]
+        else:
+            template_name = stepOrTemplateName[10:]
+    return pipelineSteps, step_name, template_name

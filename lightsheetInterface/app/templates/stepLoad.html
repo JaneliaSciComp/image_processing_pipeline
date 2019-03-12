@@ -64,15 +64,15 @@
                         {% set defaultValueText4 = parameter.text4 %}
                         {% set defaultValueText5 = parameter.text5 %}
                         {% set defaultValueFloat1 = parameter.float1 %}
-                        {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
+                        {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['loadedParameters'][panel] %}
                             {% set usesDefaultStepValue=False %}
                             {#Set defaults, useful for dependencies#}
-                            {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
+                            {% set data = pipelineStep['loadedParameters'][panel][keyForProvidedStep].data %}
                         {% else %}
                             {% set usesDefaultStepValue=True %}
                             {% if parameter.formatting == 'C' and pipelineStep is none %}
                                 {% set data = [parameter.number1] %}
-                                {% elif parameter.formatting == 'B' or parameter.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
+                            {% elif parameter.formatting == 'B' or parameter.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
                                 {% if parameter.text5 %}
                                     {% set data = [parameter.text1, parameter.text2, parameter.text3, parameter.text4, parameter.text5] %}
                                 {% elif parameter.text4 %}
@@ -97,7 +97,6 @@
                                     {% set data = [parameter.number1] %}
                                 {% endif %}
                             {% elif parameter.type == "Text" or parameter.formatting=='A' %}
-                                {% set defaultValueText1 = parameter.text1 %}
                                 {% set data = parameter.text1 %}
                             {% elif parameter.type =="Float" %}
                                 {% set data = parameter.float1 %}

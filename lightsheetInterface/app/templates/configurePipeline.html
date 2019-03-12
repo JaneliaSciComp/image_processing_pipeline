@@ -59,14 +59,5 @@
           <input type="text" class="form-control lightsheet-input ip-namefield" name="job-name" id="jobId" value="Job_{{ version }}_{{ date_now | safe | strftime_short }}_{{ machine_name }}">
         {% endif %}
       </div>
-      <div class="form-group form-inline">
-        <label class="lightsheet-label-configure">Job: </label>
-        <select class="selectpicker job-select" data-live-search="true" onchange="location = this.options[this.selectedIndex].value;">
-          <option value={{ request.get_host }} selected>---Select Previous Run---</option>
-          {% for job in jobsJson | reverse %}
-            <option value="{{ request.get_host }}{{job.stepOrTemplateName}}?lightsheetDB_id={{ job.id }}" >{{ job.creationDate }} {{job.jobName}}</option>
-          {% endfor %}
-        </select>
-      </div>
     </div>
 </div>

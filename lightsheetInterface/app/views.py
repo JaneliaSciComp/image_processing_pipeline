@@ -9,7 +9,7 @@ from app import app
 from app.authservice import create_auth_service
 from app.forms import LoginForm
 from app.utils import *
-from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loadPreexistingJob
+from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loadPreexistingJob, loadUploadedConfig
 from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
 from collections import OrderedDict
@@ -83,20 +83,27 @@ def workflow():
     allTemplateNames = [template['name'] for template in allTemplates]
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
 
+    if pInstance:  # Then a previously submitted job is loaded
+        uploadedContent = json.loads(pInstance.content)
+        configObj = buildConfigObject({'steps':uploadedContent['steps']})
+        pipelineSteps, step_name, template_name = loadUploadedConfig(uploadedContent, configObj)
+        if not (step_name or template_name):
+            template_name = 'Deprecated Workflow'
+
     deprecated = False
-    if step_name or (template_name in allTemplateNames) or pInstance:
-        if template_name:
-            stepOrTemplateName = "Template: " + template_name
+    stepOrTemplateName = ''
+    if template_name:
+        stepOrTemplateName = "Template: " + template_name
+        if template_name in allTemplateNames:
             configObj = buildConfigObject({'template':template_name})
         else:
-            stepOrTemplateName = "Step: " + step_name
-            configObj = buildConfigObject({'step':step_name})
-        if pInstance:  # Then a previously submitted job is loaded
-            content = json.loads(pInstance.content)
-            configObj = buildConfigObject({'steps':content['steps']})
-    else:
-        deprecated=True
-        configObj = buildConfigObject()
+            deprecated=True
+            if not pInstance:
+                configObj = buildConfigObject()
+
+    elif step_name:
+        stepOrTemplateName = "Step: " + step_name
+        configObj = buildConfigObject({'step':step_name})
 
     if lightsheetDB_id:
         if lightsheetDB_id == 'favicon.ico':
@@ -130,12 +137,10 @@ def workflow():
             globalParameters = [parameter.name for parameter in step.parameter]
         else:
             nonGlobalParameters=nonGlobalParameters+[parameter.name for parameter in step.parameter]
-
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
                            parentJobInfo=None,
                            config=configObj,
-                           jobsJson=[],
                            currentStep=step_name,
                            currentTemplate=template_name,
                            posted=posted,
@@ -333,97 +338,11 @@ def uploaded_configfile(filename=None):
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
         result = createConfig(c)
-        return redirect(url_for('load_configuration', config_name=result['name']))
+        return redirect(url_for('workflow', config_name=result['name']))
         # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
     message = []
     message.append('Error uploading the file {0}'.format(filename))
     ##return render_template('upload.html', filename=filename, message=message)
-
-
-"""
- View Function to look at a configuration file
-"""
-@app.route('/load/<config_name>', methods=['GET', 'POST'])
-@login_required
-def load_configuration(config_name):
-    reparameterize = request.args.get('reparameterize')
-    currentStep = None
-    currentTemplate = None
-    pInstance = PipelineInstance.objects.filter(name=config_name).first()
-    global allStepNames, globalParameters, nonGlobalParameters
-    stepOrTemplateName = None
-    allStepNames = []
-    globalParameters = []
-    nonGlobalParameters = []
-    jobName = None
-    pipelineSteps=None
-    if pInstance:  # Then a previously submitted job is loaded
-        content = json.loads(pInstance.content)
-        configObj = buildConfigObject({'steps':content['steps']})
-        pipelineSteps = OrderedDict()
-        if 'steps' in content:
-            steps = content['steps']
-            for s in steps:
-                name = s['name']
-                stepConfig = [step for step in configObj['steps'] if step['name'] == name]
-                stepConfig = stepConfig[0]
-                allStepNames.append(name)
-                jobs = parseJsonDataNoForms(s, name, configObj)
-                # Pipeline steps is passed to index.html for formatting the html based
-                pipelineSteps[name] = {
-                    'stepName': name,
-                    'stepDescription': stepConfig,
-                    'inputJson': None,
-                    'state': False,
-                    'checkboxState': 'checked',
-                    'collapseOrShow': 'show',
-                    'jobs': jobs
-                }
-                if "GLOBALPARAMETERS" in name.upper():
-                    globalParameters = [parameter.name for parameter in stepConfig.parameter]
-                else:
-                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in stepConfig.parameter]
-
-            if "stepOrTemplateName" in content:
-                stepOrTemplateName = content["stepOrTemplateName"]
-                if stepOrTemplateName.find("Step: ", 0, 6) != -1:
-                    currentStep = stepOrTemplateName[6:]
-                else:
-                    currentTemplate = stepOrTemplateName[10:]
-                if currentTemplate in configObj["steps"]: #then include all steps in this template
-                    allStepNames = []
-                    globalParameters = []
-                    nonGlobalParameters = []
-                    for step in configObj["steps"][currentTemplate]:
-                        allStepNames.append(step.name)
-                        if "GLOBALPARAMETERS" in step.name.upper():
-                            globalParameters = [parameter.name for parameter in step.parameter]
-                        else:
-                            nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
-
-        posted = "false"
-        if request.method == 'POST':
-            posted = "true"
-            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
-                    stepOrTemplateName)
-            return submissionStatusReturner(submissionStatus)
-
-
-        return render_template('index.html',
-                               pipelineSteps=pipelineSteps,
-                               pipeline_config=config_name,
-                               parentJobInfo=None,
-                               jobsJson=[],
-                               config=configObj,
-                               currentStep=currentStep,
-                               currentTemplate=currentTemplate,
-                               posted=posted,
-                               jobName=None
-                               )
-
-    else:
-        return 'No such configuration in the system.'
-
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
 def config(imageProcessingDB_id):
@@ -492,10 +411,7 @@ def submissionStatusReturner(submissionStatus):
 @app.route('/all_jobs', methods=['GET'])
 @login_required
 def all_jobs():
-    showAllJobs=True
-    jobs = []
-    return render_template('all_jobs.html',
-                           jobsJson=jobs)  # used by the job table
+    return render_template('all_jobs.html')  # used by the job table
 
 @app.route('/table_data', methods=['GET'])
 @login_required

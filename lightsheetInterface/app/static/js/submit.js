@@ -170,7 +170,7 @@ dataIo.customSubmit = async function (event) {
 
 dataIo.reset = function (stepOrTemplateName, id) {
     var baseUrl = window.location.origin;
-    window.location.replace(baseUrl + stepOrTemplateName + "?lightsheetDB_id=" + id + "&reparameterize=true");
+    window.location.replace(baseUrl + stepOrTemplateName + "&lightsheetDB_id=" + id + "&reparameterize=true");
 };
 
 dataIo.downloadSettings = function (stepOrTemplateName) {
