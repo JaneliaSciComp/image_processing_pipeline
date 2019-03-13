@@ -1,113 +1,113 @@
 <!-- 
   Contains the template for rendering a parameter, different types of parameter can exist
 -->
-{% set displayName = param.name.rpartition("_")[0] %}
+{% set displayName = parameter.name.rpartition("_")[0] %}
 {% set addAttribute = '' %}
 {% set labelClass = 'lightsheet-label' %}
 {% set spanClass = 'input-group-text lightsheet-input' %}
 <!-- Set some additional attributes to the input field based on which flags are set for the parameter in the model -->
-{% if param.mount == True %}
+{% if parameter.mount == True %}
     {% set addAttribute = addAttribute + ' mount' %}
     {% set spanClass = spanClass + ' label-mount' %}
 {% endif %}
 
-{% if param.ignore == True %}
+{% if parameter.ignore == True %}
     {% set addAttribute = addAttribute + ' ignore readonly' %}
-{% elif param.readonly == True %}
+{% elif parameter.readonly == True %}
     {% set addAttribute = addAttribute + ' readonly' %}
 {% endif %}
 
 <!-- Use display name instead of internal name if display name is not empty -->
-{% if param.displayName %}
-    {% set displayName = param.displayName %}
+{% if parameter.displayName %}
+    {% set displayName = parameter.displayName %}
 {% endif %}
 
-{% if value.description is not none %}
-    <div class="input-group input-group-sm mb-2" id="divisionFor-{{ param.name }}">
+{% if parameter.description is not none %}
+    <div class="input-group input-group-sm mb-2" id="divisionFor-{{ parameter.name }}">
 {% else %}
-    <div class="input-group input-group-sm mb-2" id="divisionFor-{{ param.name }}">
+    <div class="input-group input-group-sm mb-2" id="divisionFor-{{ parameter.name }}">
 {% endif %}
-<div class="input-group-prepend lightsheet-area" title="{{ value.description }}">
-      <span class="{{ spanClass }}" value="">
+<div class="input-group-prepend lightsheet-area" title="{{ parameter.description }}">
+      <span class="{{ spanClass }}" value = "">
         {{ displayName}}
        </span>
     <div class="input-group-prepend lightsheet-fields">
-        {% if meta.formatting == 'F' %}
-            {% if value.boolean == true %}
+        {% if parameter.formatting == 'F' %}
+            {% if parameter.boolean == true %}
                 {% if data=='False' %}
-                    <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" id="{{ param.name }}">
+                    <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" id="{{ parameter.name }}">
                 {% else %}
-                    <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" checked id="{{ param.name }}">
+                    <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" checked id="{{ parameter.name }}">
                 {% endif %}
             {% else %}
-                <input type="checkbox" class="flag-parameter  lightsheet-field" {{ addAttribute }} disabled step="any" id="{{ param.name }}">
+                <input type="checkbox" class="flag-parameter  lightsheet-field" {{ addAttribute }} disabled step="any" id="{{ parameter.name }}">
             {% endif %}
-        {% elif meta.formatting == 'B' %}
+        {% elif parameter.formatting == 'B' %}
             {% include "radiobutton-parameter.html" ignore missing with context %}
-        {% elif meta.formatting == 'C' %}
+        {% elif parameter.formatting == 'C' %}
             {% include "multiselect-parameter.html" ignore missing with context %}
-        {% elif meta.formatting == 'D' %}
+        {% elif parameter.formatting == 'D' %}
             {% include "dropdown-parameter.html" ignore missing with context %}
-        {% elif meta.type == 'Integer' or meta.type == 'Float' %}
-                {% if meta.count == '1' %}
-                    {% if meta.type== 'Integer' %}
-                        <input type="number" step="any" class="form-control lightsheet-number" {{ addAttribute }} data-defaultValue="{{ defaultValueNumber1 }}" value={{ data|int }} id="{{ param.name }}">
+        {% elif parameter.type == 'Integer' or parameter.type == 'Float' %}
+                {% if parameter.count == '1' %}
+                    {% if parameter.type== 'Integer' %}
+                        <input type="number" step="any" class="form-control lightsheet-number" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value = {{ data|int }} id="{{ parameter.name }}">
                     {% else %}
-                        <input type="number" step="any" class="form-control lightsheet-number" {{ addAttribute }} data-defaultValue="{{ defaultValueFloat1 }}" value={{ data }} id="{{ param.name }}">
+                        <input type="number" step="any" class="form-control lightsheet-number" {{ addAttribute }} data-defaultValue = "{{ defaultValueFloat1 }}" value = {{ data }} id="{{ parameter.name }}">
                     {% endif %}
-                {% elif meta.count == '2' %}
-                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ data[0] }}" id="{{ param.name }}-0">
-                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ data[1] }}" id="{{ param.name }}-1">
-                {% elif meta.count == '3' %}
-                    {% if meta.formatting == 'R' %}
+                {% elif parameter.count == '2' %}
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value = "{{ data[0] }}" id="{{ parameter.name }}-0">
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value = "{{ data[1] }}" id="{{ parameter.name }}-1">
+                {% elif parameter.count == '3' %}
+                    {% if parameter.formatting == 'R' %}
                         <div class="form-group form-inline">
-                            <label class="{{ labelClass }}" for="{{ param.name }}-number1">From: </label>
-                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-start" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ data['start'] }}" >
+                            <label class="{{ labelClass }}" for="{{ parameter.name }}-number1">From: </label>
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ parameter.name }}-start" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value = "{{ data['start'] }}" >
                         </div>
                         <div class="form-group form-inline">
-                            <label class="{{ labelClass }}" for="{{ param.name }}-number2">To: </label>
-                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-end" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ data['end'] }}">
+                            <label class="{{ labelClass }}" for="{{ parameter.name }}-number2">To: </label>
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ parameter.name }}-end" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value = "{{ data['end'] }}">
                         </div>
                         <div class="form-group form-inline">
-                            <label class="{{ labelClass }}" for="{{ param.name }}-number3">Every:</label>
-                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ param.name }}-every" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ data['every'] }}">
+                            <label class="{{ labelClass }}" for="{{ parameter.name }}-number3">Every: </label>
+                            <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" id="{{ parameter.name }}-every" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value = "{{ data['every'] }}">
                         </div>
                     {% else %}
-                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ data[0] }}" id="{{ param.name }}-0">
-                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ data[1] }}" id="{{ param.name }}-1">
-                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ data[2] }}" id="{{ param.name }}-2">
+                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value = "{{ data[0] }}" id="{{ parameter.name }}-0">
+                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value = "{{ data[1] }}" id="{{ parameter.name }}-1">
+                        <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value = "{{ data[2] }}" id="{{ parameter.name }}-2">
                     {% endif %}
-                {% elif meta.count == '4' %}
-                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ data[0] }}" id="{{ param.name }}-0">
-                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ data[1] }}" id="{{ param.name }}-1">
-                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ data[2] }}" id="{{ param.name }}-2">
-                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber4 }}" value="{{ data[3] }}" id="{{ param.name }}-3">
+                {% elif parameter.count == '4' %}
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber1 }}" value = "{{ data[0] }}" id="{{ parameter.name }}-0">
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber2 }}" value = "{{ data[1] }}" id="{{ parameter.name }}-1">
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber3 }}" value = "{{ data[2] }}" id="{{ parameter.name }}-2">
+                    <input type="number" step="any" class="form-control lightsheet-number lightsheet-nested-input" {{ addAttribute }} data-defaultValue = "{{ defaultValueNumber4 }}" value = "{{ data[3] }}" id="{{ parameter.name }}-3">
                 {% endif %}
-        {% elif meta.type == 'Text' or meta.formatting== 'A' or meta.formatting =='' %}
-            <input type="text" class="form-control lightsheet-text" {{ addAttribute }} data-defaultValue = "{{ defaultValueText1 }}" value="{{ data }}" id="{{ param.name }}">
+        {% elif parameter.type == 'Text' or parameter.formatting== 'A' or parameter.formatting =='' %}
+            <input type="text" class="form-control lightsheet-text" {{ addAttribute }} data-defaultValue = "{{ defaultValueText1 }}" value = "{{ data }}" id="{{ parameter.name }}">
         {% endif %}
-        {% if value.empty == True %}
-            {% if meta.type == 'Text' %}
-                <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty string as field value">
+        {% if parameter.empty == True %}
+            {% if parameter.type == 'Text' %}
+                <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty string as field parameter">
             {% else %}
-                <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field value">
+                <div class="form-check form-check-inline lightsheet-checkbox" title="Pass empty array as field parameter">
             {% endif %}
-            <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ param }}" {{ addAttribute }} value=false onchange="lightsheet.passEmptyField(this)">
-            {% if (not data or (usesDefaultStepValue and meta.startsEmpty)) %}
+            <input class="form-check-input" type="checkbox" id="emptycheckbox_{{ parameter }}" {{ addAttribute }} value = false onchange="lightsheet.passEmptyField(this)">
+            {% if (not data or (usesDefaultStepValue and parameter.startsEmpty)) %}
                 {% set needsToBeChecked = True %}
             {% else %}
                 {% set needsToBeChecked = False %}
             {% endif %}
-            <label class="form-check-label" for="emptycheckbox_{{ param }}">Empty Field</label>
+            <label class="form-check-label" for="emptycheckbox_{{ parameter }}">Empty Field</label>
             </div>
         {% endif %}
-        {% if value.hint %}
+        {% if parameter.hint %}
             <div class="form-group form-inline hint-area">
                 <div class="input-group-sm mb-1">
                     <i class="fa fa-info-circle info-icon"></i>
                 </div>
                 <div class="input-group-sm mb-1 parameter-hint">
-                    {{ value.hint | safe }}
+                    {{ parameter.hint | safe }}
                 </div>
             </div>
         {% endif %}
@@ -117,8 +117,8 @@
 <script>
     $(document).ready(function () {
         if ("{{ needsToBeChecked }}" == "True") {
-            document.getElementById("emptycheckbox_{{ param }}").checked = true;
-            document.getElementById("emptycheckbox_{{ param }}").onchange();
+            document.getElementById("emptycheckbox_{{ parameter }}").checked = true;
+            document.getElementById("emptycheckbox_{{ parameter }}").onchange();
         }
     })
 

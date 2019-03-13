@@ -15,14 +15,15 @@
       </form>
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}" style="display: none;"> Advanced Search </a>
       <a class="navbar-brand" href="{{ url_for('upload') }}"> Upload Pipeline</a>
-      <a class="navbar-brand" href="{{ url_for('upload_config') }}"> Upload Config</a>
+      <a class="navbar-brand" href="{{ url_for('load_config') }}"> Upload Config</a>
       <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
       <a class="navbar-brand" href="{{ url_for('logout') }}"> Logout </a>
-      <div style="margin-left: 8em;">
+      <div style="margin-left: 1em;">
+          <a class="navbar-brand" > Selected Uploaded Config: </a>
         <select class="selectpicker" id="pipeline-configs" data-live-search="true">
           <option value=""></option>
-          {% if pConfig is defined %}
-            {% set current = request.path | replace("/load/", "", 1) %}
+            {% if pConfig is defined %}
+            {% set current = request.url.split('config_name=')[-1] %}
             {% for p in pConfig %}
               {% if current == p.name %}
                 <option selected value={{ p.name }}>{{ p.description }}</option>
@@ -35,5 +36,5 @@
       </div>
     {% endif %}
   </nav>
-  <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script>document.write("<script src='{{ url_for('static', filename='js/landing.js') }}?time=" + Date.now() +"'><\/script>");</script>
 {% endblock navbar %}

@@ -1,5 +1,5 @@
 import datetime, json, requests, operator, time
-
+from flask import url_for
 from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
 from datetime import datetime
@@ -66,36 +66,25 @@ def getJobInfoFromDB(imageProcessingDB, _id=None, parentOrChild="parent"):
 # build result object of existing job information
 def mapJobsToDict(x, allSteps):
     result = {}
-
-    if '_id' in x:
-        result['id'] = str(x['_id']) if str(x['_id']) is not None else ''
-    if 'username' in x:
-        result['username'] = x['username'] if x['username'] is not None else ''
-    if 'jobName' in x:
-        result['jobName'] = x['jobName'] if x['jobName'] is not None else ''
-    if 'username' in x:
-        result['username'] = x['username'] if x['username'] is not None else ''
-    if 'submissionAddress' in x:
-        result['submissionAddress'] = x['submissionAddress'] if x['submissionAddress'] is not None else ''
-    else:
-        result['submissionAddress'] = ''
-
-    if 'creationDate' in x:
-        result['creationDate'] = x['creationDate'] if x['creationDate'] is not None else ''
-    if 'state' in x:
-        result['state'] = x['state'] if x['state'] is not None else ''
-    if 'jacs_id' in x:
-        result['jacs_id'] = x['jacs_id'] if x['jacs_id'] is not None else ''
-    if 'stepOrTemplateName' in x:
-        if x['stepOrTemplateName'] is not None:
-            result['stepOrTemplateName'] = stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
-            result["jobType"] = x['stepOrTemplateName']
-        else:
-            result['stepOrTemplateName'] = '/load/previousjob'  # default loading
+    allParameters = ['username', 'jobName', 'username', 'creationDate', 'state', 'jacs_id', '_id', 'submissionAddress', 'stepOrTemplateName' ]
+    for currentParameter in allParameters:
+        if currentParameter in x:
+            if currentParameter == '_id':
+                result['id'] = str(x[currentParameter]) if str(x[currentParameter]) is not None else ''
+            elif currentParameter == 'stepOrTemplateName':
+                if x['stepOrTemplateName'] is not None:
+                    result['stepOrTemplateName'] = stepOrTemplateNamePathMaker(x['stepOrTemplateName'])
+                    result["jobType"] = x['stepOrTemplateName']
+                else:
+                    result['stepOrTemplateName'] = ''
+                    result["jobType"] = ''
+            else:
+                result[currentParameter] = x[currentParameter] if x[currentParameter] is not None else ''
+        elif currentParameter == 'submissionAddress':
+            result['submissionAddress'] = ''
+        elif currentParameter == 'stepOrTemplateName':
+            result['stepOrTemplateName'] = ''
             result["jobType"] = ''
-    else:
-        result['stepOrTemplateName'] = '/load/previousjob'  # default loading
-        result["jobType"] = ''
 
     result['selectedSteps'] = {'names': '', 'states': '', 'submissionAddress': ''}
     for i, step in enumerate(x["steps"]):
@@ -131,78 +120,80 @@ def allJobsInJSON(imageProcessingDB,showAllJobs=False):
 
 
 # build object with meta information about parameters from the admin interface
-def getParameters(parameter):
-    frequent = {}
-    sometimes = {}
-    rare = {}
-    for param in parameter:
-        if param.number1 != None:
-            param.type = 'Integer'
-            if param.number2 == None:
-                param.count = '1'
-            elif param.number3 == None:
-                param.count = '2'
-            elif param.number4 == None:
-                param.count = '3'
-            elif param.number5 == None:
-                param.count = '4'
-            elif param.number6 == None:
-                param.count = '5'
+def getParameters(parameters):
+    for parameter in parameters:
+        if parameter.number1 != None:
+            parameter.type = 'Integer'
+            if parameter.number2 == None:
+                parameter.count = '1'
+            elif parameter.number3 == None:
+                parameter.count = '2'
+            elif parameter.number4 == None:
+                parameter.count = '3'
+            elif parameter.number5 == None:
+                parameter.count = '4'
+            elif parameter.number6 == None:
+                parameter.count = '5'
             else:
-                param.count = '6'
-        elif param.float1:
-            param.type = 'Float'
-            param.count = '1'
-        elif param.text1:
-            param.type = 'Text'
-            if not param.text2:
-                param.count = '1'
-            elif not param.text3:
-                param.count = '2'
-            elif not param.text4:
-                param.count = '3'
-            elif not param.text5:
-                param.count = '4'
+                parameter.count = '6'
+        elif parameter.float1:
+            parameter.type = 'Float'
+            parameter.count = '1'
+        elif parameter.text1:
+            parameter.type = 'Text'
+            if not parameter.text2:
+                parameter.count = '1'
+            elif not parameter.text3:
+                parameter.count = '2'
+            elif not parameter.text4:
+                parameter.count = '3'
+            elif not parameter.text5:
+                parameter.count = '4'
             else:
-                param.count = '5'
+                parameter.count = '5'
 
-        if param.frequency == 'F':
-            frequent[param.name] = param
-        elif param.frequency == 'S':
-            sometimes[param.name] = param
-        elif param.frequency == 'R':
-            rare[param.name] = param
-
-    result = {'frequent': frequent, 'sometimes': sometimes, 'rare': rare}
-    return result
+    return parameters
 
 
 # build object with information about steps and parameters about admin interface
-def buildConfigObject():
+def buildConfigObject(stepOrTemplateDictionary=None):
     try:
-        sorted_steps = {}
-        templates = Template.objects.all().order_by('order')
-        allSteps = Step.objects.all()
-        allStepsDict = {}
-
-        for step in allSteps:
-            allStepsDict[step.name] = step
-
-        for template in templates:
-            #sorted_steps[template.name] = template.steps
-            steps = template.steps
-            sorted_steps[template.name] = sorted(steps, key=operator.attrgetter('order'))
-
-        p = Parameter.objects.all()
-        paramDict = getParameters(p)
-
+        currentSteps = []
+        #Check if we are loading a default step/template in which case we just need to load the corresponding information
+        #Else, we need to load all possible settings since we are loading a deprecated step/template name which may contain steps in order we don't expect
+        if stepOrTemplateDictionary:
+            if 'step' in stepOrTemplateDictionary:
+                stepName = stepOrTemplateDictionary['step']
+                currentSteps = Step.objects.all().filter(name=stepName)[0]
+                currentSteps['parameter'] = getParameters(currentSteps.parameter)
+                currentSteps = [currentSteps]
+            elif 'template' in stepOrTemplateDictionary:
+                templateName = stepOrTemplateDictionary['template']
+                template = Template.objects.all().filter(name=templateName)
+                currentSteps = sorted(template[0].steps, key=operator.attrgetter('order'))
+                for step in currentSteps:
+                    step['parameter'] = getParameters(step['parameter'])
+            elif 'steps' in stepOrTemplateDictionary:
+                for tempStep in stepOrTemplateDictionary['steps']:
+                    if 'name' in tempStep:
+                        stepName = tempStep['name']
+                    else:
+                        stepName = tempStep
+                    step = Step.objects.all().filter(name=stepName)[0]
+                    step['parameter'] = getParameters(step['parameter'])
+                    currentSteps.append(step)
+        else:
+            allSteps = Step.objects.all()
+            for step in allSteps:
+                step['parameter'] = getParameters(step['parameter'])
+                currentSteps.append(step)
+        
         config = {
-            'steps': sorted_steps,
-            'stepsAllDict': allStepsDict,
-            'parameterDictionary': paramDict,
+            'steps': currentSteps,
             'stepNames': getStepNames(),
             'templateNames': getTemplateNames()
         }
+
     except ServerSelectionTimeoutError:
         return 404
     return config
@@ -539,16 +530,10 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
             }
             if "numberOfProcessors" in step["parameters"]:
                 stepPostBody["serviceResources"] = {"nSlots": str(int(step["parameters"]["numberOfProcessors"]))}
-            if "-expandDir" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandDir", step["parameters"]["-expandDir"]))
-            if "-expandPattern" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandPattern", step["parameters"]["-expandPattern"]))
-            if "-expandedArgFlag" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandedArgFlag", step["parameters"]["-expandedArgFlag"]))
-            if "-expandedArgList" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandedArgList", step["parameters"]["-expandedArgList"]))
-            if "-expandDepth" in step["parameters"]:
-                stepPostBody["serviceArgs"].extend(("-expandDepth", step["parameters"]["-expandDepth"]))
+            for argName in ["-expandDir", "-expandPattern", "-expandedArgFlag", "-expandedArgList", "-expandDepth"]:
+                if argName in step["parameters"]:
+                    stepPostBody["serviceArgs"].extend((argName, step["parameters"][argName]))
+
         pipelineServices.append(stepPostBody)
     if remainingSteps[0]['type'] == "LightSheet":
         postUrl = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'
@@ -578,7 +563,6 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
         # updateLightsheetDatabaseStatus
         updateDBStatesAndTimes(imageProcessingDB)
         submissionStatus = "success"
-        print("success")
     except requests.exceptions.RequestException as e:
         print('Exception occured')
         submissionStatus = requests
@@ -589,9 +573,9 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
 
 def stepOrTemplateNamePathMaker(stepOrTemplateName):
     if stepOrTemplateName.find("Step: ", 0, 6) != -1:
-        stepOrTemplateName = "/step/" + stepOrTemplateName[6:]
+        stepOrTemplateName = url_for('workflow', step=stepOrTemplateName[6:])
     else:
-        stepOrTemplateName = "/template/" + stepOrTemplateName[10:]
+        stepOrTemplateName = url_for('workflow', template=stepOrTemplateName[10:])
     return stepOrTemplateName
 
 def copyStepInDatabase(imageProcessingDB, originalStepName, newStepName, newStepDescription = None):
@@ -618,20 +602,25 @@ def copyParameterInDatabase(imageProcessingDB, parameterIds, originalStepName, n
             textIndex=textIndex+1
         #Insert new parameter and store Ids
         newParameterIds[i]=imageProcessingDB.parameter.insert_one(newParameter).inserted_id
-        dependencies = list(imageProcessingDB.dependency.find({"outputField": currentParameterId} , {'_id': 1 }))
+        isGlobalParameter = ("globalparameters" in originalStepName.lower())
+        if isGlobalParameter:
+            field = 'inputField'
+        else:
+            field = 'outputField'
+        dependencies = list(imageProcessingDB.dependency.find({field: currentParameterId} , {'_id': 1 }))
         if dependencies:
             dependencyIds = [d['_id'] for d in dependencies]
-            copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName)
+            copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName, field)
     return newParameterIds
 
-def copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName):
+def copyDependenciesInDatabase(imageProcessingDB, dependencyIds, originalStepName, newStepName, field):
     for currentDependencyId in dependencyIds:
         currentDependency = list(imageProcessingDB.dependency.find({"_id": currentDependencyId} , {'_id': 0}))[0]
-        outputFieldName = list(imageProcessingDB.parameter.find({'_id': currentDependency['outputField']}))[0]['name']
-        newOutputFieldName = outputFieldName.replace('_'+originalStepName, '_'+newStepName)
-        newOutputFieldId = list(imageProcessingDB.parameter.find({'name': newOutputFieldName} , {'_id':1}))[0]['_id']
+        fieldName = list(imageProcessingDB.parameter.find({'_id': currentDependency[field]}))[0]['name']
+        newFieldName = fieldName.replace('_'+originalStepName, '_'+newStepName)
+        newFieldId = list(imageProcessingDB.parameter.find({'name': newFieldName} , {'_id':1}))[0]['_id']
         newDependency = currentDependency
-        newDependency['outputField'] = newOutputFieldId
+        newDependency[field] = newFieldId
         newDependency['pattern'] = newDependency['pattern'].replace('_'+originalStepName, '_'+newStepName)
         imageProcessingDB.dependency.insert_one(newDependency)
 

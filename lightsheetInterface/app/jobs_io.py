@@ -7,7 +7,7 @@ from mongoengine.queryset.visitor import Q
 from app.models import Step, Parameter
 from enum import Enum
 from app import app
-from app.utils import submitToJACS, getJobStepData
+from app.utils import submitToJACS, getJobStepData, getParameters
 from bson.objectid import ObjectId
 from collections import OrderedDict
 
@@ -163,54 +163,35 @@ def reformatDataToPost(postedData, forSubmission=True):
 
 # new parse data, don't create any flask forms
 def parseJsonDataNoForms(data, stepName, config):
+    step = [step for step in config['steps'] if step['name'] == stepName]
+    stepParameters = getParameters(step[0].parameter)
     # Check structure of incoming data
     if 'parameters' in data:
         parameterData = data['parameters']
     else:
         parameterData = data
     keys = parameterData.keys()
+    fsrDictionary = {'F':'frequent','S':'sometimes','R':'rare'}
+    result = {}
+    result['frequent'] = {}
+    result['sometimes'] = {}
+    result['rare'] = {}
     if keys != None:
-        pFrequent = {}
-        pSometimes = {}
-        pRare = {}
         # For each key, look up the parameter type and add parameter to the right type of form based on that:
         for key in keys:
-            param = Parameter.objects.filter(name=key).first()
-            if param == None:  # key doesn't exist, try extended key
-                extendedKey = key + "_" + stepName
-                param = Parameter.objects.filter(name=extendedKey).first()
-            if param != None:  # check if key now exists
+            keyWithAppendedStepNameAssured = key.rsplit('_',1)[0] + '_' + stepName
+            param = [param for param in stepParameters if param['name']==keyWithAppendedStepNameAssured]
+            if param and key:  # check if key now exists
+                param=param[0]
                 if type(parameterData[key]) is list and len(parameterData[key]) == 0:
                     parameterData[key] = ''
                 elif parameterData[key] == 'None':
                     parameterData[key] = ''
-                if param.frequency == 'F':
-                    pFrequent[key] = {}
-                    if key in config['parameterDictionary']['frequent'].keys():
-                        pFrequent[key]['config'] = config['parameterDictionary']['frequent'][key]
-                    else:
-                        pFrequent[key]['config'] = config['parameterDictionary']['frequent'][key + '_' + stepName]
-                    pFrequent[key]['data'] = parameterData[key]
-                elif param.frequency == 'S':
-                    pSometimes[key] = {}
-                    if key in config['parameterDictionary']['sometimes'].keys():
-                        pSometimes[key]['config'] = config['parameterDictionary']['sometimes'][key]
-                    else:
-                        pSometimes[key]['config'] = config['parameterDictionary']['sometimes'][key + '_' + stepName]
-                    pSometimes[key]['data'] = parameterData[key]
-                elif param.frequency == 'R':
-                    pRare[key] = {}
-                    # Either look up value of key itself or for the extended key with the stepname and store it into result object
-                    if key in config['parameterDictionary']['rare'].keys():
-                        pRare[key]['config'] = config['parameterDictionary']['rare'][key]
-                    else:
-                        pRare[key]['config'] = config['parameterDictionary']['rare'][key + '_' + stepName]
-                    pRare[key]['data'] = parameterData[key]
+                frequency = fsrDictionary[param['frequency']]
+                result[frequency][key] = {}
+                result[frequency][key]['config'] = param
+                result[frequency][key]['data'] = parameterData[key]
 
-    result = {}
-    result['frequent'] = pFrequent
-    result['sometimes'] = pSometimes
-    result['rare'] = pRare
     return result
 
 
@@ -283,8 +264,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
         globalParametersAndRemainingStepNames = list(
             imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},
                                         {"remainingStepNames": 1, "globalParameters": 1}))
-        if "globalParameters" in globalParametersAndRemainingStepNames[0]:
-            globalParameters = globalParametersAndRemainingStepNames[0]["globalParameters"]
         if ("pause" in jobData[-1] and jobData[-1]["pause"] == 0 and jobData[-1]["state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in jobData):
             ableToReparameterize = False
         errorStepIndex = next((i for i, step in enumerate(jobData) if step["state"] == "ERROR"), None)
@@ -303,7 +282,6 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
         reparameterize = False
 
     # match data on step name
-    matchNameIndex = {}
     if type(jobData) is list:
         if imageProcessingDB_id != None:  # load data for an existing job
             for i in range(len(jobData)):
@@ -318,7 +296,7 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                         checkboxState = 'unchecked'
                         collapseOrShow = ''
                     if stepData:
-                        jobs = parseJsonDataNoForms(stepData, currentStep, configObj)
+                        loadedParameters = parseJsonDataNoForms(stepData, currentStep, configObj)
                         # Pipeline steps is passed to index.html for formatting the html based
                         pipelineSteps[currentStep] = {
                             'stepName': currentStep,
@@ -327,9 +305,38 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                             'inputJson': None,
                             'checkboxState': checkboxState,
                             'collapseOrShow': collapseOrShow,
-                            'jobs': jobs
+                            'loadedParameters': loadedParameters
                         }
     elif type(jobData) is dict:
         loadStatus = 'Job cannot be loaded.'
 
     return pipelineSteps, loadStatus, jobName, username
+
+def loadUploadedConfig(uploadedContent, configObj):
+    pipelineSteps = OrderedDict()
+    if 'steps' in uploadedContent:
+        steps = uploadedContent['steps']
+        for s in steps:
+            name = s['name']
+            stepConfig = [step for step in configObj['steps'] if step['name'] == name]
+            stepConfig = stepConfig[0]
+            loadedParameters = parseJsonDataNoForms(s, name, configObj)
+            # Pipeline steps is passed to index.html for formatting the html based
+            pipelineSteps[name] = {
+                'stepName': name,
+                'stepDescription': stepConfig,
+                'inputJson': None,
+                'state': False,
+                'checkboxState': 'checked',
+                'collapseOrShow': 'show',
+                'loadedParameters': loadedParameters
+            }
+    step_name = None
+    template_name = None
+    if 'stepOrTemplateName' in uploadedContent:
+        stepOrTemplateName = uploadedContent["stepOrTemplateName"]
+        if stepOrTemplateName.find("Step: ", 0, 6) != -1:
+            step_name = stepOrTemplateName[6:]
+        else:
+            template_name = stepOrTemplateName[10:]
+    return pipelineSteps, step_name, template_name

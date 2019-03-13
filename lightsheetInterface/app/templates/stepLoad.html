@@ -49,76 +49,72 @@
                     {% else %}
                         <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
                     {% endif %}
-                {% for param in step.parameter %}
-                    {% set key=param.name %}
-                    {% if key in config.parameterDictionary[panel] %}
-                        {% set value = config.parameterDictionary[panel][key] %}
-                        {% set meta = value %}
-                        {% set keyForProvidedStep = param.name.rpartition("_")[0] %}
-                        {% set defaultValueNumber1 = param.number1 %}
-                        {% set defaultValueNumber2 = param.number2 %}
-                        {% set defaultValueNumber3 = param.number3 %}
-                        {% set defaultValueNumber4 = param.number4 %}
-                        {% set defaultValueNumber5 = param.number5 %}
-                        {% set defaultValueNumber6 = param.number6 %}
-                        {% set defaultValueText1 = param.text1 %}
-                        {% set defaultValueText2 = param.text2 %}
-                        {% set defaultValueText3 = param.text3 %}
-                        {% set defaultValueText4 = param.text4 %}
-                        {% set defaultValueText5 = param.text5 %}
-                        {% set defaultValueFloat1 = param.float1 %}
-                        {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['jobs'][panel] %}
+                {% for parameter in step.parameter %} <!-- TODO: Loop over parameters in outer loop --!>
+                    {% if parameter.frequency == panel[0].upper() %}
+                        {% set keyForProvidedStep = parameter.name.rpartition("_")[0] %}
+                        {% set defaultValueNumber1 = parameter.number1 %}
+                        {% set defaultValueNumber2 = parameter.number2 %}
+                        {% set defaultValueNumber3 = parameter.number3 %}
+                        {% set defaultValueNumber4 = parameter.number4 %}
+                        {% set defaultValueNumber5 = parameter.number5 %}
+                        {% set defaultValueNumber6 = parameter.number6 %}
+                        {% set defaultValueText1 = parameter.text1 %}
+                        {% set defaultValueText2 = parameter.text2 %}
+                        {% set defaultValueText3 = parameter.text3 %}
+                        {% set defaultValueText4 = parameter.text4 %}
+                        {% set defaultValueText5 = parameter.text5 %}
+                        {% set defaultValueFloat1 = parameter.float1 %}
+                        {% if pipelineStep is not none and keyForProvidedStep in pipelineStep['loadedParameters'][panel] %}
                             {% set usesDefaultStepValue=False %}
                             {#Set defaults, useful for dependencies#}
-                            {% set data = pipelineStep['jobs'][panel][keyForProvidedStep].data %}
+                            {% set data = pipelineStep['loadedParameters'][panel][keyForProvidedStep].data %}
                         {% else %}
                             {% set usesDefaultStepValue=True %}
-                            {% if meta.formatting == 'C' and pipelineStep is none %}
-                                {% set data = [param.number1] %}
-                            {% elif meta.formatting == 'B' or meta.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
-                                {% if param.text5 %}
-                                    {% set data = [param.text1, param.text2, param.text3, param.text4, param.text5] %}
-                                {% elif param.text4 %}
-                                    {% set data = [param.text1, param.text2, param.text3, param.text4] %}
-                                {% elif param.text3 %}
-                                    {% set data = [param.text1, param.text2, param.text3] %}
-                                {% elif param.text2 %}
-                                    {% set data = [param.text1, param.text2] %}
-                                {% elif param.text1 %}
-                                    {% set data = [param.text1] %}
-                                {% elif param.number6 %}
-                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5, param.number6] %}
-                                {% elif param.number5 %}
-                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5] %}
-                                {% elif param.number4 %}
-                                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
-                                {% elif param.number3 %}
-                                    {% set data = [param.number1, param.number2, param.number3] %}
-                                {% elif param.number2 %}
-                                    {% set data = [param.number1, param.number2] %}
-                                {% elif param.number1 %}
-                                    {% set data = [param.number1] %}
+                            {% if parameter.formatting == 'C' and pipelineStep is none %}
+                                {% set data = [parameter.number1] %}
+                            {% elif parameter.formatting == 'B' or parameter.formatting == 'D' %}{#Radio Button or Dropdown Menu#}
+                                {% if parameter.text5 %}
+                                    {% set data = [parameter.text1, parameter.text2, parameter.text3, parameter.text4, parameter.text5] %}
+                                {% elif parameter.text4 %}
+                                    {% set data = [parameter.text1, parameter.text2, parameter.text3, parameter.text4] %}
+                                {% elif parameter.text3 %}
+                                    {% set data = [parameter.text1, parameter.text2, parameter.text3] %}
+                                {% elif parameter.text2 %}
+                                    {% set data = [parameter.text1, parameter.text2] %}
+                                {% elif parameter.text1 %}
+                                    {% set data = [parameter.text1] %}
+                                {% elif parameter.number6 %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3, parameter.number4, parameter.number5, parameter.number6] %}
+                                {% elif parameter.number5 %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3, parameter.number4, parameter.number5] %}
+                                {% elif parameter.number4 %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3, parameter.number4] %}
+                                {% elif parameter.number3 %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3] %}
+                                {% elif parameter.number2 %}
+                                    {% set data = [parameter.number1, parameter.number2] %}
+                                {% elif parameter.number1 %}
+                                    {% set data = [parameter.number1] %}
                                 {% endif %}
-                            {% elif meta.type == "Text" or meta.formatting=='A' %}
-                                {% set defaultValueText1 = param.text1 %}
-                                {% set data = param.text1 %}
-                            {% elif meta.type =="Float" %}
-                                {% set data = param.float1 %}
+                            {% elif parameter.type == "Text" or parameter.formatting=='A' %}
+                                {% set data = parameter.text1 %}
+                            {% elif parameter.type =="Float" %}
+                                {% set data = parameter.float1 %}
                             {% else %}
-                                {% if meta.count == '1' %}
-                                    {% set data = param.number1|int %}
-                                {% elif meta.count == '2' %}
-                                    {% set data = [param.number1, param.number2] %}
-                                {% elif meta.formatting == 'R' %}
-                                    {% set data = {'start': param.number1, 'end': param.number2, 'every': param.number3} %}
-                                {% elif meta.count == '3' %}
-                                    {% set data = [param.number1, param.number2, param.number3] %}
-                                {% elif meta.count == '4' %}
-                                    {% set data = [param.number1, param.number2, param.number3, param.number4] %}
-                                {% elif meta.count == '5' %}
-                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5] %}
-                                {% elif meta.count == '6' %}
-                                    {% set data = [param.number1, param.number2, param.number3, param.number4, param.number5, param.number6] %}
+                                {% if parameter.count == '1' %}
+                                    {% set data = parameter.number1|int %}
+                                {% elif parameter.count == '2' %}
+                                    {% set data = [parameter.number1, parameter.number2] %}
+                                {% elif parameter.formatting == 'R' %}
+                                    {% set data = {'start': parameter.number1, 'end': parameter.number2, 'every': parameter.number3} %}
+                                {% elif parameter.count == '3' %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3] %}
+                                {% elif parameter.count == '4' %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3, parameter.number4] %}
+                                {% elif parameter.count == '5' %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3, parameter.number4, parameter.number5] %}
+                                {% elif parameter.count == '6' %}
+                                    {% set data = [parameter.number1, parameter.number2, parameter.number3, parameter.number4, parameter.number5, parameter.number6] %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}

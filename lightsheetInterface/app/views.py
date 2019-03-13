@@ -9,10 +9,13 @@ from app import app
 from app.authservice import create_auth_service
 from app.forms import LoginForm
 from app.utils import *
-from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loadPreexistingJob
+from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loadPreexistingJob, loadUploadedConfig
 from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
 from collections import OrderedDict
+
+# This file contains all the view components necessary for routing and loading the correct webpages
+
 
 ALLOWED_EXTENSIONS = set(['txt', 'json'])
 
@@ -30,12 +33,8 @@ else:
     client = MongoClient(mongo_uri)
 
 # imageProcessingDB is the database containing lightsheet job information and parameters
+# The current database is called "lightsheet" but should be renamed to better reflect all its functionality
 imageProcessingDB = client.lightsheet
-
-# All step names and globalParameters and nonGlobalParameters for current config
-allStepNames = []
-globalParameters = []
-nonGlobalParameters = []
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -59,68 +58,61 @@ def logout():
     return redirect(url_for('.index'))
 
 """
- View Function to load a given step
+ View Function to configure jobs
 """
-@app.route('/step/<step_name>', methods=['GET', 'POST'])
+@app.route('/workflow', methods=['GET', 'POST'])
 @login_required
-def step(step_name):
-    stepOrTemplateName = "Step: " + step_name
-    configObj = buildConfigObject()
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = request.args.get('reparameterize')
-    if lightsheetDB_id == 'favicon.ico':
-        lightsheetDB_id = None
-
-    submissionStatus = None
+def workflow():
     pipelineSteps = None
     jobName = None
     posted = "false"
-    if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-        if reparameterize and current_user.username != username:
-            #Then don't allow because not the same user as the user who submitted the job
-            abort(404)
-    if request.method == 'POST':
-        posted = "true"
-        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
-                                    lightsheetDB_id,
-                                    None, stepOrTemplateName)
-        return submissionStatusReturner(submissionStatus)
 
-    global allStepNames
-    allStepNames = step_name
-    return render_template('index.html',
-                           pipelineSteps=pipelineSteps,
-                           config=configObj,
-                           jobsJson=[],  # used by the job table
-                           submissionStatus=None,
-                           currentStep=step_name,
-                           currentTemplate=None,
-                           posted=posted,
-                           jobName=jobName)
-
-"""
- View Function to load the steps of a given template
-"""
-@app.route('/template/<template_name>', methods=['GET', 'POST'])
-@login_required
-def template(template_name):
-    stepOrTemplateName = "Template: " + template_name
-    configObj = buildConfigObject()
+    #Get HTML query values
+    step_name = request.args.get('step')
+    template_name = request.args.get('template')
+    config_name = request.args.get('config_name')
     lightsheetDB_id = request.args.get('lightsheetDB_id')
     reparameterize = request.args.get('reparameterize')
-    if lightsheetDB_id == 'favicon.ico':
-        lightsheetDB_id = None
+    pInstance = PipelineInstance.objects.filter(name=config_name).first()
 
-    submissionStatus = None
-    pipelineSteps = None
-    jobName = None
-    posted = "false"
-    if lightsheetDB_id:
-        pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-        if reparameterize and current_user.username != username:
-            #Then don't allow because not the same user as the user who submitted the job
-            abort(404)
+    if pInstance:  # Then an uploaded config has been loaded
+        uploadedContent = json.loads(pInstance.content)
+        configObj = buildConfigObject({'steps':uploadedContent['steps']})
+        pipelineSteps, step_name, template_name = loadUploadedConfig(uploadedContent, configObj)
+        if not (step_name or template_name):
+            template_name = 'Deprecated Workflow'
+
+    #Get the appropriate step or template name and build corresponding config objects
+    deprecated = False
+    stepOrTemplateName = ''
+    if template_name:
+        allTemplates =  list(imageProcessingDB.template.find({},{'name':1,'_id':0}))
+        allTemplateNames = [template['name'] for template in allTemplates]
+        stepOrTemplateName = "Template: " + template_name
+        if template_name in allTemplateNames:
+            configObj = buildConfigObject({'template':template_name})
+        else:
+            deprecated=True
+            if not pInstance:
+                configObj = buildConfigObject()
+    elif step_name:
+        stepOrTemplateName = "Step: " + step_name
+        configObj = buildConfigObject({'step':step_name})
+
+    if lightsheetDB_id: #Then a previous job has been loaded
+        if lightsheetDB_id == 'favicon.ico':
+            lightsheetDB_id = None
+        else:
+            pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
+            pipelineStepsWithConfig=[]
+            if deprecated:
+                for pipelineStepName in pipelineSteps:
+                    pipelineStepsWithConfig.append([step for step in configObj['steps'] if step.name==pipelineStepName][0])
+                configObj['steps'] = pipelineStepsWithConfig
+            if reparameterize and current_user.username != username:
+                #Then don't allow because not the same user as the user who submitted the job
+                abort(404)
+
     if request.method == 'POST':
         posted = "true"
         submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
@@ -129,35 +121,15 @@ def template(template_name):
                                     stepOrTemplateName)
         return submissionStatusReturner(submissionStatus)
 
-    global allStepNames, globalParameters, nonGlobalParameters
-    allStepNames = []
-    globalParameters = []
-    nonGlobalParameters = []
-    if configObj.get('steps'):
-        # only populate step names if steps is set
-        if template_name in configObj["steps"]:
-            for step in configObj["steps"][template_name]:
-                allStepNames.append(step.name)
-                if "GLOBALPARAMETERS" in step.name.upper():
-                    globalParameters = [parameter.name for parameter in step.parameter]
-                else:
-                    nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
-        else: #old template name or something
-            for stepName in pipelineSteps:
-                allStepNames.append(stepName)
-                if "GLOBALPARAMETERS" in stepName.upper():
-                    globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
-                else:
-                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
     return render_template('index.html',
                            pipelineSteps=pipelineSteps,
-                           parentJobInfo=None,
                            config=configObj,
-                           jobsJson=[],
-                           submissionStatus=submissionStatus,
+                           currentStep=step_name,
                            currentTemplate=template_name,
                            posted=posted,
-                           jobName=jobName)
+                           jobName=jobName,
+                           value_dependency = add_value_dependency_object(configObj),
+                           dimension_dependency = add_dimension_dependency_object(configObj))
 
 """
  Root view function
@@ -165,7 +137,7 @@ def template(template_name):
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return redirect(url_for('template', template_name="AIC SimView Single Camera"))
+    return redirect(url_for('workflow', template='AIC SimView Single Camera'))
 
 """
  View Function to the the status of jobs
@@ -173,7 +145,6 @@ def index():
 @app.route('/job_status', methods=['GET', 'POST'])
 @login_required
 def job_status():
-    submissionStatus = None
     imageProcessingDB_id = request.args.get('lightsheetDB_id')
     # Mongo client
     updateDBStatesAndTimes(imageProcessingDB)
@@ -183,6 +154,7 @@ def job_status():
     stepOrTemplateName = []
     posted="false"
     remainingStepNames = None
+
     if request.method == 'POST':
         #Find pause that is in remaining steps
         posted = "true"
@@ -202,17 +174,17 @@ def job_status():
         if pausedJobInformation["remainingStepNames"]: #only submit if not empty
             submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
         updateDBStatesAndTimes(imageProcessingDB)
+
     if imageProcessingDB_id is not None:
         jobType, stepOrTemplateName, childJobInfo, remainingStepNames = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
         if not stepOrTemplateName:
-            stepOrTemplateName = "/load/previousjob"
+            stepOrTemplateName = "Deprecated Workflow"
     # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html',
                            parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
                            childJobInfo=childJobInfo,
                            lightsheetDB_id=imageProcessingDB_id,
                            stepOrTemplateName=stepOrTemplateName,
-                           submissionStatus=submissionStatus,
                            jobType=jobType,
                            posted=posted,
                            remainingStepNames=remainingStepNames)
@@ -303,20 +275,34 @@ def uploaded_file(filename=None):
     message.append('Error uploading the file {0}'.format(filename))
     return render_template('upload.html', filename=filename, message=message)
 
+"""
+ View Function for creating a configuration record in the database of an existing pipeline from a json file
+"""
+@app.route('/upload_config/<filename>', methods=['GET', 'POST'])
+@login_required
+def upload_config(filename=None):
+    with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
+        c = json.loads(file.read())
+        result = createConfig(c)
+        return redirect(url_for('workflow', config_name=result['name']))
+        # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
+    message = []
+    message.append('Error uploading the file {0}'.format(filename))
+    ##return render_template('upload.html', filename=filename, message=message)
 
 """
  View Function for loading the configuration of an existing pipeline from a json file
 """
-@app.route('/upload_config', methods=['GET', 'POST'])
+@app.route('/load_config', methods=['GET', 'POST'])
 @login_required
-def upload_config(filename=None):
+def load_config(filename=None):
     if request.method == "GET":
         steps = Step.objects.all()
         empty = False
         if len(steps) == 0:
             empty = True
         return render_template(
-            'upload_config.html',
+            'load_config.html',
             empty=empty
         )
 
@@ -335,7 +321,7 @@ def upload_config(filename=None):
         if file and _allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_configfile',
+            return redirect(url_for('upload_config',
                                     filename=filename))
         else:
             # allowed_ext = print(', '.join(ALLOWED_EXTENSIONS[:-1]) + " or " + ALLOWED_EXTENSIONS[-1])
@@ -343,120 +329,6 @@ def upload_config(filename=None):
             message = 'Please make sure, your file extension is one of the following: ' + allowed_ext
             return render_template('upload.html', message=message)
         return 'error'
-
-"""
- View Function for creating a configuration record in the database of an existing pipeline from a json file
-"""
-@app.route('/upload_conf/<filename>', methods=['GET', 'POST'])
-@login_required
-def uploaded_configfile(filename=None):
-    with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
-        c = json.loads(file.read())
-        result = createConfig(c)
-        return redirect(url_for('load_configuration', config_name=result['name']))
-        # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
-    message = []
-    message.append('Error uploading the file {0}'.format(filename))
-    ##return render_template('upload.html', filename=filename, message=message)
-
-
-"""
- View Function to look at a configuration file
-"""
-@app.route('/load/<config_name>', methods=['GET', 'POST'])
-@login_required
-def load_configuration(config_name):
-    configObj = buildConfigObject()
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
-    reparameterize = request.args.get('reparameterize')
-    if lightsheetDB_id == 'favicon.ico':
-        lightsheetDB_id = None
-    currentStep = None
-    currentTemplate = None
-    pInstance = PipelineInstance.objects.filter(name=config_name).first()
-    global allStepNames, globalParameters, nonGlobalParameters
-    stepOrTemplateName = None
-    allStepNames = []
-    globalParameters = []
-    nonGlobalParameters = []
-    jobName = None
-    pipelineSteps=None
-    if lightsheetDB_id or pInstance:  # Then a previously submitted job is loaded
-        if lightsheetDB_id:
-            pipelineSteps, submissionStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-            if reparameterize and current_user.username != username:
-                #Then don't allow because not the same user as the user who submitted the job
-                abort(404)
-            for stepName in pipelineSteps:
-                allStepNames.append(stepName)
-                if "GLOBALPARAMETERS" in stepName.upper():
-                    globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
-                else:
-                    nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][stepName].parameter]
-
-        else:
-            content = json.loads(pInstance.content)
-            pipelineSteps = OrderedDict()
-            if 'steps' in content:
-                steps = content['steps']
-                for s in steps:
-                    name = s['name']
-                    allStepNames.append(name)
-                    jobs = parseJsonDataNoForms(s, name, configObj)
-                    # Pipeline steps is passed to index.html for formatting the html based
-                    pipelineSteps[name] = {
-                        'stepName': name,
-                        'stepDescription': configObj['stepsAllDict'][name].description,
-                        'inputJson': None,
-                        'state': False,
-                        'checkboxState': 'checked',
-                        'collapseOrShow': 'show',
-                        'jobs': jobs
-                    }
-                    if "GLOBALPARAMETERS" in name.upper():
-                        globalParameters = [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
-                    else:
-                        nonGlobalParameters=nonGlobalParameters + [parameter.name for parameter in configObj["stepsAllDict"][name].parameter]
-
-            if "stepOrTemplateName" in content:
-                stepOrTemplateName = content["stepOrTemplateName"]
-                if stepOrTemplateName.find("Step: ", 0, 6) != -1:
-                    currentStep = stepOrTemplateName[6:]
-                else:
-                    currentTemplate = stepOrTemplateName[10:]
-                if currentTemplate in configObj["steps"]: #then include all steps in this template
-                    allStepNames = []
-                    globalParameters = []
-                    nonGlobalParameters = []
-                    for step in configObj["steps"][currentTemplate]:
-                        allStepNames.append(step.name)
-                        if "GLOBALPARAMETERS" in step.name.upper():
-                            globalParameters = [parameter.name for parameter in step.parameter]
-                        else:
-                            nonGlobalParameters=nonGlobalParameters+ [parameter.name for parameter in step.parameter]
-
-        posted = "false"
-        if request.method == 'POST':
-            posted = "true"
-            submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB, lightsheetDB_id, None,
-                    stepOrTemplateName)
-            return submissionStatusReturner(submissionStatus)
-
-
-        return render_template('index.html',
-                               pipelineSteps=pipelineSteps,
-                               pipeline_config=config_name,
-                               parentJobInfo=None,
-                               jobsJson=[],
-                               config=configObj,
-                               currentStep=currentStep,
-                               currentTemplate=currentTemplate,
-                               posted=posted,
-                               jobName=None
-                               )
-
-    else:
-        return 'No such configuration in the system.'
 
 
 @app.route('/config/<imageProcessingDB_id>', methods=['GET'])
@@ -501,7 +373,15 @@ def hide_entries():
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
-def createDependencyResults(dependencies):
+def createDependencyResults(dependencies, configObj):
+    globalParameters = []
+    nonGlobalParameters = []
+    for step in configObj["steps"]:
+        if "GLOBALPARAMETERS" in step.name.upper():
+            globalParameters = [parameter.name for parameter in step.parameter]
+        else:
+            nonGlobalParameters=nonGlobalParameters+[parameter.name for parameter in step.parameter]
+
     result = []
     for d in dependencies:
         inputFieldName = d.inputField.name
@@ -526,10 +406,7 @@ def submissionStatusReturner(submissionStatus):
 @app.route('/all_jobs', methods=['GET'])
 @login_required
 def all_jobs():
-    showAllJobs=True
-    jobs = []
-    return render_template('all_jobs.html',
-                           jobsJson=jobs)  # used by the job table
+    return render_template('all_jobs.html')  # used by the job table
 
 @app.route('/table_data', methods=['GET'])
 @login_required
@@ -572,20 +449,18 @@ def delete_step_and_references(stepName):
         )
     return response
 
-#TODO Delete parameters
-@app.context_processor
-def add_value_dependency_object():
+def add_value_dependency_object(configObj):
     dep = Dependency.objects.filter(dependency_type='V')
     result = []
     if dep is not None:
-        result = createDependencyResults(dep)
-    return dict(value_dependency=result)
+        result = createDependencyResults(dep, configObj)
+    return result
 
 
-@app.context_processor
-def add_dimension_dependency_object():
+def add_dimension_dependency_object(configObj):
     dep = Dependency.objects.filter(dependency_type='D')
     result = []
     if dep is not None:
-        result = createDependencyResults(dep)
-    return dict(dimension_dependency=result)
+        result = createDependencyResults(dep, configObj)
+    return result
+

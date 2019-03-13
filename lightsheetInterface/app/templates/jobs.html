@@ -12,7 +12,7 @@
   <tbody id="job-table-body">
     {% if parentJobInfo is not none %}
       {% for currentJobInfo in parentJobInfo %}
-        <tr onclick="window.location = '?lightsheetDB_id={{ currentJobInfo._id }}' ;">
+        <tr onclick="window.location = '&lightsheetDB_id={{ currentJobInfo._id }}' ;">
           <td>{{ loop.index }}</td>
           <td>Name</td>
           {% if 'creationDate' in currentJobInfo and currentJobInfo.creationDate is not none %}
