@@ -1,23 +1,13 @@
 <div class="custom-multi-checkbox">
     <select class="selectpicker lightsheet-field" multiple onchange="dependency.addParameter(this)" id="select_{{ parameter.name }}">
-      {% if parameter.number1 is not none %}
-        <option {% if parameter.number1 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber1 }}" value="{{ parameter.number1 }}" id="select_{{ parameter.name }}_number1">{{ parameter.number1 }}</option>
-      {% endif %}
-      {% if parameter.number2 is not none %}
-        <option {% if parameter.number2 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber2 }}" value="{{ parameter.number2 }}" id="select_{{ parameter.name }}_number2">{{ parameter.number2 }}</option>
-      {% endif %}
-      {% if parameter.number3 is not none %}
-        <option {% if parameter.number3 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber3 }}" value="{{ parameter.number3 }}" id="select_{{ parameter.name }}_number3">{{ parameter.number3 }}</option>
-      {% endif %}
-      {% if parameter.number4 is not none %}
-        <option {% if parameter.number4 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber4 }}" value="{{ parameter.number4 }}" id="select_{{ parameter.name }}_number4">{{ parameter.number4 }}</option>
-      {% endif %}
-        {% if parameter.number5 is not none %}
-            <option {% if parameter.number5 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber5 }}" value="{{ parameter.number5 }}" id="select_{{ parameter.name }}_number5">{{ parameter.number5 }}</option>
-        {% endif %}
-        {% if parameter.number6 is not none %}
-            <option {% if parameter.number6 in data %} selected {% endif %} data-defaultValue = "{{ defaultValueNumber6 }}" value="{{ parameter.number6 }}" id="select_{{ parameter.name }}_number6">{{ parameter.number6 }}</option>
-        {% endif %}
+        {%  for textOrNumber in ['text','number'] %}
+            {% for index in range(1,7)  %}
+                {% set currentValue = parameter[textOrNumber~index] %}
+                {% if (textOrNumber=='number' and currentValue is not none) or (textOrNumber == 'text' and currentValue is not none and currentValue|length) %}
+                    <option {% if currentValue in data %} selected {% endif %} data-defaultValue = "{{ defaultValue[textOrNumber~index] }}" value="{{ currentValue }}" id="select_{{ parameter.name }}_{{ textOrNumber }}{{index}}">{{ currentValue }}</option>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
     </select>
     <div id="hidden_{{ parameter.name }}">
       <input type="hidden" value='' id="{{ parameter.name }}" />

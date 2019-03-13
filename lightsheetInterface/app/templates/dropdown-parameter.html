@@ -1,47 +1,21 @@
 {% if data is not string %}
     {% set data = data[0] %}
 {% endif %}
-{% set selected = false %}
+{% set selected = "False" %}
 <select name="{{ parameter.name }}" id="{{ parameter.name }}" class="lightsheet-field" >
-    {% if parameter.text1 %}
-        <option value="{{ parameter.text1 }}" {% if parameter.text1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText1 }}" id="select_{{ parameter.name }}_text1"> {{ parameter.text1 }}
-    {% endif %}
-    {% if parameter.text2 %}
-        <option value="{{ parameter.text2 }}" {% if parameter.text2 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText2 }}" id="select_{{ parameter.name }}_text2"> {{ parameter.text2 }}
-    {% endif %}
-    {% if parameter.text3 %}
-        <option value="{{ parameter.text3 }}" {% if parameter.text3 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText3 }}" id="select_{{ parameter.name }}_text3"> {{ parameter.text3 }}
-    {% endif %}
-    {% if parameter.text4 %}
-        <option value="{{ parameter.text4 }}" {% if parameter.text4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText4 }}" id="select_{{ parameter.name }}_text4"> {{ parameter.text4 }}
-    {% endif %}
-    {% if parameter.text5 %}
-        <option value="{{ parameter.text5 }}" {% if parameter.text5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueText5 }}" id="select_{{ parameter.name }}_text5"> {{ parameter.text5 }}
-    {% endif %}
-    {% if parameter.number1 %}
-        <option value="{{ parameter.number1 }}" {% if parameter.number1 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber1 }}" id="select_{{ parameter.name }}_number1"> {{ parameter.number1 }}
-    {% endif %}
-    {% if parameter.number2 %}
-        <option value="{{ parameter.number2 }}" {% if parameter.number2 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber2 }}" id="select_{{ parameter.name }}_number2"> {{ parameter.number2 }}
-    {% endif %}
-    {% if parameter.number3 %}
-        <option value="{{ parameter.number3 }}" {% if parameter.number3 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber3 }}" id="select_{{ parameter.name }}_number3"> {{ parameter.number3 }}
-    {% endif %}
-    {% if parameter.number4 %}
-        <option value="{{ parameter.number4 }}" {% if parameter.number4 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber4 }}" id="select_{{ parameter.name }}_number4"> {{ parameter.number4 }}
-    {% endif %}
-    {% if parameter.number5 %}
-        <option value="{{ parameter.number5 }}" {% if parameter.number5 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber5 }}" id="select_{{ parameter.name }}_number5"> {{ parameter.number5 }}
-    {% endif %}
-    {% if parameter.number6 %}
-        <option value="{{ parameter.number6 }}" {% if parameter.number6 == data %} selected="selected" {% set selected = true %} {% endif %} data-defaultValue="{{ defaultValueNumber6 }}" id="select_{{ parameter.name }}_number6"> {{ parameter.number6 }}
-    {% endif %}
-
+    {%  for textOrNumber in ['text','number'] %}
+        {% for index in range(1,7)  %}
+            {% set currentValue = parameter[textOrNumber~index] %}
+            {% if (textOrNumber=='number' and currentValue is not none) or (textOrNumber == 'text' and currentValue is not none and currentValue|length) %}
+                <option value="{{ currentValue }}" {% if currentValue == data %} selected="selected" {% set selected = "True" %} {% endif %} data-defaultValue="{{ defaultValue[textOrNumber~index] }}" id="select_{{ parameter.name }}_{{ textOrNumber }}{{index}}">{{ currentValue }}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
 </select>
 <script>
-    if("{{ selected }}"=="False" ) {
+    if("{{ selected }}"=="False") {
         //Quickfix. TODO: Make this more formal, maybe load it otherways
-        //If one loads a job where the dropdox is usually dependent on other fields,
+        //If one loads a job where the dropdown is usually dependent on other fields,
         //then the value loaded will not match. So here we set it to be the first dependent value based on data-defaultValue
         //Can then click on other fields to update dropdown
         var dropdown = document.getElementById("{{ parameter.name }}");
@@ -50,6 +24,5 @@
             $(allDependentValues[0]).text("{{ data }}");
             $(allDependentValues[0]).attr('selected',true);
         }
-
     }
 </script>
