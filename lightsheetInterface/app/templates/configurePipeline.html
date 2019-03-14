@@ -10,16 +10,16 @@
                         {% if currentTemplate is none %}
                             <option value="" selected></option>
                         {% endif %}
-                        {%  set deprecated = True %}
+                        {%  set deprecated = {'isDeprecated': True} %}
                         {% for name in config.templateNames %}
                             {% if currentTemplate == name %}
-                                {%  set deprecated = False %}
+                                {%  if deprecated.update({'isDeprecated': False}) %}{% endif %}
                                 <option value="{{ name }}" selected>{{ name }}</option>
                             {% else %}
                                 <option value="{{ name }}">{{ name }}</option>
                             {% endif %}
                         {% endfor %}
-                        {% if deprecated %}
+                        {% if deprecated['isDeprecated'] %}
                             <option value="{{ currentTemplate }}" selected>{{ currentTemplate }}</option>
                         {% endif %}
                     {% else %}
