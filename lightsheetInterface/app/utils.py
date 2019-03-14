@@ -512,14 +512,19 @@ def submitToJACS(config_server_url, imageProcessingDB, job_id, continueOrReparam
         requestOutputJsonified = requestOutput.json()
         creationDate = job_id.generation_time
         creationDate = str(creationDate.replace(tzinfo=UTC).astimezone(eastern))
+        if 'id' in requestOutputJsonified:
+            jacs_id = requestOutputJsonified['id']
+        else:
+            jacs_id = requestOutputJsonified['_id']
+
         if continueOrReparameterize:
             imageProcessingDB.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
-                "jacsStatusAddress": jacs_host + '8080/job/' + requestOutputJsonified["id"],
-                "jacs_id": requestOutputJsonified["_id"]}})
+                "jacsStatusAddress": jacs_host + '8080/job/' + jacs_id,
+                "jacs_id": jacs_id}})
         else:
             print(requestOutputJsonified)
             imageProcessingDB.jobs.update_one({"_id": job_id}, {
-                "$set": {"jacs_id": [requestOutputJsonified["id"]], "configAddress": configAddress,
+                "$set": {"jacs_id": [jacs_id], "configAddress": configAddress,
                          "creationDate": creationDate[:-6]}})
 
         # JACS service states
