@@ -292,7 +292,7 @@ def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, 
                     checkboxState = 'checked'
                     collapseOrShow = 'show'
                     stepData = jobData[i]
-                    if (reparameterize and (currentStep not in remainingStepNames)) or (currentStep in succededButLatterStepFailed):
+                    if ("globalparameters" not in currentStep.lower()) and reparameterize and ((currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed)):
                         checkboxState = 'unchecked'
                         collapseOrShow = ''
                     if stepData:
