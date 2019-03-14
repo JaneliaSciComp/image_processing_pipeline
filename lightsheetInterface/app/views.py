@@ -75,7 +75,7 @@ def workflow():
     reparameterize = request.args.get('reparameterize')
     pInstance = PipelineInstance.objects.filter(name=config_name).first()
 
-    if pInstance:  # Then an uploaded config has been loaded
+    if pInstance:  # Then load an uploaded config
         uploadedContent = json.loads(pInstance.content)
         configObj = buildConfigObject({'steps':uploadedContent['steps']})
         pipelineSteps, step_name, template_name = loadUploadedConfig(uploadedContent, configObj)

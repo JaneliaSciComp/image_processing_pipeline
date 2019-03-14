@@ -66,6 +66,15 @@
                             {% set data = pipelineStep['loadedParameters'][panel][keyForProvidedStep].data %}
                         {% else %}
                             {% set usesDefaultStepValue=True %}
+                            {% set data = [] %}
+                            {% for textOrNumber in ['text','number'] %}
+                                {%  for index in range(1,7) %}
+                                    {% set currentValue = parameter[textOrNumber~index] %}
+                                    {% if (textOrNumber=='number' and currentValue is not none) or (textOrNumber == 'text' and currentValue is not none and currentValue|length) %}
+                                        {% set data = data.append(currentValue) %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
                             {% if parameter.formatting == 'C' and pipelineStep is none %}
                                 {% set data = [parameter.number1] %}
                             {% elif parameter.formatting == 'B' or parameter.formatting == 'D' %}{#Radio Button or Dropdown Menu#}

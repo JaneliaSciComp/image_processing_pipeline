@@ -249,54 +249,17 @@ def getConfigurationsFromDB(imageProcessingDB_id, imageProcessingDB, globalParam
             output = {globalParameter: ""}
     else:
         if stepName:
-            if stepName == "getArgumentsToRunJob":
-                output = getArgumentsToRunJob(imageProcessingDB, imageProcessingDB_id)
-            else:
-                output = list(
-                    imageProcessingDB.jobs.find({'_id': ObjectId(imageProcessingDB_id), 'steps.name': stepName},
-                                                {'_id': 0, "steps.$":1}))
-                if output:
-                    output = output[0]["steps"][0]["parameters"]
+            output = list(
+                imageProcessingDB.jobs.find({'_id': ObjectId(imageProcessingDB_id), 'steps.name': stepName},
+                                            {'_id': 0, "steps.$":1}))
+            if output:
+                output = output[0]["steps"][0]["parameters"]
         else:
             output = list(imageProcessingDB.jobs.find({'_id': ObjectId(imageProcessingDB_id)}, {'_id': 0, 'steps': 1}))
 
     if output:
         return output
     return 404
-
-
-# get the job parameter information from db
-def getArgumentsToRunJob(imageProcessingDB, _id):
-    currentJobSteps = imageProcessingDB.jobs.find({'_id': ObjectId(_id)},
-                                                  {'_id': 0, 'steps.name': 1, 'steps.pause': 1})
-    temp = list(imageProcessingDB.jobs.find({"_id": ObjectId(_id)}, {'_id': 0, "remainingStepNames": 1}))
-    if "remainingStepNames" in temp[0]:
-        remainingStepNames = temp[0]["remainingStepNames"]
-    else:
-        remainingStepNames = []
-        for step in currentJobSteps[0]["steps"]:
-            remainingStepNames.append(step["name"])
-
-    output = {"currentJACSJobStepNames": '', 'configOutputPath': ''}
-    pauseState = False
-    currentStepIndex = 0
-    while pauseState == False and currentStepIndex < len(currentJobSteps[0]["steps"]):
-        if currentJobSteps[0]["steps"][currentStepIndex]["name"] in remainingStepNames:
-            step = currentJobSteps[0]["steps"][currentStepIndex]
-            output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"] + step["name"] + ','
-            if ("pause" in step):
-                pauseState = step["pause"]
-        currentStepIndex = currentStepIndex + 1
-    if output["currentJACSJobStepNames"]:
-        output["currentJACSJobStepNames"] = output["currentJACSJobStepNames"][:-1]
-        configOutputPath = imageProcessingDB.jobs.find({'_id': ObjectId(_id)}, {'_id': 0, 'configOutputPath': 1})
-        if configOutputPath[0]:
-            output["configOutputPath"] = configOutputPath[0]
-    if currentJobSteps:
-        return output
-    else:
-        return 404
-
 
 # get latest status information about jobs from db
 def updateDBStatesAndTimes(imageProcessingDB,showAllJobs=False):
