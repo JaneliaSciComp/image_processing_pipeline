@@ -11,7 +11,7 @@ import datetime, uuid
 types = (('', None), ('S', 'Step'), ('D', 'Directory'))
 frequency = (('F', 'Frequent'), ('S', 'Sometimes'), ('R', 'Rare'))
 formats = (
-    ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Checkboxes'), ('O', 'Option'), ('F', 'Flag'),
+    ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Multiselect Dropdown'), ('F', 'Flag'),
     ('B', 'Radio Button'), ('D', 'Dropdown Menu'))
 dependency_type = (('V', 'Value'), ('D', 'Dimension'))
 templates = (('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal'))
@@ -31,7 +31,6 @@ class Parameter(Document):
     name = StringField(max_length=1000, unique=True, required=True)
     displayName = StringField(max_length=1000)
     description = StringField(max_length=1000)
-    ignore = BooleanField()
     mount = BooleanField()
     frequency = StringField(max_length=20, choices=frequency)
     formatting = StringField(max_length=20, choices=formats)
@@ -54,7 +53,7 @@ class Parameter(Document):
     text3 = StringField(max_length=2000)
     text4 = StringField(max_length=2000)
     text5 = StringField(max_length=2000)
-    boolean = BooleanField()
+    meta = {'strict': False} #To prevent error from no longer having certain fields
 
     def __unicode__(self):
         return self.name
@@ -110,7 +109,7 @@ class ConfigurationInstance(Document):
     text3 = StringField(max_length=2000)
     text4 = StringField(max_length=2000)
     text5 = StringField(max_length=2000)
-    boolean = BooleanField()
+    meta = {'strict': False} #To prevent error from no longer having certain fields
 
     def __unicode__(self):
         return self.creation_date.strftime("%d/%m/%y-%H:%m")
@@ -251,10 +250,10 @@ class ExtendedParameterView(ModelView):
 
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
     form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
-                    "text3", "text4", "text5", "boolean", "readonly", "ignore", "mount", "empty", "startsEmpty", "frequency", "formatting",
+                    "text3", "text4", "text5", "readonly", "mount", "empty", "startsEmpty", "frequency", "formatting",
                     "order", "hint"]
     column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
-                      "text2", "text3", "text4","text5", "boolean", "mount", "frequency", "formatting", "ignore"]
+                      "text2", "text3", "text4","text5", "mount", "frequency", "formatting"]
     form_overrides = {
         'hint': CKTextAreaField
     }

@@ -33,14 +33,10 @@
        </span>
     <div class="input-group-prepend lightsheet-fields">
         {% if parameter.formatting == 'F' %}
-            {% if parameter.boolean == true %}
-                {% if data=='False' %}
-                    <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" id="{{ parameter.name }}">
-                {% else %}
-                    <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" checked id="{{ parameter.name }}">
-                {% endif %}
+            {% if data=='False' %}
+                <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" id="{{ parameter.name }}">
             {% else %}
-                <input type="checkbox" class="flag-parameter  lightsheet-field" {{ addAttribute }} disabled step="any" id="{{ parameter.name }}">
+                <input type="checkbox" class="flag-parameter lightsheet-field" {{ addAttribute }} step="any" checked id="{{ parameter.name }}">
             {% endif %}
         {% elif parameter.formatting == 'B' %}
             {% include "radiobutton-parameter.html" ignore missing with context %}
