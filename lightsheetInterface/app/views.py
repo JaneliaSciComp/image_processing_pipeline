@@ -128,8 +128,7 @@ def workflow():
                            currentTemplate=template_name,
                            posted=posted,
                            jobName=jobName,
-                           value_dependency = add_value_dependency_object(configObj),
-                           dimension_dependency = add_dimension_dependency_object(configObj))
+                           global_dependencies = add_global_dependency_object(configObj))
 
 """
  Root view function
@@ -449,16 +448,9 @@ def delete_step_and_references(stepName):
         )
     return response
 
-def add_value_dependency_object(configObj):
-    dep = Dependency.objects.filter(dependency_type='V')
-    result = []
-    if dep is not None:
-        result = createDependencyResults(dep, configObj)
-    return result
 
-
-def add_dimension_dependency_object(configObj):
-    dep = Dependency.objects.filter(dependency_type='D')
+def add_global_dependency_object(configObj):
+    dep = Dependency.objects.filter()
     result = []
     if dep is not None:
         result = createDependencyResults(dep, configObj)

@@ -11,10 +11,8 @@ import datetime, uuid
 types = (('', None), ('S', 'Step'), ('D', 'Directory'))
 frequency = (('F', 'Frequent'), ('S', 'Sometimes'), ('R', 'Rare'))
 formats = (
-    ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Multiselect Dropdown'), ('F', 'Flag'),
+    ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Multiselect Dropdown'), ('F', 'Checkbox'),
     ('B', 'Radio Button'), ('D', 'Dropdown Menu'))
-dependency_type = (('V', 'Value'), ('D', 'Dimension'))
-templates = (('L', 'Lightsheet'), ('I', 'ImageProcessing'), ('C', 'Confocal'))
 steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet'))
 
 
@@ -37,7 +35,6 @@ class Parameter(Document):
     readonly = BooleanField()
     empty = BooleanField()
     startsEmpty = BooleanField()
-    order = IntField()
     hint = StringField()
 
     # fields, which store default value information
@@ -64,11 +61,12 @@ class Step(Document):
     description = StringField(max_length=500)
     parameter = ListField(ReferenceField(Parameter))
     submit = BooleanField(default=True)
-    template = ListField(StringField(max_length=500, choices=templates))
     order = IntField(required=True)
     steptype = StringField(max_length=500, choices=steptypes)
     codeLocation = StringField(max_length=500)
     entryPointForSpark = StringField(max_length=500)
+    meta = {'strict': False} #To prevent error from no longer having certain fields
+
     def __unicode__(self):
         return self.name
 
@@ -85,10 +83,8 @@ class Template(Document):
 class Dependency(Document):
     inputField = ReferenceField(Parameter)
     outputField = ReferenceField(Parameter)
-    outputStep = ReferenceField(Step)
     pattern = StringField(max_length=2000)
-    equation = BooleanField()
-    dependency_type = StringField(max_length=20, choices=dependency_type)
+    meta = {'strict': False} #To prevent error from no longer having certain fields
 
 
 # serves as a fact table --> has references to both steps and parameters but stores actual values needed to configure an
@@ -194,7 +190,6 @@ class DependecyView(ModelView):
     column_filters = ['inputField', 'outputField', 'pattern']
     column_labels = dict(inputField='Input',
                          outputField='Output',
-                         outputStep='Step',
                          pattern='Pattern')
 
 
@@ -250,8 +245,7 @@ class ExtendedParameterView(ModelView):
 
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
     form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
-                    "text3", "text4", "text5", "readonly", "mount", "empty", "startsEmpty", "frequency", "formatting",
-                    "order", "hint"]
+                    "text3", "text4", "text5", "readonly", "mount", "empty", "startsEmpty", "frequency", "formatting", "hint"]
     column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
                       "text2", "text3", "text4","text5", "mount", "frequency", "formatting"]
     form_overrides = {

@@ -82,17 +82,12 @@
             var table_data = null;
         {% endif %}
 
-        {% if value_dependency is defined %}
-            var value_dependencies = {{ value_dependency|safe }};
+        {% if global_dependencies is defined %}
+            var global_dependencies = {{ global_dependencies|safe }};
         {% else %}
-            var value_dependencies = null;
+            var global_dependencies = null;
         {% endif %}
 
-        {% if dimension_dependency is defined %}
-            var dimension_dependencies = {{ dimension_dependency|safe }};
-        {% else %}
-            var dimension_dependencies = null;
-        {% endif %}
 
         {% if currentTemplate is defined %}
             // var currentTemplate = String("{{ currentTemplate|safe }}").replace(/ /g, "%20");
