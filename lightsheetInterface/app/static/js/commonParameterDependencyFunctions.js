@@ -31,8 +31,6 @@ function getParameterInformation(parameterString) {
 }
 
 function updateDependencyString(parameterInformation, parameterValue, stringToUpdate) {
-    console.log(parameterInformation)
-    console.log(parameterValue)
     parameterPatternString = parameterInformation.parameterPatternString;
     parameterName = parameterInformation.parameterName;
     parameterType = parameterInformation.parameterType;
