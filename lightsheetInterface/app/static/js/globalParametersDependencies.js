@@ -54,6 +54,7 @@ dependency.applyGlobalParameter = function () {
                     var currentVariableValue = globalInputs[0].value;
 
 
+
                     if (document.getElementById(dependencySubstring) && document.getElementById(dependencySubstring).type == "checkbox") { //Then generic checkbox
                         if (document.getElementById(dependencySubstring).checked) {
                             currentVariableValue = dependencySubstring.substring(0, dependencySubstring.lastIndexOf('_'));
@@ -122,38 +123,6 @@ dependency.applyGlobalParameter = function () {
                     currentVariableValue = currentVariableValueFormatted.slice(0, -1); //Remove trailing "_"
                 }
                 pattern = updateDependencyString(parameterInformation, currentVariableValue, pattern);
-                /* if (filepathVariable) {
-                     var filepath = currentVariableValue.substring(0, currentVariableValue.lastIndexOf('/') + 1);
-                     pattern = pattern.replace("{{filepath " + dependencySubstring + " filepath}}", filepath)
-                 }
-                 else if (filenameVariable) {
-                     var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
-                     pattern = pattern.replace("{{filename " + dependencySubstring + " filename}}", filename)
-                 }
-                 else if (basenameVariable) {
-                     var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
-                     var basename = filename.split('.')[0];
-                     pattern = pattern.replace("{{basename " + dependencySubstring + " basename}}", basename)
-                 }
-                 else if (extensionVariable) {
-                     var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
-                     var extension = '.' + filename.split('.').slice(1).join('.');
-                     pattern = pattern.replace("{{extension " + dependencySubstring + " extension}}", extension)
-                 }
-                 else if (loopVariable) {
-                     currentVariableValueSplit = currentVariableValue.split(" ");//Split on space
-                     loopedPattern = "";
-                     for (var loopVariableIndex = 0; loopVariableIndex < currentVariableValueSplit.length; loopVariableIndex++) {
-                         loopedPattern = loopedPattern + pattern.replace("{{" + dependencySubstring + "}}", currentVariableValueSplit[loopVariableIndex]) + " ";
-                     }
-                     pattern = loopedPattern.slice(0, -1);
-                 }
-                 else {
-                     stringToReplace = "{" + dependencySubstring + "}";
-                     var regex = new RegExp(stringToReplace, "g");
-                     pattern = pattern.replace(regex, currentVariableValue); //Global replacement
-                 }*/
-
             }
             if (isThisAnEquation) {
                 pattern = eval(pattern);
