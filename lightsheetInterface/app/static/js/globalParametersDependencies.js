@@ -28,36 +28,18 @@ dependency.applyGlobalParameter = function () {
                 pattern = newText;
             }
 
-            var variables = pattern.match(/[^\{\]]+(?=\})/g);
-            for (var i = 0; i < variables.length; i++) {
+            //var variables = pattern.match(/[^\{\]]+(?=\})/g);
+            var dependenciesFound = pattern.match(/{[^\s]([^}]+)[^\s]}/g); //get all dependencies by finding text in between brackets, assuming the brackets don't have spaces;
+                                                                            // those will be reserved for equations: eg for(){ ... }, vs {variableName}
+            dependenciesFound = dependenciesFound.filter(onlyUnique);
+            for (var i = 0; i < dependenciesFound.length; i++) {
                 var currentVariableId;
-                filepathVariable = false;
-                filenameVariable = false;
-                basenameVariable = false;
-                extensionVariable = false;
-                loopVariable = false;
-                if (variables[i].slice(-10) == " filepath}") {//Hacky way to get filepath, filename, basename, extension, loop
-                    variables[i] = variables[i].slice(9, -10);
-                    filepathVariable = true;
-                }
-                else if (variables[i].slice(-10) == " filename}") {
-                    variables[i] = variables[i].slice(9, -10);
-                    filenameVariable = true;
-                }
-                else if (variables[i].slice(-10) == " basename}") {
-                    variables[i] = variables[i].slice(9, -10);
-                    basenameVariable = true
-                }
-                else if (variables[i].slice(-11) == " extension}") {
-                    variables[i] = variables[i].slice(10, -11);
-                    extensionVariable = true;
-                }
-                else if (variables[i].slice(-1) == "}") {
-                    variables[i] = variables[i].slice(0, -1);
-                    loopVariable = true;
-                }
+                let dependencyFound = dependenciesFound[i];
+                var parameterInformation = getParameterInformation(dependencyFound);
+                dependencySubstring = parameterInformation.parameterName;
+                parameterType = parameterInformation.parameterType;
 
-                currentVariableId = "divisionFor-" + variables[i];
+                currentVariableId = "divisionFor-" + dependencySubstring;
                 needToFormat = false;
                 if (currentVariableId.includes("_string") && isLightsheet) { //Specific to lightsheet
                     needToFormat = true;
@@ -72,9 +54,9 @@ dependency.applyGlobalParameter = function () {
                     var currentVariableValue = globalInputs[0].value;
 
 
-                    if (document.getElementById(variables[i]) && document.getElementById(variables[i]).type == "checkbox") { //Then generic checkbox
-                        if (document.getElementById(variables[i]).checked) {
-                            currentVariableValue = variables[i].substring(0, variables[i].lastIndexOf('_'));
+                    if (document.getElementById(dependencySubstring) && document.getElementById(dependencySubstring).type == "checkbox") { //Then generic checkbox
+                        if (document.getElementById(dependencySubstring).checked) {
+                            currentVariableValue = dependencySubstring.substring(0, dependencySubstring.lastIndexOf('_'));
                         }
                         else {
                             currentVariableValue = "";
@@ -139,38 +121,38 @@ dependency.applyGlobalParameter = function () {
                     }
                     currentVariableValue = currentVariableValueFormatted.slice(0, -1); //Remove trailing "_"
                 }
-
-                if (filepathVariable) {
-                    var filepath = currentVariableValue.substring(0, currentVariableValue.lastIndexOf('/') + 1);
-                    pattern = pattern.replace("{{filepath " + variables[i] + " filepath}}", filepath)
-                }
-                else if (filenameVariable) {
-                    var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
-                    pattern = pattern.replace("{{filename " + variables[i] + " filename}}", filename)
-                }
-                else if (basenameVariable) {
-                    var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
-                    var basename = filename.split('.')[0];
-                    pattern = pattern.replace("{{basename " + variables[i] + " basename}}", basename)
-                }
-                else if (extensionVariable) {
-                    var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
-                    var extension = '.' + filename.split('.').slice(1).join('.');
-                    pattern = pattern.replace("{{extension " + variables[i] + " extension}}", extension)
-                }
-                else if (loopVariable) {
-                    currentVariableValueSplit = currentVariableValue.split(" ");//Split on space
-                    loopedPattern = "";
-                    for (var loopVariableIndex = 0; loopVariableIndex < currentVariableValueSplit.length; loopVariableIndex++) {
-                        loopedPattern = loopedPattern + pattern.replace("{{" + variables[i] + "}}", currentVariableValueSplit[loopVariableIndex]) + " ";
-                    }
-                    pattern = loopedPattern.slice(0, -1);
-                }
-                else {
-                    stringToReplace = "{" + variables[i] + "}";
-                    var regex = new RegExp(stringToReplace, "g");
-                    pattern = pattern.replace(regex, currentVariableValue); //Global replacement
-                }
+                pattern = updateDependencyString(parameterInformation, currentVariableValue, pattern);
+                /* if (filepathVariable) {
+                     var filepath = currentVariableValue.substring(0, currentVariableValue.lastIndexOf('/') + 1);
+                     pattern = pattern.replace("{{filepath " + dependencySubstring + " filepath}}", filepath)
+                 }
+                 else if (filenameVariable) {
+                     var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
+                     pattern = pattern.replace("{{filename " + dependencySubstring + " filename}}", filename)
+                 }
+                 else if (basenameVariable) {
+                     var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
+                     var basename = filename.split('.')[0];
+                     pattern = pattern.replace("{{basename " + dependencySubstring + " basename}}", basename)
+                 }
+                 else if (extensionVariable) {
+                     var filename = currentVariableValue.substring(currentVariableValue.lastIndexOf('/') + 1);
+                     var extension = '.' + filename.split('.').slice(1).join('.');
+                     pattern = pattern.replace("{{extension " + dependencySubstring + " extension}}", extension)
+                 }
+                 else if (loopVariable) {
+                     currentVariableValueSplit = currentVariableValue.split(" ");//Split on space
+                     loopedPattern = "";
+                     for (var loopVariableIndex = 0; loopVariableIndex < currentVariableValueSplit.length; loopVariableIndex++) {
+                         loopedPattern = loopedPattern + pattern.replace("{{" + dependencySubstring + "}}", currentVariableValueSplit[loopVariableIndex]) + " ";
+                     }
+                     pattern = loopedPattern.slice(0, -1);
+                 }
+                 else {
+                     stringToReplace = "{" + dependencySubstring + "}";
+                     var regex = new RegExp(stringToReplace, "g");
+                     pattern = pattern.replace(regex, currentVariableValue); //Global replacement
+                 }*/
 
             }
             if (isThisAnEquation) {

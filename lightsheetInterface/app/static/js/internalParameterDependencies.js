@@ -5,6 +5,7 @@ $(document).ready(function () {
         function (element) { //Text fields can have dependencies specified in their defaults, where {dependencyID} denotes replacing the bracketed string with the value of the dependencyID text box
             let currentValue = $(element).attr('data-defaultValue');
             let currentID = "";
+            var dependenciesFound = null;
             if (currentValue) {
                 var isThisAnEquation = false;
                 var mathFinderRegularExpression = /(.*{equation\s+)(.*)(\s+equation}.*)/;
@@ -14,36 +15,17 @@ $(document).ready(function () {
                     currentValue = newText;
                 }
                 currentID = "#" + $(element).attr("id"); //need this b/c of https://dzone.com/articles/in-place-construction-for-stdany-stdvariant-and-st
-                var dependenciesFound = currentValue.match(/{([^}]+)}/g);
-            }
-            else {
-                dependenciesFound = null;
+                dependenciesFound = currentValue.match(/{[^\s]([^}]+)[^\s]}/g); //get all dependencies by finding text in between brackets, assuming the brackets don't have spaces;
+                // those will be reserved for equations: eg for(){ ... }, vs {variableName}
+                dependenciesFound = dependenciesFound.filter(onlyUnique);
             }
             if (dependenciesFound != null) {
                 for (var i = 0; i < dependenciesFound.length; i++) {//Loop over dependencies for given field with dependency as indicated in data-defaultValue
                     let dependencyFound = dependenciesFound[i];
                     let dependencySubstring = null;
-
                     //All the following is to get the handle to the current source of the dependency
-                    if(dependencyFound.slice(-10) ==" filepath}"){//Hacky way to get filepath, filename, basename, extension, loop
-                        dependencySubstring = dependencyFound.slice(11,-10);
-                    }
-                    else if(dependencyFound.slice(-10) ==" filename}"){
-                        dependencySubstring = dependencyFound.slice(11,-10);
-                    }
-                    else if(dependencyFound.slice(-10) ==" basename}"){
-                        dependencySubstring = dependencyFound.slice(11,-10);
-                    }
-                    else if(dependencyFound.slice(-11) ==" extension}"){
-                        dependencySubstring = dependencyFound.slice(12,-11);
-                    }
-                    else {
-                        var isThisALoop = dependencyFound.substr(1, dependencyFound.length - 1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
-                        if (isThisALoop != null) {
-                            dependencyFound = isThisALoop[0];
-                        }
-                        dependencySubstring = dependencyFound.substr(1, dependencyFound.length - 2);
-                    }
+                    var parameterInformation = getParameterInformation(dependencyFound);
+                    dependencySubstring = parameterInformation.parameterName;
                     stepName = dependencySubstring.split("_");
                     stepName = stepName[stepName.length - 1];
                     let currentDependency = "#" + dependencySubstring;
@@ -58,41 +40,13 @@ $(document).ready(function () {
                     $(currentDependency).bind("focus click keyup change checked", function () {
                         let updatedValue = currentValue;
                         for (var j = 0; j < dependenciesFound.length; j++) {//Need to loop through dependencies to ensure that all values are updated, not just the one that was just changed, in case they have some interdependencies
-                            loopingOverAllDependenciesCurrentOneBeingProcessed = dependenciesFound[j];
-                            var isThisALoop;
                             let standardID;
-
-                            filepathVariable = false;
-                            filenameVariable = false;
-                            basenameVariable = false;
-                            extensionVariable = false; //Hacky way to get filepath, filename, basename, extension, loop
-                            if (loopingOverAllDependenciesCurrentOneBeingProcessed.slice(-10) == " filepath}") {
-                                standardID = loopingOverAllDependenciesCurrentOneBeingProcessed.slice(11, -10);
-                                filepathVariable = true;
-                            }
-                            else if (loopingOverAllDependenciesCurrentOneBeingProcessed.slice(-10) == " filename}") {
-                                standardID = loopingOverAllDependenciesCurrentOneBeingProcessed.slice(11, -10);
-                                filenameVariable = true;
-                            }
-                            else if (loopingOverAllDependenciesCurrentOneBeingProcessed.slice(-10) == " basename}") {
-                                standardID = loopingOverAllDependenciesCurrentOneBeingProcessed.slice(11, -10);
-                                basenameVariable = true
-                            }
-                            else if (loopingOverAllDependenciesCurrentOneBeingProcessed.slice(-11) == " extension}") {
-                                standardID = loopingOverAllDependenciesCurrentOneBeingProcessed.slice(12, -11);
-                                extensionVariable = true;
-                            }
-                            else {
-                                isThisALoop = loopingOverAllDependenciesCurrentOneBeingProcessed.substr(1, loopingOverAllDependenciesCurrentOneBeingProcessed.length - 1).match(/{([^}]+)}/g); //Check if loop dependency based on whether it has {{ var }}, after parsing above, will be missing a closing bracket
-                                if (isThisALoop != null) {
-                                    loopingOverAllDependenciesCurrentOneBeingProcessed = isThisALoop[0];
-                                }
-                                standardID = loopingOverAllDependenciesCurrentOneBeingProcessed.substr(1, loopingOverAllDependenciesCurrentOneBeingProcessed.length - 2);
-                            }
+                            var parameterInformation = getParameterInformation(dependenciesFound[j]);
+                            standardID = parameterInformation.parameterName;
+                            parameterType = parameterInformation.parameterType;
                             let dependencyToUpdate = "#" + standardID; //Current one we are updating
                             let type = $(dependencyToUpdate).prop('type');
                             dependencyToUpdateValue = null; //Initialize dependencyToUpdateValue to null
-
                             if (type == "checkbox") {//If check box is checked, then dependencyToUpdateValue equals empty string
                                 if ($(dependencyToUpdate).prop('checked')) {
                                     dependencyToUpdateValue = "";
@@ -116,61 +70,13 @@ $(document).ready(function () {
                                     dependencyToUpdateValue = dependencyToUpdateValue.substring(0, dependencyToUpdateValue.lastIndexOf("/"));
                                 }
                             }
-
-                            if (standardID.match("^--") || standardID.match("^-")) { //If it starts or ends with a - or --
-                                var lastIndex = standardID.lastIndexOf("_");
-                                let flagName = standardID.substr(0, lastIndex);
-                                if (dependencyToUpdateValue != null) {
-                                    if (isThisALoop != null) {//Then this needs to loop
-                                        let splitString = dependencyToUpdateValue.split(" ");
-                                        dependencyToUpdateValue = "";
-                                        for (var k = 0; k < splitString.length; k++) {
-                                            if (splitString[k] != "") {
-                                                dependencyToUpdateValue = dependencyToUpdateValue + flagName + " " + splitString[k] + " ";
-                                            }
-                                        }
-                                        loopingOverAllDependenciesCurrentOneBeingProcessed = "{" + loopingOverAllDependenciesCurrentOneBeingProcessed + "}";
-                                    }
-                                    else {
-                                        dependencyToUpdateValue = flagName + " " + dependencyToUpdateValue;
-                                    }
-                                }
-                                else {
-                                    dependencyToUpdateValue = "";
-                                }
-                            }
-                            if (filepathVariable || filenameVariable || basenameVariable || extensionVariable) {
-                                if (filepathVariable) {
-                                    var filepath = dependencyToUpdateValue.substring(0, dependencyToUpdateValue.lastIndexOf('/') + 1);
-                                    dependencyToUpdateValue = filepath;
-                                }
-                                else if (filenameVariable) {
-                                    var filename = dependencyToUpdateValue.substring(dependencyToUpdateValue.lastIndexOf('/') + 1);
-                                    dependencyToUpdateValue = filename;
-                                }
-                                else if (basenameVariable) {
-                                    var filename = dependencyToUpdateValue.substring(dependencyToUpdateValue.lastIndexOf('/') + 1);
-                                    var basename = filename.split('.')[0];
-                                    dependencyToUpdateValue = basename;
-                                }
-                                else if (extensionVariable) {
-                                    var filename = dependencyToUpdateValue.substring(dependencyToUpdateValue.lastIndexOf('/') + 1);
-                                    var extension = '.' + filename.split('.').slice(1).join('.');
-                                    dependencyToUpdateValue = extension;
-                                }
-                                updatedValue = updatedValue.replace(loopingOverAllDependenciesCurrentOneBeingProcessed + "}", dependencyToUpdateValue);
-                            }
-                            else {
-                                stringToReplace = loopingOverAllDependenciesCurrentOneBeingProcessed;
-                                var regex = new RegExp(stringToReplace, "g"); //Global replacement
-                                updatedValue = updatedValue.replace(regex, dependencyToUpdateValue);
-                            }
+                            updatedValue = updateDependencyString(parameterInformation, dependencyToUpdateValue, updatedValue);
                         }
                         updatedValue = updatedValue.replace(/\s\s+/g, ' '); //remove extra spaces
                         updatedValue = updatedValue.trim(); //remove leading/trailing spaces
-                        if(isThisAnEquation){
+                        if (isThisAnEquation) {
                             updatedValue = eval(updatedValue);//TODO: Replace eval with Function
-                            if(updatedValue.toString().indexOf("undefined")>-1){
+                            if (updatedValue.toString().indexOf("undefined") > -1) {
                                 updatedValue = "";
                             }
                         }
@@ -185,8 +91,10 @@ $(document).ready(function () {
                         $(currentDependency).trigger("change");
 
                     }
-                };
-            };
+                }
+                ;
+            }
+            ;
 //                if (isThisAnEquation){
 //                    $(element).val(eval($(element).val()));
 //                }

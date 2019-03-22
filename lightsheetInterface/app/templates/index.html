@@ -97,6 +97,7 @@
             dataIo.currentUrl = dataIo.currentUrl.replace('placeholder', currentTemplate);
         {% endif %}
     </script>
+    <script>document.write("<script src='{{ url_for('static', filename='js/commonParameterDependencyFunctions.js') }}?time=" + Date.now() +"'><\/script>");</script>
     <script>document.write("<script src='{{ url_for('static', filename='js/globalParametersDependencies.js') }}?time=" + Date.now() +"'><\/script>");</script>
 
     <!-- script to set default job name -->
@@ -113,57 +114,6 @@
                     var name = $('#existing-job-selector').find(":selected").text();
                     $('#job-heading').text('Configure ' + name);
                 }
-
-                $('body').on('change', "select[id^='select_']", function (event) {
-                    var inputField = this.id.replace("select_", "");
-                    var tmp = this.parentElement.getElementsByClassName('dropdown-menu')[0];
-                    var selectedItems = $(tmp).find("a[aria-selected=true]");
-                    var nrItems = selectedItems ? selectedItems.length : 0;
-                    if (dimension_dependencies) {
-                        for (var d = 0; d < dimension_dependencies.length; d++) {
-                            var tmp = dimension_dependencies[d];
-                            if (tmp.input == inputField) {
-                                var stepPanel = $('#' + tmp.step + '-card');
-                                var outputObj = stepPanel.find('#' + tmp.step + "-" + tmp.output);
-                                var inputFields = outputObj.find(".lightsheet-nested-input");
-                                for (var k = 0; k < inputFields.length; k++) {
-                                    if (k < nrItems) {
-                                        $(inputFields[k]).prop('disabled', false);
-                                    }
-                                    else {
-                                        $(inputFields[k]).prop('disabled', true);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-                $('body').on('change', "input[id^='emptycheckbox_']", function (event) {
-                    var inputField = this.id.replace("emptycheckbox_", "");
-                    if (dimension_dependencies) {
-                        for (var d = 0; d < dimension_dependencies.length; d++) {
-                            var dep = dimension_dependencies[d];
-                            var fullFieldName = dep.step + "-" + dep.input;
-                            if (fullFieldName == inputField) {
-                                var stepPanel = $('#' + dep.step + '-card');
-                                var outputObj = stepPanel.find('#' + dep.step + "-" + dep.output);
-                                var inputFields = $(outputObj).find("input");
-                                if (this.checked) { // disable fields
-                                    inputFields.each(function () {
-                                        this.disabled = true;
-                                    })
-                                }
-                                else { // enable fields
-                                    inputFields.each(function () {
-                                        this.disabled = false;
-                                    })
-                                }
-                            }
-                        }
-                    }
-                });
-
 
                 $('#template-selector').on('change', function (event) {
                     var template_id = $(this).find(":selected").val();
