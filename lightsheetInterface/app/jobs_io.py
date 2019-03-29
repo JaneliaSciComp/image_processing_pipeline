@@ -12,14 +12,7 @@ from bson.objectid import ObjectId
 from collections import OrderedDict
 
 
-class ParameterTypes(Enum):
-    checkbox = 1
-    rangeParam = 2
-    flag = 3
-    option = 4
-
-
-# change data before job is resubmitted
+# reformat data for job resubmission
 def reformat_data_to_post(posted_data, for_submission=True):
     temp_reformatted_data = []
     reformatted_data = []
@@ -29,38 +22,22 @@ def reformat_data_to_post(posted_data, for_submission=True):
     if posted_data and posted_data != {}:
         for step in posted_data.keys():
             # first part: get the parameter values into lists
-            step_result = {}
-            step_result['name'] = step
-            # add some optional paramters
-            if 'type' in posted_data[step].keys():
-                step_result['type'] = posted_data[step]['type']
-            if 'bindPaths' in posted_data[step].keys():
-                step_result['bindPaths'] = posted_data[step]['bindPaths']
-            if 'pause' in posted_data[step].keys():
-                step_result['pause'] = posted_data[step]['pause']
-            if for_submission:
-                step_result['state'] = 'NOT YET QUEUED'
             step_parameter_result = {}
             sorted_parameters = sorted(posted_data[step][p].keys())
             checkboxes = []
+
             for parameter_key in sorted_parameters:
                 # Find checkboxes and deal with them separately
                 if 'checkbox' in parameter_key:
                     checkboxes.append(parameter_key)
-                parameter_type = None
 
-                q = Parameter.objects.filter(Q(formatting='F') & (
-                        Q(name=parameter_key.split('-')[0]) | Q(name=parameter_key.split('-')[0] + '_' + step)))
-                if (len(q) != 0):  # this parameter is a range parameter
-                    parameter_type = ParameterTypes.flag
-
+                is_range_parameter = False
                 # First test if it's a nested parameter
                 if '-' in parameter_key:  # check, whether this is a range parameter
                     split_rest = parameter_key.split('-')
-                    q = Parameter.objects.filter(Q(formatting='R') & (
-                            Q(name=parameter_key.split('-')[0]) | Q(name=parameter_key.split('-')[0] + '_' + step)))
+                    q = Parameter.objects.filter(Q(formatting='R') & Q(name=parameter_key.split('-')[0] + '_' + step))
                     if (len(q) != 0):  # this parameter is a range parameter
-                        parameter_type = ParameterTypes.rangeParam
+                        is_range_parameter = True
 
                 # Then check if stepname is part of parameter name
                 if '_' in parameter_key:
@@ -70,30 +47,21 @@ def reformat_data_to_post(posted_data, for_submission=True):
                 else:
                     parameter = parameter_key
 
-                range_parameter = False
-                if parameter_type and parameter_type == ParameterTypes.rangeParam:
-                    range_parameter = True
-                    if parameter in step_parameter_result:
-                        param_value_set = step_parameter_result[parameter]  # get the existing object
-                    else:
-                        param_value_set = {}  # create a new object
+                if is_range_parameter:
+                    param_value_set = step_parameter_result[parameter] if ( parameter in step_parameter_result ) else {}
                     # move the parts of the range parameter to the right key of the object
-                    if split_rest[1] == 'start' or split_rest[1] == 'end' or split_rest[1] == 'every':
+                    if split_rest[1] in ['start', 'every', 'end']:
                         current_value = posted_data[step][p][parameter_key]
                         if current_value == "empty":
-                            range_parameter = False
+                            is_range_parameter = False
                         else:
-                            if split_rest[1] == 'start':
-                                param_value_set['start'] = float(current_value) if current_value is not '' and current_value != "[]" else ''
-                            elif split_rest[1] == 'end':
-                                param_value_set['end'] = float(current_value) if current_value is not '' and current_value != "[]" else ''
-                            elif split_rest[1] == 'every':
-                                param_value_set['every'] = float(current_value) if current_value is not '' and current_value != "[]" else ''
-                    if range_parameter:
+                            param_value_set[split_rest[1]] = float(current_value) if current_value is not '' and current_value != "[]" else ''
+
+                    if is_range_parameter:
                         # update the object
                         step_parameter_result[parameter] = param_value_set
 
-                if not range_parameter:  # no range
+                if not is_range_parameter:  # no range
                     if parameter in step_parameter_result:
                         param_value_set = step_parameter_result[parameter]
                     else:
@@ -101,9 +69,6 @@ def reformat_data_to_post(posted_data, for_submission=True):
                     if not param_value_set:
                         param_value_set = []
                     step_parameter_result[parameter] = param_value_set
-
-                    # if paramType and paramType == ParameterTypes.flag:
-                    # TODO: 'cope with flag parameters when submitting the job'
 
                     # check if current value is a float within a string and needs to be converted
                     current_value = posted_data[step][p][parameter_key]
@@ -137,6 +102,19 @@ def reformat_data_to_post(posted_data, for_submission=True):
                                 if elem == "" and len(set(step_parameter_result[parameter])) == 1:
                                     step_parameter_result[parameter] = []
                                     break
+
+            #replace with step_info function
+            step_result = {}
+            step_result['name'] = step
+            # add some optional paramters
+            if 'type' in posted_data[step].keys():
+                step_result['type'] = posted_data[step]['type']
+            if 'bindPaths' in posted_data[step].keys():
+                step_result['bindPaths'] = posted_data[step]['bindPaths']
+            if 'pause' in posted_data[step].keys():
+                step_result['pause'] = posted_data[step]['pause']
+            if for_submission:
+                step_result['state'] = 'NOT YET QUEUED'
             step_result['parameters'] = step_parameter_result
             temp_reformatted_data.append(OrderedDict(step_result))
 
@@ -221,13 +199,9 @@ def do_the_post(config_server_url, form_json, reparameterize, image_processing_d
                 'remainingStepNames')}
             image_processing_db.jobs.update_one({"_id": image_processing_db_id}, {"$set": sub_dict})
             for current_step_dictionary in processed_data:
-                update_output = image_processing_db.jobs.update_one(
-                    {"_id": image_processing_db_id, "steps.name": current_step_dictionary["name"]},
-                    {"$set": {"steps.$": current_step_dictionary}})
+                update_output = image_processing_db.jobs.update_one({"_id": image_processing_db_id, "steps.name": current_step_dictionary["name"]}, {"$set": {"steps.$": current_step_dictionary}})
                 if update_output.matched_count == 0:  # Then new step
-                    image_processing_db.jobs.update_one(
-                        {"_id": image_processing_db_id},
-                        {"$push": {"steps": current_step_dictionary}})
+                    image_processing_db.jobs.update_one({"_id": image_processing_db_id}, {"$push": {"steps": current_step_dictionary}})
 
         else:
             image_processing_db_id = image_processing_db.jobs.insert_one(data_to_post_to_db).inserted_id

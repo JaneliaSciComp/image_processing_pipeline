@@ -18,21 +18,19 @@ from bson.objectid import ObjectId
 
 ALLOWED_EXTENSIONS = {'txt', 'json'}
 
-global_error = None
-
 # Mongo client
-mongo_uri = app.config['MONGODB_HOST']
-mongo_user = app.config.get('MONGODB_USERNAME')
-mongo_password = app.config.get('MONGODB_PASSWORD')
+MONGO_URI = app.config['MONGODB_HOST']
+MONGO_USER = app.config.get('MONGODB_USERNAME')
+MONGO_PASSWORD = app.config.get('MONGODB_PASSWORD')
 
-if mongo_user:
-    client = MongoClient(mongo_uri, username=mongo_user, password=mongo_password)
+if MONGO_USER:
+    CLIENT = MongoClient(MONGO_URI, username=MONGO_USER, password=MONGO_PASSWORD)
 else:
-    client = MongoClient(mongo_uri)
+    CLIENT = MongoClient(MONGO_URI)
 
 # imageProcessingDB is the database containing lightsheet job information and parameters
 # The current database is called "lightsheet" but should be renamed to better reflect all its functionality
-image_processing_db = client.lightsheet
+IMAGE_PROCESSING_DB = CLIENT.lightsheet
 
 
 def _allowed_file(filename):
@@ -87,7 +85,7 @@ def workflow():
     deprecated = False
     step_or_template_name = ''
     if template_name:
-        all_templates = list(image_processing_db.template.find({}, {'name': 1, '_id': 0}))
+        all_templates = list(IMAGE_PROCESSING_DB.template.find({}, {'name': 1, '_id': 0}))
         all_template_names = [template['name'] for template in all_templates]
         step_or_template_name = "Template: " + template_name
         if template_name in all_template_names:
@@ -104,7 +102,7 @@ def workflow():
         if image_processing_db_id == 'favicon.ico':
             image_processing_db_id = None
         else:
-            pipeline_steps, load_status, job_name, username = load_preexisting_job(image_processing_db, image_processing_db_id, reparameterize, configuration_object)
+            pipeline_steps, load_status, job_name, username = load_preexisting_job(IMAGE_PROCESSING_DB, image_processing_db_id, reparameterize, configuration_object)
             pipelineStepsWithConfig = []
             if deprecated:
                 for pipelineStepName in pipeline_steps:
@@ -115,7 +113,7 @@ def workflow():
                 abort(404)
 
     if request.method == 'POST':
-        submission_status = do_the_post(request.url_root, request.json, reparameterize, image_processing_db,
+        submission_status = do_the_post(request.url_root, request.json, reparameterize, IMAGE_PROCESSING_DB,
                                         image_processing_db_id,
                                         None,
                                         step_or_template_name)
@@ -147,8 +145,8 @@ def index():
 def job_status():
     image_processing_db_id = request.args.get('lightsheetDB_id')
     # Mongo client
-    update_db_states_and_times(image_processing_db)
-    parent_job_info = get_job_info_from_db(image_processing_db, image_processing_db_id, "parent")
+    update_db_states_and_times(IMAGE_PROCESSING_DB)
+    parent_job_info = get_job_info_from_db(IMAGE_PROCESSING_DB, image_processing_db_id, "parent")
     child_job_info = []
     job_type = []
     step_or_template_name = []
@@ -158,7 +156,7 @@ def job_status():
     if request.method == 'POST':
         # Find pause that is in remaining steps
         posted = "true"
-        paused_job_information = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}))
+        paused_job_information = list(IMAGE_PROCESSING_DB.jobs.find({"_id": ObjectId(image_processing_db_id)}))
         paused_job_information = paused_job_information[0]
         username = paused_job_information["username"]
         if current_user.username != username:
@@ -170,13 +168,13 @@ def job_status():
         while paused_job_information["remainingStepNames"][0] != paused_job_information["steps"][paused_step_index]["name"]:
             paused_job_information["remainingStepNames"].pop(0)
         paused_job_information["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
-        image_processing_db.jobs.update_one({"_id": ObjectId(image_processing_db_id)}, {"$set": paused_job_information})
+        IMAGE_PROCESSING_DB.jobs.update_one({"_id": ObjectId(image_processing_db_id)}, {"$set": paused_job_information})
         if paused_job_information["remainingStepNames"]:  # only submit if not empty
-            submit_to_jacs(request.url_root, image_processing_db, image_processing_db_id, True)
-        update_db_states_and_times(image_processing_db)
+            submit_to_jacs(request.url_root, IMAGE_PROCESSING_DB, image_processing_db_id, True)
+        update_db_states_and_times(IMAGE_PROCESSING_DB)
 
     if image_processing_db_id is not None:
-        job_type, step_or_template_name, child_job_info, remaining_step_names = get_job_info_from_db(image_processing_db, image_processing_db_id, "child")
+        job_type, step_or_template_name, child_job_info, remaining_step_names = get_job_info_from_db(IMAGE_PROCESSING_DB, image_processing_db_id, "child")
         if not step_or_template_name:
             step_or_template_name = "Deprecated Workflow"
 
@@ -335,8 +333,7 @@ def load_config():
 def config(image_processing_db_id):
     global_parameter = request.args.get('globalParameter')
     step_name = request.args.get('stepName')
-    step_parameter = request.args.get('stepParameter')
-    output = get_configurations_from_db(image_processing_db_id, image_processing_db, global_parameter, step_name)
+    output = get_configurations_from_db(image_processing_db_id, IMAGE_PROCESSING_DB, global_parameter, step_name)
     if output == 404:
         abort(404)
     else:
@@ -371,7 +368,7 @@ def hide_entries():
     ids_to_hide = request.json
     for i, id_to_hide in enumerate(ids_to_hide):
         ids_to_hide[i] = ObjectId(id_to_hide)
-    image_processing_db.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}}, {"$set": {"hideFromView": 1}})
+    IMAGE_PROCESSING_DB.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}}, {"$set": {"hideFromView": 1}})
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
@@ -417,8 +414,8 @@ def all_jobs():
 @login_required
 def table_data():
     show_all_jobs = request.args.get('showAllJobs') == 'True'
-    update_db_states_and_times(image_processing_db, show_all_jobs)
-    data = all_jobs_in_json(image_processing_db, show_all_jobs)
+    update_db_states_and_times(IMAGE_PROCESSING_DB, show_all_jobs)
+    data = all_jobs_in_json(IMAGE_PROCESSING_DB, show_all_jobs)
     output = {}
     output['data'] = data
     response = app.response_class(
@@ -436,7 +433,7 @@ def copy_step():
         original_step_name = request.args.get('from')
         new_step_name = request.args.get('to')
         description = request.args.get('description')
-        copy_step_in_database(image_processing_db, original_step_name, new_step_name, description)
+        copy_step_in_database(IMAGE_PROCESSING_DB, original_step_name, new_step_name, description)
         response = app.response_class(
             status=200,
             mimetype='application/json'
@@ -449,7 +446,7 @@ def copy_step():
 def delete_step_and_references(step_name):
     if current_user.username in app.config.get('ADMINS'):
         if step_name:
-            delete_step_and_references_from_database(image_processing_db, step_name)
+            delete_step_and_references_from_database(IMAGE_PROCESSING_DB, step_name)
         response = app.response_class(
             status=200,
             mimetype='application/json'

@@ -12,11 +12,11 @@ from collections import OrderedDict
 from itertools import repeat
 
 # JACS server
-jacs_host = app.config.get('JACS_HOST')
+JACS_HOST = app.config.get('JACS_HOST')
 
 # Timezone for timings
-eastern = timezone('US/Eastern')
-UTC = timezone('UTC')
+EASTERN_TIMEZONE = timezone('US/Eastern')
+UTC_TIMEZONE = timezone('UTC')
 
 
 # collect the information about existing job used by the job_status page
@@ -245,9 +245,8 @@ def get_configurations_from_db(image_processing_db_id, image_processing_db, glob
             output = {global_parameter: ""}
     else:
         if step_name:
-            output = list(
-                image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id), 'steps.name': step_name},
-                                              {'_id': 0, "steps.$": 1}))
+            output = list(image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id), 'steps.name': step_name},
+                                                        {'_id': 0, "steps.$": 1}))
             if output:
                 output = output[0]["steps"][0]["parameters"]
         else:
@@ -262,64 +261,54 @@ def get_configurations_from_db(image_processing_db_id, image_processing_db, glob
 def update_db_states_and_times(image_processing_db, show_all_jobs=False):
     if current_user.is_authenticated:
         if show_all_jobs:
-            all_job_info_from_db = list(image_processing_db.jobs.find({"username": {"$exists": "true"}, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
+            relevant_job_info_from_db = list(image_processing_db.jobs.find({"username": {"$exists": "true"}, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
         else:
-            all_job_info_from_db = list(image_processing_db.jobs.find(
-                {"username": current_user.username,
-                 "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
-        for parent_job_info_from_db in all_job_info_from_db:
+            relevant_job_info_from_db = list(image_processing_db.jobs.find({"username": current_user.username, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
+        for parent_job_info_from_db in relevant_job_info_from_db:
             if 'jacs_id' in parent_job_info_from_db:  # TODO handle case, when jacs_id is missing
-                # if parentJobInfoFromDB["state"] in ['NOT YET QUEUED', 'RUNNING']: #Don't need this now not in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
                 if isinstance(parent_job_info_from_db["jacs_id"], list):
                     jacs_ids = parent_job_info_from_db["jacs_id"]
                 else:
                     jacs_ids = [parent_job_info_from_db["jacs_id"]]
 
                 for jacs_id in jacs_ids:
-                    parent_job_info_from_jacs = requests.get(jacs_host + ':9000/api/rest-v2/services/',
-                                                             params={'service-id': jacs_id},
-                                                             headers=get_headers(True)).json()
+                    parent_job_info_from_jacs = get_job_info_from_jacs({'service-id': jacs_id})
                     if parent_job_info_from_jacs and len(parent_job_info_from_jacs["resultList"]) > 0:
                         parent_job_info_from_jacs = parent_job_info_from_jacs["resultList"][0]
-                        image_processing_db.jobs.update_one({"_id": parent_job_info_from_db["_id"]},
-                                                            {"$set": {"state": parent_job_info_from_jacs["state"]}})
-                        all_child_job_info_from_jacs = requests.get(jacs_host + ':9000/api/rest-v2/services/',
-                                                                    params={'parent-id': jacs_id},
-                                                                    headers=get_headers(True)).json()
+                        image_processing_db.jobs.update_one({"_id": parent_job_info_from_db["_id"]}, {"$set": {"state": parent_job_info_from_jacs["state"]}})
+
+                        all_child_job_info_from_jacs = get_job_info_from_jacs({'parent-id': jacs_id})
                         all_child_job_info_from_jacs = all_child_job_info_from_jacs["resultList"]
                         if all_child_job_info_from_jacs:
                             for current_child_job_info_from_db in parent_job_info_from_db["steps"]:
-                                current_child_job_info_from_jacs = next((step for step in all_child_job_info_from_jacs if
-                                                                         (current_child_job_info_from_db["name"] in step["description"])), None)
+                                current_child_job_info_from_jacs = next((step for step in all_child_job_info_from_jacs if (current_child_job_info_from_db["name"] in step["description"])), None)
                                 if current_child_job_info_from_db["state"] == "NOT YET QUEUED" and jacs_id != jacs_ids[-1]:  # NOT YET QUEUED jobs were just submitted so only want to check based on currently running job
                                     current_child_job_info_from_jacs = {}
                                 if current_child_job_info_from_jacs:
                                     creation_time = convert_jacs_time(current_child_job_info_from_jacs["processStartTime"])
-                                    output_path = "N/A"
-                                    if "outputPath" in current_child_job_info_from_jacs:
-                                        output_path = current_child_job_info_from_jacs["outputPath"][:-11]
-                                    image_processing_db.jobs.update_one({"_id": parent_job_info_from_db["_id"],
-                                                                         "steps.name": current_child_job_info_from_db["name"]},
-                                                                        {"$set": {
-                                                                            "steps.$.state": current_child_job_info_from_jacs["state"],
-                                                                            "steps.$.creationTime": creation_time.strftime("%Y-%m-%d %H:%M:%S"),
-                                                                            "steps.$.elapsedTime": str(datetime.now(eastern).replace(microsecond=0) - creation_time),
-                                                                            "steps.$.logAndErrorPath": output_path,
-                                                                            "steps.$._id": current_child_job_info_from_jacs["_id"]
-                                                                        }})
+                                    find_dictionary = {"_id": parent_job_info_from_db["_id"], "steps.name": current_child_job_info_from_db["name"]}
+                                    set_dictionary = {"steps.$.state": current_child_job_info_from_jacs["state"],
+                                                      "steps.$.creationTime": creation_time.strftime("%Y-%m-%d %H:%M:%S"),
+                                                      "steps.$.elapsedTime": str(datetime.now(EASTERN_TIMEZONE).replace(microsecond=0) - creation_time),
+                                                      "steps.$._id": current_child_job_info_from_jacs["_id"]}
 
-                                    if current_child_job_info_from_jacs["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:
+                                    if current_child_job_info_from_jacs["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:  # Add endTime and elapsedTime
                                         end_time = convert_jacs_time(current_child_job_info_from_jacs["modificationDate"])
-                                        image_processing_db.jobs.update_one({"_id": parent_job_info_from_db["_id"],
-                                                                             "steps.name": current_child_job_info_from_db["name"]},
-                                                                            {"$set": {"steps.$.endTime": end_time.strftime("%Y-%m-%d %H:%M:%S"),
-                                                                                      "steps.$.elapsedTime": str(end_time - creation_time)
-                                                                                      }})
+                                        set_dictionary = {**set_dictionary, **{"steps.$.endTime": end_time.strftime("%Y-%m-%d %H:%M:%S"), "steps.$.elapsedTime": str(end_time - creation_time)}}
+
+                                    image_processing_db.jobs.update_one(find_dictionary, {"$set": set_dictionary})
+
+
+def get_job_info_from_jacs(request_params_dictionary):
+    request_output_jsonified = requests.get(JACS_HOST + ':9000/api/rest-v2/services/',
+                                            params=request_params_dictionary,
+                                            headers=get_headers(True)).json()
+    return request_output_jsonified
 
 
 def convert_jacs_time(t):
     t = datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
-    t = UTC.localize(t).astimezone(eastern)
+    t = UTC_TIMEZONE.localize(t).astimezone(EASTERN_TIMEZONE)
     return t
 
 
@@ -437,7 +426,44 @@ def create_config(content):
 def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_reparameterize):
     job_id = ObjectId(job_id)
     config_address = config_server_url + "config/{}".format(job_id)
+    post_body, post_url = build_post_body_for_jacs(image_processing_db, job_id)
 
+    # Do the submission to JACS
+    try:
+        request_output = requests.post(post_url,
+                                       headers=get_headers(),
+                                       data=json.dumps(post_body))
+        request_output_jsonified = request_output.json()
+        creation_date = job_id.generation_time
+        creation_date = str(creation_date.replace(tzinfo=UTC_TIMEZONE).astimezone(EASTERN_TIMEZONE))
+        if 'id' in request_output_jsonified:
+            jacs_id = request_output_jsonified['id']
+        else:
+            jacs_id = request_output_jsonified['_id']
+
+        if continue_or_reparameterize:
+            image_processing_db.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
+                "jacsStatusAddress": JACS_HOST + '8080/job/' + jacs_id,
+                "jacs_id": jacs_id}})
+        else:
+            image_processing_db.jobs.update_one({"_id": job_id}, {
+                "$set": {"jacs_id": [jacs_id], "configAddress": config_address,
+                         "creationDate": creation_date[:-6]}})
+
+        # JACS service states
+        # if any are not Canceled, timeout, error, or successful then
+        # updateLightsheetDatabaseStatus
+        update_db_states_and_times(image_processing_db)
+        submission_status = "success"
+    except requests.exceptions.RequestException:
+        print('Exception occured')
+        submission_status = requests
+        if not continue_or_reparameterize:
+            image_processing_db.jobs.remove({"_id": job_id})
+    return submission_status
+
+
+def build_post_body_for_jacs(image_processing_db, job_id):
     job_info_from_database = list(image_processing_db.jobs.find({"_id": job_id}))
     job_info_from_database = job_info_from_database[0]
     remaining_steps = []
@@ -451,9 +477,9 @@ def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_r
             if "pause" in step:
                 pause_state = step["pause"]
         current_step_index = current_step_index + 1
+
     post_body = {"ownerKey": "user:" + current_user.username if current_user.is_authenticated else "",
                  "resources": {"gridAccountId": current_user.username}}
-
     pipeline_services = []
     for step in remaining_steps:
         if step["type"] == "LightSheet":
@@ -491,44 +517,14 @@ def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_r
 
         pipeline_services.append(step_post_body)
     if remaining_steps[0]['type'] == "LightSheet":
-        post_url = jacs_host + ':9000/api/rest-v2/async-services/lightsheetPipeline'
+        post_url = JACS_HOST + ':9000/api/rest-v2/async-services/lightsheetPipeline'
         post_body['processingLocation'] = 'LSF_JAVA'
         post_body["dictionaryArgs"] = {"pipelineConfig": {"steps": pipeline_services}}
     else:
-        post_url = jacs_host + ':9000/api/rest-v2/async-services/pipeline'
+        post_url = JACS_HOST + ':9000/api/rest-v2/async-services/pipeline'
         post_body["dictionaryArgs"] = {"pipelineConfig": {"pipelineServices": pipeline_services}}
-    try:
-        request_output = requests.post(post_url,
-                                       headers=get_headers(),
-                                       data=json.dumps(post_body))
-        request_output_jsonified = request_output.json()
-        creation_date = job_id.generation_time
-        creation_date = str(creation_date.replace(tzinfo=UTC).astimezone(eastern))
-        if 'id' in request_output_jsonified:
-            jacs_id = request_output_jsonified['id']
-        else:
-            jacs_id = request_output_jsonified['_id']
 
-        if continue_or_reparameterize:
-            image_processing_db.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
-                "jacsStatusAddress": jacs_host + '8080/job/' + jacs_id,
-                "jacs_id": jacs_id}})
-        else:
-            image_processing_db.jobs.update_one({"_id": job_id}, {
-                "$set": {"jacs_id": [jacs_id], "configAddress": config_address,
-                         "creationDate": creation_date[:-6]}})
-
-        # JACS service states
-        # if any are not Canceled, timeout, error, or successful then
-        # updateLightsheetDatabaseStatus
-        update_db_states_and_times(image_processing_db)
-        submission_status = "success"
-    except requests.exceptions.RequestException:
-        print('Exception occured')
-        submission_status = requests
-        if not continue_or_reparameterize:
-            image_processing_db.jobs.remove({"_id": job_id})
-    return submission_status
+    return post_body, post_url
 
 
 def step_or_template_name_path_maker(step_or_template_name):
@@ -538,7 +534,7 @@ def step_or_template_name_path_maker(step_or_template_name):
         step_or_template_name = url_for('workflow', template=step_or_template_name[10:])
     return step_or_template_name
 
-
+## THE REMAINNIG FUNCTIONS ARE CURRENTLY ONLY FOR QUICKLY COPYING SETPS AND DELETING PARAMETERS FOR ADMIN USE. THERE IS NO FORMAL UI WAY TO DO IT YET, JUST VIA HTML REQUESTS ##
 def copy_step_in_database(image_processing_db, original_step_name, new_step_name, new_step_description=None):
     original_step = list(image_processing_db.step.find({"name": original_step_name}, {'_id': 0}))
     if original_step:
