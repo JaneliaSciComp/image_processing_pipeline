@@ -50,7 +50,7 @@ class Parameter(Document):
     text3 = StringField(max_length=2000)
     text4 = StringField(max_length=2000)
     text5 = StringField(max_length=2000)
-    meta = {'strict': False} #To prevent error from no longer having certain fields
+    meta = {'strict': False}  # To prevent error from no longer having certain fields
 
     def __unicode__(self):
         return self.name
@@ -65,7 +65,7 @@ class Step(Document):
     steptype = StringField(max_length=500, choices=steptypes)
     codeLocation = StringField(max_length=500)
     entryPointForSpark = StringField(max_length=500)
-    meta = {'strict': False} #To prevent error from no longer having certain fields
+    meta = {'strict': False}  # To prevent error from no longer having certain fields
 
     def __unicode__(self):
         return self.name
@@ -84,7 +84,7 @@ class Dependency(Document):
     inputField = ReferenceField(Parameter)
     outputField = ReferenceField(Parameter)
     pattern = StringField(max_length=2000)
-    meta = {'strict': False} #To prevent error from no longer having certain fields
+    meta = {'strict': False}  # To prevent error from no longer having certain fields
 
 
 # serves as a fact table --> has references to both steps and parameters but stores actual values needed to configure an
@@ -105,7 +105,7 @@ class ConfigurationInstance(Document):
     text3 = StringField(max_length=2000)
     text4 = StringField(max_length=2000)
     text5 = StringField(max_length=2000)
-    meta = {'strict': False} #To prevent error from no longer having certain fields
+    meta = {'strict': False}  # To prevent error from no longer having certain fields
 
     def __unicode__(self):
         return self.creation_date.strftime("%d/%m/%y-%H:%m")
@@ -247,7 +247,7 @@ class ExtendedParameterView(ModelView):
     form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
                     "text3", "text4", "text5", "readonly", "mount", "empty", "startsEmpty", "frequency", "formatting", "hint"]
     column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
-                      "text2", "text3", "text4","text5", "mount", "frequency", "formatting"]
+                      "text2", "text3", "text4", "text5", "mount", "frequency", "formatting"]
     form_overrides = {
         'hint': CKTextAreaField
     }

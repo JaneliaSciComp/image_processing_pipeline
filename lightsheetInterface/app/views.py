@@ -9,15 +9,14 @@ from app import app
 from app.authservice import create_auth_service
 from app.forms import LoginForm
 from app.utils import *
-from app.jobs_io import reformatDataToPost, parseJsonDataNoForms, doThePost, loadPreexistingJob, loadUploadedConfig
+from app.jobs_io import reformat_data_to_post, parse_json_data_no_forms, do_the_post, load_preexisting_job, load_uploaded_config
 from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
-from collections import OrderedDict
 
 # This file contains all the view components necessary for routing and loading the correct webpages
 
 
-ALLOWED_EXTENSIONS = set(['txt', 'json'])
+ALLOWED_EXTENSIONS = {'txt', 'json'}
 
 global_error = None
 
@@ -26,7 +25,6 @@ mongo_uri = app.config['MONGODB_HOST']
 mongo_user = app.config.get('MONGODB_USERNAME')
 mongo_password = app.config.get('MONGODB_PASSWORD')
 
-
 if mongo_user:
     client = MongoClient(mongo_uri, username=mongo_user, password=mongo_password)
 else:
@@ -34,10 +32,12 @@ else:
 
 # imageProcessingDB is the database containing lightsheet job information and parameters
 # The current database is called "lightsheet" but should be renamed to better reflect all its functionality
-imageProcessingDB = client.lightsheet
+image_processing_db = client.lightsheet
+
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 """
  Url to return the favicon
@@ -46,6 +46,7 @@ def _allowed_file(filename):
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico')
+
 
 """
  Logout functionality
@@ -57,78 +58,77 @@ def logout():
     auth_service.logout()
     return redirect(url_for('.index'))
 
+
 """
  View Function to configure jobs
 """
 @app.route('/workflow', methods=['GET', 'POST'])
 @login_required
 def workflow():
-    pipelineSteps = None
-    jobName = None
-    posted = "false"
+    pipeline_steps = None
+    job_name = None
 
-    #Get HTML query values
+    # Get HTML query values
     step_name = request.args.get('step')
     template_name = request.args.get('template')
-    config_name = request.args.get('config_name')
-    lightsheetDB_id = request.args.get('lightsheetDB_id')
+    configuration_name = request.args.get('config_name')
+    image_processing_db_id = request.args.get('lightsheetDB_id')
     reparameterize = request.args.get('reparameterize')
-    pInstance = PipelineInstance.objects.filter(name=config_name).first()
+    pipeline_instance = PipelineInstance.objects.filter(name=configuration_name).first()
 
-    if pInstance:  # Then load an uploaded config
-        uploadedContent = json.loads(pInstance.content)
-        configObj = buildConfigObject({'steps':uploadedContent['steps']})
-        pipelineSteps, step_name, template_name = loadUploadedConfig(uploadedContent, configObj)
+    if pipeline_instance:  # Then load an uploaded config
+        uploaded_content = json.loads(pipeline_instance.content)
+        configuration_object = build_configuration_object({'steps': uploaded_content['steps']})
+        pipeline_steps, step_name, template_name = load_uploaded_config(uploaded_content, configuration_object)
         if not (step_name or template_name):
             template_name = 'Deprecated Workflow'
 
-    #Get the appropriate step or template name and build corresponding config objects
+    # Get the appropriate step or template name and build corresponding config objects
     deprecated = False
-    stepOrTemplateName = ''
+    step_or_template_name = ''
     if template_name:
-        allTemplates =  list(imageProcessingDB.template.find({},{'name':1,'_id':0}))
-        allTemplateNames = [template['name'] for template in allTemplates]
-        stepOrTemplateName = "Template: " + template_name
-        if template_name in allTemplateNames:
-            configObj = buildConfigObject({'template':template_name})
+        all_templates = list(image_processing_db.template.find({}, {'name': 1, '_id': 0}))
+        all_template_names = [template['name'] for template in all_templates]
+        step_or_template_name = "Template: " + template_name
+        if template_name in all_template_names:
+            configuration_object = build_configuration_object({'template': template_name})
         else:
-            deprecated=True
-            if not pInstance:
-                configObj = buildConfigObject()
+            deprecated = True
+            if not pipeline_instance:
+                configuration_object = build_configuration_object()
     elif step_name:
-        stepOrTemplateName = "Step: " + step_name
-        configObj = buildConfigObject({'step':step_name})
+        step_or_template_name = "Step: " + step_name
+        configuration_object = build_configuration_object({'step': step_name})
 
-    if lightsheetDB_id: #Then a previous job has been loaded
-        if lightsheetDB_id == 'favicon.ico':
-            lightsheetDB_id = None
+    if image_processing_db_id:  # Then a previous job has been loaded
+        if image_processing_db_id == 'favicon.ico':
+            image_processing_db_id = None
         else:
-            pipelineSteps, loadStatus, jobName, username = loadPreexistingJob(imageProcessingDB, lightsheetDB_id, reparameterize, configObj)
-            pipelineStepsWithConfig=[]
+            pipeline_steps, load_status, job_name, username = load_preexisting_job(image_processing_db, image_processing_db_id, reparameterize, configuration_object)
+            pipelineStepsWithConfig = []
             if deprecated:
-                for pipelineStepName in pipelineSteps:
-                    pipelineStepsWithConfig.append([step for step in configObj['steps'] if step.name==pipelineStepName][0])
-                configObj['steps'] = pipelineStepsWithConfig
+                for pipelineStepName in pipeline_steps:
+                    pipelineStepsWithConfig.append([step for step in configuration_object['steps'] if step.name == pipelineStepName][0])
+                configuration_object['steps'] = pipelineStepsWithConfig
             if reparameterize and current_user.username != username:
-                #Then don't allow because not the same user as the user who submitted the job
+                # Then don't allow because not the same user as the user who submitted the job
                 abort(404)
 
     if request.method == 'POST':
-        posted = "true"
-        submissionStatus = doThePost(request.url_root, request.json, reparameterize, imageProcessingDB,
-                                    lightsheetDB_id,
-                                    None,
-                                    stepOrTemplateName)
-        return submissionStatusReturner(submissionStatus)
+        submission_status = do_the_post(request.url_root, request.json, reparameterize, image_processing_db,
+                                        image_processing_db_id,
+                                        None,
+                                        step_or_template_name)
+        return submission_status_returner(submission_status)
 
     return render_template('index.html',
-                           pipelineSteps=pipelineSteps,
-                           config=configObj,
+                           pipelineSteps=pipeline_steps,
+                           config=configuration_object,
                            currentStep=step_name,
                            currentTemplate=template_name,
-                           posted=posted,
-                           jobName=jobName,
-                           global_dependencies = add_global_dependency_object(configObj))
+                           jobName=job_name,
+                           global_dependencies=add_global_dependency_object(configuration_object))
+
 
 """
  Root view function
@@ -138,55 +138,57 @@ def workflow():
 def index():
     return redirect(url_for('workflow', template='AIC SimView Single Camera'))
 
+
 """
- View Function to the the status of jobs
+ View Function to the the status of jobs and for resuming jobs
 """
 @app.route('/job_status', methods=['GET', 'POST'])
 @login_required
 def job_status():
-    imageProcessingDB_id = request.args.get('lightsheetDB_id')
+    image_processing_db_id = request.args.get('lightsheetDB_id')
     # Mongo client
-    updateDBStatesAndTimes(imageProcessingDB)
-    parentJobInfo = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "parent")
-    childJobInfo = []
-    jobType = []
-    stepOrTemplateName = []
-    posted="false"
-    remainingStepNames = None
+    update_db_states_and_times(image_processing_db)
+    parent_job_info = get_job_info_from_db(image_processing_db, image_processing_db_id, "parent")
+    child_job_info = []
+    job_type = []
+    step_or_template_name = []
+    posted = "false"
+    remaining_step_names = None
 
     if request.method == 'POST':
-        #Find pause that is in remaining steps
+        # Find pause that is in remaining steps
         posted = "true"
-        pausedJobInformation = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)}))
-        pausedJobInformation = pausedJobInformation[0]
-        username = pausedJobInformation["username"]
+        paused_job_information = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}))
+        paused_job_information = paused_job_information[0]
+        username = paused_job_information["username"]
         if current_user.username != username:
-            #Then don't allow because not the same user as the user who submitted the job
+            # Then don't allow because not the same user as the user who submitted the job
             abort(404)
         # Make sure that we pop off all steps that have completed and been approved, ie, ones that are no longer in remaining
-        pausedStates = [step['pause'] if ('pause' in step and step["name"] in pausedJobInformation["remainingStepNames"]) else 0 for step in pausedJobInformation["steps"]]
-        pausedStepIndex = next((i for i, pausable in enumerate(pausedStates) if pausable), None)
-        while pausedJobInformation["remainingStepNames"][0] != pausedJobInformation["steps"][pausedStepIndex]["name"]:
-             pausedJobInformation["remainingStepNames"].pop(0)
-        pausedJobInformation["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
-        imageProcessingDB.jobs.update_one({"_id": ObjectId(imageProcessingDB_id)}, {"$set": pausedJobInformation})
-        if pausedJobInformation["remainingStepNames"]: #only submit if not empty
-            submissionStatus = submitToJACS(request.url_root, imageProcessingDB, imageProcessingDB_id, True)
-        updateDBStatesAndTimes(imageProcessingDB)
+        paused_states = [step['pause'] if ('pause' in step and step["name"] in paused_job_information["remainingStepNames"]) else 0 for step in paused_job_information["steps"]]
+        paused_step_index = next((i for i, pausable in enumerate(paused_states) if pausable), None)
+        while paused_job_information["remainingStepNames"][0] != paused_job_information["steps"][paused_step_index]["name"]:
+            paused_job_information["remainingStepNames"].pop(0)
+        paused_job_information["remainingStepNames"].pop(0)  # Remove steps that have been completed/approved
+        image_processing_db.jobs.update_one({"_id": ObjectId(image_processing_db_id)}, {"$set": paused_job_information})
+        if paused_job_information["remainingStepNames"]:  # only submit if not empty
+            submit_to_jacs(request.url_root, image_processing_db, image_processing_db_id, True)
+        update_db_states_and_times(image_processing_db)
 
-    if imageProcessingDB_id is not None:
-        jobType, stepOrTemplateName, childJobInfo, remainingStepNames = getJobInfoFromDB(imageProcessingDB, imageProcessingDB_id, "child")
-        if not stepOrTemplateName:
-            stepOrTemplateName = "Deprecated Workflow"
+    if image_processing_db_id is not None:
+        job_type, step_or_template_name, child_job_info, remaining_step_names = get_job_info_from_db(image_processing_db, image_processing_db_id, "child")
+        if not step_or_template_name:
+            step_or_template_name = "Deprecated Workflow"
+
     # Return job_status.html which takes in parentServiceData and childSummarizedStatuses
     return render_template('job_status.html',
-                           parentJobInfo=reversed(parentJobInfo),  # so in chronolgical order
-                           childJobInfo=childJobInfo,
-                           lightsheetDB_id=imageProcessingDB_id,
-                           stepOrTemplateName=stepOrTemplateName,
-                           jobType=jobType,
+                           parentJobInfo=reversed(parent_job_info),  # so in chronolgical order
+                           childJobInfo=child_job_info,
+                           lightsheetDB_id=image_processing_db_id,
+                           stepOrTemplateName=step_or_template_name,
+                           jobType=job_type,
                            posted=posted,
-                           remainingStepNames=remainingStepNames)
+                           remainingStepNames=remaining_step_names)
 
 
 @app.route('/search')
@@ -202,6 +204,7 @@ def login_form():
     return render_template('login.html',
                            form=form,
                            next=next_page_param if next_page_param else '')
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -226,6 +229,7 @@ def login():
                                form=form,
                                next=next_page if next_page else ''), 401
 
+
 """
  View Function for loading a pipeline from a json file
 """
@@ -249,14 +253,11 @@ def upload():
         if file and _allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file',
-                                    filename=filename))
+            return redirect(url_for('uploaded_file', filename=filename))
         else:
-            # allowed_ext = print(', '.join(ALLOWED_EXTENSIONS[:-1]) + " or " + ALLOWED_EXTENSIONS[-1])
             allowed_ext = (', '.join(ALLOWED_EXTENSIONS))
             message = 'Please make sure, your file extension is one of the following: ' + allowed_ext
             return render_template('upload.html', message=message)
-        return 'error'
 
 
 """
@@ -267,12 +268,14 @@ def upload():
 def uploaded_file(filename=None):
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
-        result = createDBentries(c)
+        result = create_db_entries(c)
         return render_template('upload.html', content=c, filename=filename, message=result['message'],
                                success=result['success'])
     message = []
     message.append('Error uploading the file {0}'.format(filename))
+
     return render_template('upload.html', filename=filename, message=message)
+
 
 """
  View Function for creating a configuration record in the database of an existing pipeline from a json file
@@ -282,19 +285,20 @@ def uploaded_file(filename=None):
 def upload_config(filename=None):
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
-        result = createConfig(c)
+        result = create_config(c)
         return redirect(url_for('workflow', config_name=result['name']))
         # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
     message = []
     message.append('Error uploading the file {0}'.format(filename))
     ##return render_template('upload.html', filename=filename, message=message)
 
+
 """
  View Function for loading the configuration of an existing pipeline from a json file
 """
 @app.route('/load_config', methods=['GET', 'POST'])
 @login_required
-def load_config(filename=None):
+def load_config():
     if request.method == "GET":
         steps = Step.objects.all()
         empty = False
@@ -320,22 +324,19 @@ def load_config(filename=None):
         if file and _allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('upload_config',
-                                    filename=filename))
+            return redirect(url_for('upload_config',filename=filename))
         else:
-            # allowed_ext = print(', '.join(ALLOWED_EXTENSIONS[:-1]) + " or " + ALLOWED_EXTENSIONS[-1])
             allowed_ext = (', '.join(ALLOWED_EXTENSIONS))
             message = 'Please make sure, your file extension is one of the following: ' + allowed_ext
             return render_template('upload.html', message=message)
-        return 'error'
 
 
-@app.route('/config/<imageProcessingDB_id>', methods=['GET'])
-def config(imageProcessingDB_id):
-    globalParameter = request.args.get('globalParameter')
-    stepName = request.args.get('stepName')
-    stepParameter = request.args.get('stepParameter')
-    output = getConfigurationsFromDB(imageProcessingDB_id, imageProcessingDB, globalParameter, stepName, stepParameter)
+@app.route('/config/<image_processing_db_id>', methods=['GET'])
+def config(image_processing_db_id):
+    global_parameter = request.args.get('globalParameter')
+    step_name = request.args.get('stepName')
+    step_parameter = request.args.get('stepParameter')
+    output = get_configurations_from_db(image_processing_db_id, image_processing_db, global_parameter, step_name)
     if output == 404:
         abort(404)
     else:
@@ -346,21 +347,23 @@ def config(imageProcessingDB_id):
 @login_required
 def download_settings():
     if request.method == 'POST':
-        postedJson = request.json
-        jobName = ''
-        if 'jobName' in postedJson.keys():
-            jobName = postedJson['jobName']
-            del (postedJson['jobName'])
-        reformattedData = reformatDataToPost(postedJson, False)
-        reformattedData = {'name': jobName,
-                           'steps': reformattedData[0],
+        posted_json = request.json
+        job_name = ''
+        if 'jobName' in posted_json.keys():
+            job_name = posted_json['jobName']
+            del (posted_json['jobName'])
+        reformatted_data = reformat_data_to_post(posted_json, False)
+        reformatted_data = {'name': job_name,
+                           'steps': reformatted_data[0],
                            }
         response = app.response_class(
-            response=json.dumps(reformattedData),
+            response=json.dumps(reformatted_data),
             status=200,
             mimetype='application/json'
         )
+
         return response
+
 
 @app.route('/hide_entries/', methods=['POST'])
 @login_required
@@ -368,52 +371,55 @@ def hide_entries():
     ids_to_hide = request.json
     for i, id_to_hide in enumerate(ids_to_hide):
         ids_to_hide[i] = ObjectId(id_to_hide)
-    output=imageProcessingDB.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}},{"$set":{"hideFromView":1}})
+    image_processing_db.jobs.update_many({"username": current_user.username, "_id": {"$in": ids_to_hide}}, {"$set": {"hideFromView": 1}})
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
-def createDependencyResults(dependencies, configObj):
-    globalParameters = []
-    nonGlobalParameters = []
-    for step in configObj["steps"]:
+def create_dependency_results(dependencies, configuration_object):
+    global_parameters = []
+    non_global_parameters = []
+    for step in configuration_object["steps"]:
         if "GLOBALPARAMETERS" in step.name.upper():
-            globalParameters = [parameter.name for parameter in step.parameter]
+            global_parameters = [parameter.name for parameter in step.parameter]
         else:
-            nonGlobalParameters=nonGlobalParameters+[parameter.name for parameter in step.parameter]
+            non_global_parameters = non_global_parameters + [parameter.name for parameter in step.parameter]
 
     result = []
     for d in dependencies:
-        inputFieldName = d.inputField.name
-        outputFieldName = d.outputField.name
-        if inputFieldName in globalParameters and outputFieldName in nonGlobalParameters:
-        # #     # need to check here, if simple value transfer (for string or float values) or if it's a nested field
-              obj = {}
-              obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
-              obj['output'] = d.outputField.name if d.outputField and d.outputField.name is not None else ''
-              obj['pattern'] = d.pattern if d.pattern is not None else ''
-              obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
-              obj['step']=outputFieldName.split("_")[-1]
-              result.append(obj)
+        input_field_name = d.inputField.name
+        output_field_name = d.outputField.name
+        if input_field_name in global_parameters and output_field_name in non_global_parameters:
+            # #     # need to check here, if simple value transfer (for string or float values) or if it's a nested field
+            obj = {}
+            obj['input'] = d.inputField.name if d.inputField and d.inputField.name is not None else ''
+            obj['output'] = d.outputField.name if d.outputField and d.outputField.name is not None else ''
+            obj['pattern'] = d.pattern if d.pattern is not None else ''
+            obj['formatting'] = d.inputField.formatting if d.inputField.formatting is not None else ''
+            obj['step'] = output_field_name.split("_")[-1]
+            result.append(obj)
     return result
 
-def submissionStatusReturner(submissionStatus):
-    if submissionStatus=="success":
-        return json.dumps({'status': submissionStatus}), 200, {'ContentType': 'application/json'}
+
+def submission_status_returner(submission_status):
+    if submission_status == "success":
+        return json.dumps({'status': submission_status}), 200, {'ContentType': 'application/json'}
     else:
-        return json.dumps({'status': submissionStatus}), 404, {'ContentType': 'application/json'}
+        return json.dumps({'status': submission_status}), 404, {'ContentType': 'application/json'}
+
 
 @app.route('/all_jobs', methods=['GET'])
 @login_required
 def all_jobs():
     return render_template('all_jobs.html')  # used by the job table
 
+
 @app.route('/table_data', methods=['GET'])
 @login_required
 def table_data():
-    showAllJobs = request.args.get('showAllJobs')=='True'
-    updateDBStatesAndTimes(imageProcessingDB,showAllJobs)
-    data = allJobsInJSON(imageProcessingDB,showAllJobs)
-    output={}
+    show_all_jobs = request.args.get('showAllJobs') == 'True'
+    update_db_states_and_times(image_processing_db, show_all_jobs)
+    data = all_jobs_in_json(image_processing_db, show_all_jobs)
+    output = {}
     output['data'] = data
     response = app.response_class(
         response=json.dumps(output),
@@ -422,26 +428,28 @@ def table_data():
     )
     return response
 
-@app.route('/copy_step', methods=['GET','POST'])
+
+@app.route('/copy_step', methods=['GET', 'POST'])
 @login_required
 def copy_step():
     if current_user.username in app.config.get('ADMINS'):
-        originalStepName = request.args.get('from')
-        newStepName = request.args.get('to')
+        original_step_name = request.args.get('from')
+        new_step_name = request.args.get('to')
         description = request.args.get('description')
-        copyStepInDatabase(imageProcessingDB, originalStepName, newStepName, description)
+        copy_step_in_database(image_processing_db, original_step_name, new_step_name, description)
         response = app.response_class(
             status=200,
             mimetype='application/json'
         )
     return response
 
-@app.route('/delete_step_and_references/<stepName>', methods=['GET','POST'])
+
+@app.route('/delete_step_and_references/<step_name>', methods=['GET', 'POST'])
 @login_required
-def delete_step_and_references(stepName):
+def delete_step_and_references(step_name):
     if current_user.username in app.config.get('ADMINS'):
-        if stepName:
-            deleteStepAndReferencesFromDatabase(imageProcessingDB, stepName)
+        if step_name:
+            delete_step_and_references_from_database(image_processing_db, step_name)
         response = app.response_class(
             status=200,
             mimetype='application/json'
@@ -453,6 +461,5 @@ def add_global_dependency_object(configObj):
     dep = Dependency.objects.filter()
     result = []
     if dep is not None:
-        result = createDependencyResults(dep, configObj)
+        result = create_dependency_results(dep, configObj)
     return result
-

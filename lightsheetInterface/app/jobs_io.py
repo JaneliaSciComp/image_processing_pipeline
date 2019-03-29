@@ -7,7 +7,7 @@ from mongoengine.queryset.visitor import Q
 from app.models import Step, Parameter
 from enum import Enum
 from app import app
-from app.utils import submitToJACS, getJobStepData, getParameters
+from app.utils import submit_to_jacs, get_job_step_data, get_parameters
 from bson.objectid import ObjectId
 from collections import OrderedDict
 
@@ -20,323 +20,312 @@ class ParameterTypes(Enum):
 
 
 # change data before job is resubmitted
-def reformatDataToPost(postedData, forSubmission=True):
-    tempReformattedData = []
+def reformat_data_to_post(posted_data, for_submission=True):
+    temp_reformatted_data = []
+    reformatted_data = []
+    remaining_step_names = []
     p = 'parameters'
-    if postedData and postedData != {}:
-        for step in postedData.keys():
+
+    if posted_data and posted_data != {}:
+        for step in posted_data.keys():
             # first part: get the parameter values into lists
-            stepResult = {}
-            stepResult['name'] = step
+            step_result = {}
+            step_result['name'] = step
             # add some optional paramters
-            if 'type' in postedData[step].keys():
-                stepResult['type'] = postedData[step]['type']
-            if 'bindPaths' in postedData[step].keys():
-                stepResult['bindPaths'] = postedData[step]['bindPaths']
-            if 'pause' in postedData[step].keys():
-                stepResult['pause'] = postedData[step]['pause']
-            if forSubmission:
-                stepResult['state'] = 'NOT YET QUEUED'
-            stepParamResult = {}
-            sortedParameters = sorted(postedData[step][p].keys())
+            if 'type' in posted_data[step].keys():
+                step_result['type'] = posted_data[step]['type']
+            if 'bindPaths' in posted_data[step].keys():
+                step_result['bindPaths'] = posted_data[step]['bindPaths']
+            if 'pause' in posted_data[step].keys():
+                step_result['pause'] = posted_data[step]['pause']
+            if for_submission:
+                step_result['state'] = 'NOT YET QUEUED'
+            step_parameter_result = {}
+            sorted_parameters = sorted(posted_data[step][p].keys())
             checkboxes = []
-            for parameterKey in sortedParameters:
+            for parameter_key in sorted_parameters:
                 # Find checkboxes and deal with them separately
-                if 'checkbox' in parameterKey:
-                    checkboxes.append(parameterKey);
-                paramType = None
-                range = False
+                if 'checkbox' in parameter_key:
+                    checkboxes.append(parameter_key)
+                parameter_type = None
 
                 q = Parameter.objects.filter(Q(formatting='F') & (
-                        Q(name=parameterKey.split('-')[0]) | Q(name=parameterKey.split('-')[0] + '_' + step)))
+                        Q(name=parameter_key.split('-')[0]) | Q(name=parameter_key.split('-')[0] + '_' + step)))
                 if (len(q) != 0):  # this parameter is a range parameter
-                    paramType = ParameterTypes.flag
+                    parameter_type = ParameterTypes.flag
 
                 # First test if it's a nested parameter
-                if '-' in parameterKey:  # check, whether this is a range parameter
-                    splitRest = parameterKey.split('-')
+                if '-' in parameter_key:  # check, whether this is a range parameter
+                    split_rest = parameter_key.split('-')
                     q = Parameter.objects.filter(Q(formatting='R') & (
-                            Q(name=parameterKey.split('-')[0]) | Q(name=parameterKey.split('-')[0] + '_' + step)))
+                            Q(name=parameter_key.split('-')[0]) | Q(name=parameter_key.split('-')[0] + '_' + step)))
                     if (len(q) != 0):  # this parameter is a range parameter
-                        paramType = ParameterTypes.rangeParam
-                        range = True
+                        parameter_type = ParameterTypes.rangeParam
 
                 # Then check if stepname is part of parameter name
-                if '_' in parameterKey:
+                if '_' in parameter_key:
                     # TODO: check, if part after underscore is really a step name or _ part of parameter name
-                    split = parameterKey.rsplit('_',1)
+                    split = parameter_key.rsplit('_', 1)
                     parameter = split[0]
                 else:
-                    parameter = parameterKey;
-                # parameter = parameter.split('-')[0]
+                    parameter = parameter_key
 
-                rangeParam = False
-                if paramType and paramType == ParameterTypes.rangeParam:
-                    rangeParam = True
-                    if parameter in stepParamResult:
-                        paramValueSet = stepParamResult[parameter]  # get the existing object
+                range_parameter = False
+                if parameter_type and parameter_type == ParameterTypes.rangeParam:
+                    range_parameter = True
+                    if parameter in step_parameter_result:
+                        param_value_set = step_parameter_result[parameter]  # get the existing object
                     else:
-                        paramValueSet = {}  # create a new object
+                        param_value_set = {}  # create a new object
                     # move the parts of the range parameter to the right key of the object
-                    if splitRest[1] == 'start' or splitRest[1] == 'end' or splitRest[1] == 'every':
-                        currValue = postedData[step][p][parameterKey]
-                        if currValue == "empty":
-                            rangeParam = False
+                    if split_rest[1] == 'start' or split_rest[1] == 'end' or split_rest[1] == 'every':
+                        current_value = posted_data[step][p][parameter_key]
+                        if current_value == "empty":
+                            range_parameter = False
                         else:
-                            if splitRest[1] == 'start':
-                                paramValueSet['start'] = float(
-                                    currValue) if currValue is not '' and currValue != "[]" else ''
-                            elif splitRest[1] == 'end':
-                                paramValueSet['end'] = float(
-                                    currValue) if currValue is not '' and currValue != "[]" else ''
-                            elif splitRest[1] == 'every':
-                                paramValueSet['every'] = float(
-                                    currValue) if currValue is not '' and currValue != "[]" else ''
-                    if rangeParam:
+                            if split_rest[1] == 'start':
+                                param_value_set['start'] = float(current_value) if current_value is not '' and current_value != "[]" else ''
+                            elif split_rest[1] == 'end':
+                                param_value_set['end'] = float(current_value) if current_value is not '' and current_value != "[]" else ''
+                            elif split_rest[1] == 'every':
+                                param_value_set['every'] = float(current_value) if current_value is not '' and current_value != "[]" else ''
+                    if range_parameter:
                         # update the object
-                        stepParamResult[parameter] = paramValueSet
+                        step_parameter_result[parameter] = param_value_set
 
-                if not rangeParam:  # no range
-                    if parameter in stepParamResult:
-                        paramValueSet = stepParamResult[parameter]
+                if not range_parameter:  # no range
+                    if parameter in step_parameter_result:
+                        param_value_set = step_parameter_result[parameter]
                     else:
-                        paramValueSet = []
-                    if not paramValueSet:
-                        paramValueSet = []
-                    stepParamResult[parameter] = paramValueSet
+                        param_value_set = []
+                    if not param_value_set:
+                        param_value_set = []
+                    step_parameter_result[parameter] = param_value_set
 
                     # if paramType and paramType == ParameterTypes.flag:
                     # TODO: 'cope with flag parameters when submitting the job'
 
                     # check if current value is a float within a string and needs to be converted
-                    currentValue = postedData[step][p][parameterKey]
-                    if re.match("[-+]?[0-9]*\.?[0-9]*.$", currentValue) is None:  # no float
+                    current_value = posted_data[step][p][parameter_key]
+                    if re.match("[-+]?[0-9]*\.?[0-9]*.$", current_value) is None:  # no float
                         try:
-                            tmp = json.loads(currentValue)
-                            paramValueSet.append(tmp)
+                            tmp = json.loads(current_value)
+                            param_value_set.append(tmp)
                         except ValueError:
-                            paramValueSet.append(currentValue)
+                            param_value_set.append(current_value)
                     else:  # it's actual a float value -> get the value
-                        paramValueSet.append(float(currentValue))
+                        param_value_set.append(float(current_value))
 
-            checkboxesClean = []
-            for param in checkboxes:
-                if postedData[step][p][param] == 'true':
-                    checkboxesClean.append(param.split('-')[1].split('_')[0])
+            checkboxes_clean = []
+            for parameter in checkboxes:
+                if posted_data[step][p][parameter] == 'true':
+                    checkboxes_clean.append(parameter.split('-')[1].split('_')[0])
 
-            if 'emptycheckbox' in stepParamResult.keys():
-                stepParamResult.pop('emptycheckbox')
+            if 'emptycheckbox' in step_parameter_result.keys():
+                step_parameter_result.pop('emptycheckbox')
 
             # cleanup step / second part: for lists with just one element, get the element
-            for param in stepParamResult:
-                if param in checkboxesClean:
-                    stepParamResult[param] = []
+            for parameter in step_parameter_result:
+                if parameter in checkboxes_clean:
+                    step_parameter_result[parameter] = []
                 else:
-                    if type(stepParamResult[param]) is list:
-                        if len(stepParamResult[param]) == 1:
-                            stepParamResult[param] = stepParamResult[param][0]
+                    if type(step_parameter_result[parameter]) is list:
+                        if len(step_parameter_result[parameter]) == 1:
+                            step_parameter_result[parameter] = step_parameter_result[parameter][0]
                         else:
-                            for elem in stepParamResult[param]:
-                                if elem == "" and len(set(stepParamResult[param])) == 1:
-                                    stepParamResult[param] = []
-                                    break;
-            stepResult['parameters'] = stepParamResult
-            tempReformattedData.append(OrderedDict(stepResult))
+                            for elem in step_parameter_result[parameter]:
+                                if elem == "" and len(set(step_parameter_result[parameter])) == 1:
+                                    step_parameter_result[parameter] = []
+                                    break
+            step_result['parameters'] = step_parameter_result
+            temp_reformatted_data.append(OrderedDict(step_result))
 
-            app.logger.info(tempReformattedData)
-            # globalParametersPosted = next((step["parameters"] for step in processedDataTemp if step["name"]=="globalParameters"),None)
-            reformattedData = []
-            remainingStepNames = [];
-            allSteps = Step.objects.all().order_by('order')
-            if allSteps:
-                for step in allSteps:
-                    currentStepDictionary = next((dictionary for dictionary in tempReformattedData if dictionary["name"] == step.name), None)
-                    if currentStepDictionary:
-                        currentStepDictionary["codeLocation"]= step.codeLocation if step.codeLocation else ""
-                        if step.steptype == "Sp":
-                            currentStepDictionary["entryPointForSpark"] = step.entryPointForSpark
-                        if step.submit:
-                            remainingStepNames.append(currentStepDictionary["name"])
-                        reformattedData.append(currentStepDictionary)
-    return reformattedData, remainingStepNames
+            app.logger.info(temp_reformatted_data)
+
+        all_steps = Step.objects.all().order_by('order')
+        if all_steps:
+            for step in all_steps:
+                current_step_dictionary = next((dictionary for dictionary in temp_reformatted_data if dictionary["name"] == step.name), None)
+                if current_step_dictionary:
+                    current_step_dictionary["codeLocation"] = step.codeLocation if step.codeLocation else ""
+                    if step.steptype == "Sp":
+                        current_step_dictionary["entryPointForSpark"] = step.entryPointForSpark
+                    if step.submit:
+                        remaining_step_names.append(current_step_dictionary["name"])
+                    reformatted_data.append(current_step_dictionary)
+
+    return reformatted_data, remaining_step_names
 
 
 # new parse data, don't create any flask forms
-def parseJsonDataNoForms(data, stepName, config):
-    step = [step for step in config['steps'] if step['name'] == stepName]
-    stepParameters = getParameters(step[0].parameter)
+def parse_json_data_no_forms(data, step_name, config):
+    step = [step for step in config['steps'] if step['name'] == step_name]
+    step_parameters = get_parameters(step[0].parameter)
     # Check structure of incoming data
     if 'parameters' in data:
-        parameterData = data['parameters']
+        parameter_data = data['parameters']
     else:
-        parameterData = data
-    keys = parameterData.keys()
-    fsrDictionary = {'F':'frequent','S':'sometimes','R':'rare'}
-    result = {}
-    result['frequent'] = {}
-    result['sometimes'] = {}
-    result['rare'] = {}
-    if keys != None:
+        parameter_data = data
+
+    keys = parameter_data.keys()
+    fsr_dictionary = {'F': 'frequent', 'S': 'sometimes', 'R': 'rare'}
+    result = {'frequent': {}, 'sometimes': {}, 'rare': {}}
+    if keys is not None:
         # For each key, look up the parameter type and add parameter to the right type of form based on that:
         for key in keys:
-            keyWithAppendedStepNameAssured = key.rsplit('_',1)[0] + '_' + stepName
-            param = [param for param in stepParameters if param['name']==keyWithAppendedStepNameAssured]
+            key_with_appended_step_name_assured = key.rsplit('_', 1)[0] + '_' + step_name
+            param = [param for param in step_parameters if param['name'] == key_with_appended_step_name_assured]
             if param and key:  # check if key now exists
-                param=param[0]
-                if type(parameterData[key]) is list and len(parameterData[key]) == 0:
-                    parameterData[key] = ''
-                elif parameterData[key] == 'None':
-                    parameterData[key] = ''
-                frequency = fsrDictionary[param['frequency']]
-                result[frequency][key] = {}
-                result[frequency][key]['config'] = param
-                result[frequency][key]['data'] = parameterData[key]
+                param = param[0]
+                if type(parameter_data[key]) is list and len(parameter_data[key]) == 0:
+                    parameter_data[key] = ''
+                elif parameter_data[key] == 'None':
+                    parameter_data[key] = ''
+                frequency = fsr_dictionary[param['frequency']]
+                result[frequency][key] = {'config': param, 'data': parameter_data[key]}
 
     return result
 
 
 # If a job is submitted (POST request) then we have to save parameters to json files and to a database and submit the job
-def doThePost(config_server_url, formJson, reparameterize, imageProcessingDB, imageProcessingDB_id,
-              submissionAddress=None, stepOrTemplateName=None):
-    app.logger.info('Post json data: {0}'.format(formJson))
-    app.logger.info('Current Step Or Template: {0}'.format(stepOrTemplateName))
+def do_the_post(config_server_url, form_json, reparameterize, image_processing_db, image_processing_db_id,
+                submission_address=None, step_or_template_name=None):
+    app.logger.info('Post json data: {0}'.format(form_json))
+    app.logger.info('Current Step Or Template: {0}'.format(step_or_template_name))
 
-    if formJson != '[]' and formJson != None:
-        userDefinedJobName = []
-
+    if form_json != '[]' and form_json is not None:
         # get the name of the job first
-        jobName = ''
-        if 'jobName' in formJson.keys():
-            jobName = formJson['jobName']
-            del (formJson['jobName'])
+        job_name = ''
+        if 'jobName' in form_json.keys():
+            job_name = form_json['jobName']
+            del (form_json['jobName'])
 
-        # delete the jobName entry from the dictionary so that the other entries are all steps
-        jobSteps = list(formJson.keys())
-        processedData, remainingStepNames = reformatDataToPost(formJson)
+        processed_data, remaining_step_names = reformat_data_to_post(form_json)
         # Prepare the db data
-        dataToPostToDB = {
-            "jobName": jobName,
-            "username":current_user.username,
-            "submissionAddress": submissionAddress,
-            "stepOrTemplateName": stepOrTemplateName,
+        data_to_post_to_db = {
+            "jobName": job_name,
+            "username": current_user.username,
+            "submissionAddress": submission_address,
+            "stepOrTemplateName": step_or_template_name,
             "state": "NOT YET QUEUED",
             "containerVersion": "placeholder",
-            "remainingStepNames": remainingStepNames,
-            "steps": processedData
+            "remainingStepNames": remaining_step_names,
+            "steps": processed_data
         }
-
-        #for step in processedData:
-            #if step["type"] != "Lightsheet"
 
         # Insert the data to the db
         if reparameterize:
-            imageProcessingDB_id = ObjectId(imageProcessingDB_id)
-            subDict = {k: dataToPostToDB[k] for k in (
+            image_processing_db_id = ObjectId(image_processing_db_id)
+            sub_dict = {k: data_to_post_to_db[k] for k in (
                 'jobName', 'submissionAddress', 'stepOrTemplateName', 'state', 'containerVersion',
                 'remainingStepNames')}
-            imageProcessingDB.jobs.update_one({"_id": imageProcessingDB_id}, {"$set": subDict})
-            for currentStepDictionary in processedData:
-                update_output = imageProcessingDB.jobs.update_one(
-                    {"_id": imageProcessingDB_id, "steps.name": currentStepDictionary["name"]},
-                    {"$set": {"steps.$": currentStepDictionary}})
-                if update_output.matched_count==0: #Then new step
-                    imageProcessingDB.jobs.update_one(
-                        {"_id": imageProcessingDB_id},
-                        {"$push": {"steps": currentStepDictionary}})
+            image_processing_db.jobs.update_one({"_id": image_processing_db_id}, {"$set": sub_dict})
+            for current_step_dictionary in processed_data:
+                update_output = image_processing_db.jobs.update_one(
+                    {"_id": image_processing_db_id, "steps.name": current_step_dictionary["name"]},
+                    {"$set": {"steps.$": current_step_dictionary}})
+                if update_output.matched_count == 0:  # Then new step
+                    image_processing_db.jobs.update_one(
+                        {"_id": image_processing_db_id},
+                        {"$push": {"steps": current_step_dictionary}})
 
         else:
-            imageProcessingDB_id = imageProcessingDB.jobs.insert_one(dataToPostToDB).inserted_id
+            image_processing_db_id = image_processing_db.jobs.insert_one(data_to_post_to_db).inserted_id
 
-        submissionStatus = submitToJACS(config_server_url, imageProcessingDB, imageProcessingDB_id, reparameterize)
-        return submissionStatus
+        submission_status = submit_to_jacs(config_server_url, image_processing_db, image_processing_db_id, reparameterize)
+        return submission_status
 
 
-def loadPreexistingJob(imageProcessingDB, imageProcessingDB_id, reparameterize, configObj):
-    loadStatus = None
+def load_preexisting_job(image_processing_db, image_processing_db_id, reparameterize, configuration_object):
+    load_status = None
+    pipeline_steps = OrderedDict()
+    job_data = get_job_step_data(image_processing_db_id, image_processing_db)  # get the data for all jobs
+    preexisting_job_username = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}, {"username": 1}))
+    username = preexisting_job_username[0]["username"]
+    able_to_reparameterize = True
+    succeded_but_latter_step_failed = []
 
-    pipelineSteps = OrderedDict()
-    jobData = getJobStepData(imageProcessingDB_id, imageProcessingDB)  # get the data for all jobs
-    preexistingJobUsername = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},{"username": 1}))
-    username = preexistingJobUsername[0]["username"]
-    ableToReparameterize = True
-    succededButLatterStepFailed = []
-    if jobData:
-        globalParametersAndRemainingStepNames = list(
-            imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},
-                                        {"remainingStepNames": 1, "globalParameters": 1}))
-        if ("pause" in jobData[-1] and jobData[-1]["pause"] == 0 and jobData[-1]["state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in jobData):
-            ableToReparameterize = False
-        errorStepIndex = next((i for i, step in enumerate(jobData) if step["state"] == "ERROR"), None)
-        if errorStepIndex:
-            for i in range(errorStepIndex):
-                succededButLatterStepFailed.append(jobData[i]["name"])
-    jobName = None
-    if reparameterize == "true" and imageProcessingDB_id:
-        jobName = list(imageProcessingDB.jobs.find({"_id": ObjectId(imageProcessingDB_id)},{"_id":0, "jobName":1}))
-        jobName = jobName[0]["jobName"]
+    if job_data:
+        global_parameters_and_remaining_step_names = list(
+            image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)},
+                                          {"remainingStepNames": 1, "globalParameters": 1}))
+        if ("pause" in job_data[-1] and job_data[-1]["pause"] == 0 and job_data[-1]["state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in job_data):
+            able_to_reparameterize = False
+        error_step_index = next((i for i, step in enumerate(job_data) if step["state"] == "ERROR"), None)
+        if error_step_index:
+            for i in range(error_step_index):
+                succeded_but_latter_step_failed.append(job_data[i]["name"])
+    job_name = None
+
+    if reparameterize == "true" and image_processing_db_id:
+        job_name = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}, {"_id": 0, "jobName": 1}))
+        job_name = job_name[0]["jobName"]
         reparameterize = True
-        remainingStepNames = globalParametersAndRemainingStepNames[0]["remainingStepNames"]
-        if not ableToReparameterize:
+        remaining_step_names = global_parameters_and_remaining_step_names[0]["remainingStepNames"]
+        if not able_to_reparameterize:
             abort(404)
     else:
         reparameterize = False
 
     # match data on step name
-    if type(jobData) is list:
-        if imageProcessingDB_id != None:  # load data for an existing job
-            for i in range(len(jobData)):
-                if 'name' in jobData[i]:
+    if type(job_data) is list:
+        if image_processing_db_id != None:  # load data for an existing job
+            for i in range(len(job_data)):
+                if 'name' in job_data[i]:
                     # go through all steps and find those, which are used by the current job
-                    currentStep = jobData[i]['name']
-                    step = Step.objects(name=currentStep).first()
-                    checkboxState = 'checked'
-                    collapseOrShow = 'show'
-                    stepData = jobData[i]
-                    if ("globalparameters" not in currentStep.lower()) and reparameterize and ((currentStep not in remainingStepNames) or (currentStep in succededButLatterStepFailed)):
-                        checkboxState = 'unchecked'
-                        collapseOrShow = ''
-                    if stepData:
-                        loadedParameters = parseJsonDataNoForms(stepData, currentStep, configObj)
+                    current_step = job_data[i]['name']
+                    step = Step.objects(name=current_step).first()
+                    checkbox_state = 'checked'
+                    collapse_or_show = 'show'
+                    step_data = job_data[i]
+                    if ("globalparameters" not in current_step.lower()) and reparameterize and ((current_step not in remaining_step_names) or (current_step in succeded_but_latter_step_failed)):
+                        checkbox_state = 'unchecked'
+                        collapse_or_show = ''
+                    if step_data:
+                        loaded_parameters = parse_json_data_no_forms(step_data, current_step, configuration_object)
                         # Pipeline steps is passed to index.html for formatting the html based
-                        pipelineSteps[currentStep] = {
-                            'stepName': currentStep,
+                        pipeline_steps[current_step] = {
+                            'stepName': current_step,
                             'stepDescription': step.description,
-                            'pause': jobData[i]['pause'] if 'pause' in jobData[i] else 0,
+                            'pause': job_data[i]['pause'] if 'pause' in job_data[i] else 0,
                             'inputJson': None,
-                            'checkboxState': checkboxState,
-                            'collapseOrShow': collapseOrShow,
-                            'loadedParameters': loadedParameters
+                            'checkboxState': checkbox_state,
+                            'collapseOrShow': collapse_or_show,
+                            'loadedParameters': loaded_parameters
                         }
-    elif type(jobData) is dict:
-        loadStatus = 'Job cannot be loaded.'
+    elif type(job_data) is dict:
+        load_status = 'Job cannot be loaded.'
 
-    return pipelineSteps, loadStatus, jobName, username
+    return pipeline_steps, load_status, job_name, username
 
-def loadUploadedConfig(uploadedContent, configObj):
-    pipelineSteps = OrderedDict()
-    if 'steps' in uploadedContent:
-        steps = uploadedContent['steps']
+
+def load_uploaded_config(uploaded_content, configuration_object):
+    pipeline_steps = OrderedDict()
+    if 'steps' in uploaded_content:
+        steps = uploaded_content['steps']
         for s in steps:
             name = s['name']
-            stepConfig = [step for step in configObj['steps'] if step['name'] == name]
-            stepConfig = stepConfig[0]
-            loadedParameters = parseJsonDataNoForms(s, name, configObj)
+            step_config = [step for step in configuration_object['steps'] if step['name'] == name]
+            step_config = step_config[0]
+            loaded_parameters = parse_json_data_no_forms(s, name, configuration_object)
             # Pipeline steps is passed to index.html for formatting the html based
-            pipelineSteps[name] = {
+            pipeline_steps[name] = {
                 'stepName': name,
-                'stepDescription': stepConfig,
+                'stepDescription': step_config,
                 'inputJson': None,
                 'state': False,
                 'checkboxState': 'checked',
                 'collapseOrShow': 'show',
-                'loadedParameters': loadedParameters
+                'loadedParameters': loaded_parameters
             }
+
     step_name = None
     template_name = None
-    if 'stepOrTemplateName' in uploadedContent:
-        stepOrTemplateName = uploadedContent["stepOrTemplateName"]
-        if stepOrTemplateName.find("Step: ", 0, 6) != -1:
-            step_name = stepOrTemplateName[6:]
+    if 'stepOrTemplateName' in uploaded_content:
+        step_or_template_name = uploaded_content["stepOrTemplateName"]
+        if step_or_template_name.find("Step: ", 0, 6) != -1:
+            step_name = step_or_template_name[6:]
         else:
-            template_name = stepOrTemplateName[10:]
-    return pipelineSteps, step_name, template_name
+            template_name = step_or_template_name[10:]
+
+    return pipeline_steps, step_name, template_name
