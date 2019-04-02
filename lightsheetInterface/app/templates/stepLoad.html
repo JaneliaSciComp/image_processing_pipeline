@@ -49,7 +49,7 @@
                     {% else %}
                         <div role="tabpanel" class="tab-pane lightsheet-tab" id="{{ panel }}-{{ step.name }}">
                     {% endif %}
-                    {% for parameter in step.parameter %} <!-- TODO: Loop over parameters in outer loop --!>
+                    {% for parameter in step.parameter %} <!-- TODO: Loop over parameters in outer loop and move "data" creation in django to separate function/file --!>
                     {% if parameter.frequency == panel[0].upper() %}
                         {% set keyForProvidedStep = parameter.name.rpartition("_")[0] %}
                         {% set defaultValue={} %}
