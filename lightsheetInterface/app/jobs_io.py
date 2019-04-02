@@ -178,44 +178,44 @@ def do_the_post(config_server_url, form_json, reparameterize, image_processing_d
 def load_preexisting_job(image_processing_db, image_processing_db_id, reparameterize, configuration_object):
     load_status = None
     pipeline_steps = OrderedDict()
-    job_data = get_job_step_data(image_processing_db_id, image_processing_db)  # get the data for all jobs
-    username = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}, {"username": 1}))[0]["username"]
+    job_step_data = get_job_step_data(image_processing_db_id, image_processing_db)  # get the data for all jobs
+    relevant_job_information = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}, {"username": 1, "remainingStepNames":1, "jobName":1}))[0]
+    username = relevant_job_information['username']
     able_to_reparameterize = True
     succeded_but_latter_step_failed = []
 
-    if job_data:
-        global_parameters_and_remaining_step_names = list(
-            image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)},
-                                          {"remainingStepNames": 1, "globalParameters": 1}))
-        if ("pause" in job_data[-1] and job_data[-1]["pause"] == 0 and job_data[-1]["state"] == "SUCCESSFUL") or any((step["state"] in "RUNNING CREATED") for step in job_data):
+    if job_step_data:
+        if (job_step_data[-1]["pause"] == 0 and job_step_data[-1]["state"] == "SUCCESSFUL") \
+                or any((step["state"] in "RUNNING CREATED") for step in job_step_data):
+            #Can't reparameterize if last step already completed successfully or if any step hasn't stopped
             able_to_reparameterize = False
-        error_step_index = next((i for i, step in enumerate(job_data) if step["state"] == "ERROR"), None)
+
+        error_step_index = next((i for i, step in enumerate(job_step_data) if step["state"] == "ERROR"), None)
         if error_step_index:
             for i in range(error_step_index):
-                succeded_but_latter_step_failed.append(job_data[i]["name"])
-    job_name = None
+                succeded_but_latter_step_failed.append(job_step_data[i]["name"])
 
+    job_name = None
     if reparameterize == "true" and image_processing_db_id:
-        job_name = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}, {"_id": 0, "jobName": 1}))
-        job_name = job_name[0]["jobName"]
+        job_name = relevant_job_information['jobName']
         reparameterize = True
-        remaining_step_names = global_parameters_and_remaining_step_names[0]["remainingStepNames"]
+        remaining_step_names = relevant_job_information["remainingStepNames"]
         if not able_to_reparameterize:
             abort(404)
     else:
         reparameterize = False
 
     # match data on step name
-    if type(job_data) is list:
+    if type(job_step_data) is list:
         if image_processing_db_id != None:  # load data for an existing job
-            for i in range(len(job_data)):
-                if 'name' in job_data[i]:
+            for i in range(len(job_step_data)):
+                if 'name' in job_step_data[i]:
                     # go through all steps and find those, which are used by the current job
-                    current_step = job_data[i]['name']
+                    current_step = job_step_data[i]['name']
                     step = Step.objects(name=current_step).first()
                     checkbox_state = 'checked'
                     collapse_or_show = 'show'
-                    step_data = job_data[i]
+                    step_data = job_step_data[i]
                     if ("globalparameters" not in current_step.lower()) and reparameterize and ((current_step not in remaining_step_names) or (current_step in succeded_but_latter_step_failed)):
                         checkbox_state = 'unchecked'
                         collapse_or_show = ''
@@ -225,13 +225,13 @@ def load_preexisting_job(image_processing_db, image_processing_db_id, reparamete
                         pipeline_steps[current_step] = {
                             'stepName': current_step,
                             'stepDescription': step.description,
-                            'pause': job_data[i]['pause'] if 'pause' in job_data[i] else 0,
+                            'pause': job_step_data[i]['pause'] if 'pause' in job_step_data[i] else 0,
                             'inputJson': None,
                             'checkboxState': checkbox_state,
                             'collapseOrShow': collapse_or_show,
                             'loadedParameters': loaded_parameters
                         }
-    elif type(job_data) is dict:
+    elif type(job_step_data) is dict:
         load_status = 'Job cannot be loaded.'
 
     return pipeline_steps, load_status, job_name, username
