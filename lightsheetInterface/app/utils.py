@@ -290,7 +290,7 @@ def update_db_states_and_times(image_processing_db, show_all_jobs=False):
                                     set_dictionary = {"steps.$.state": current_child_job_info_from_jacs["state"],
                                                       "steps.$.creationTime": creation_time.strftime("%Y-%m-%d %H:%M:%S"),
                                                       "steps.$.elapsedTime": str(datetime.now(EASTERN_TIMEZONE).replace(microsecond=0) - creation_time),
-                                                      "steps.$._id": current_child_job_info_from_jacs["_id"]}
+                                                      "steps.$._id": (current_child_job_info_from_jacs["_id"] if "_id" in current_child_job_info_from_jacs else current_child_job_info_from_jacs["id"])}
 
                                     if current_child_job_info_from_jacs["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:  # Add endTime and elapsedTime
                                         end_time = convert_jacs_time(current_child_job_info_from_jacs["modificationDate"])
@@ -436,10 +436,7 @@ def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_r
         request_output_jsonified = request_output.json()
         creation_date = job_id.generation_time
         creation_date = str(creation_date.replace(tzinfo=UTC_TIMEZONE).astimezone(EASTERN_TIMEZONE))
-        if 'id' in request_output_jsonified:
-            jacs_id = request_output_jsonified['id']
-        else:
-            jacs_id = request_output_jsonified['_id']
+        jacs_id = request_output_jsonified['_id'] if '_id' in request_output_jsonified else request_output_jsonified['id']
 
         if continue_or_reparameterize:
             image_processing_db.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
@@ -450,9 +447,6 @@ def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_r
                 "$set": {"jacs_id": [jacs_id], "configAddress": config_address,
                          "creationDate": creation_date[:-6]}})
 
-        # JACS service states
-        # if any are not Canceled, timeout, error, or successful then
-        # updateLightsheetDatabaseStatus
         update_db_states_and_times(image_processing_db)
         submission_status = "success"
     except requests.exceptions.RequestException:
