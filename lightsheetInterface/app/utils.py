@@ -20,23 +20,21 @@ UTC_TIMEZONE = timezone('UTC')
 
 
 # collect the information about existing job used by the job_status page
-def get_job_info_from_db(image_processing_db, _id=None, parent_or_child="parent"):
+def get_job_info_from_db(image_processing_db, _id, parent_or_child):
     all_steps = Step.objects.all()
-    if _id:
-        _id = ObjectId(_id)
+    _id = ObjectId(_id)
 
     if parent_or_child == "parent":
         parent_job_info = list(image_processing_db.jobs.find({"username": current_user.username, "hideFromView": {"$ne": 1}}, {"configAddress": 1, "state": 1, "jobName": 1, "remainingStepNames": 1,
                                                                                                                                "creationDate": 1, "jacs_id": 1, "steps.name": 1,
                                                                                                                                "steps.state": 1}))
         for current_job_info in parent_job_info:
-            selected_step_names = ''
+            selected_step_names = []
             for step in current_job_info["steps"]:
                 step_template = next((step_template for step_template in all_steps if step_template.name == step["name"]), None)
                 if step_template == None or step_template.submit:  # None implies a deprecated name
-                    selected_step_names = selected_step_names + step["name"] + ','
-            selected_step_names = selected_step_names[:-1]
-            current_job_info.update({'selectedStepNames': selected_step_names})
+                    selected_step_names.append(step["name"])
+            current_job_info.update({'selectedStepNames': ",".join(selected_step_names)})
             current_job_info.update({"selected": ""})
             if _id:
                 if current_job_info["_id"] == _id:
@@ -89,21 +87,21 @@ def map_jobs_to_dictionary(x, all_steps):
             result['stepOrTemplateName'] = ''
             result["jobType"] = ''
 
-    result['selectedSteps'] = {'names': '', 'states': '', 'submissionAddress': ''}
+    result['selectedSteps'] = {'names': [], 'states': [], 'submissionAddress': ''}
     for i, step in enumerate(x["steps"]):
         step_template = next((step_template for step_template in all_steps if step_template.name == step["name"]), None)
         if step_template == None or step_template.submit:  # None implies a deprecated name
             result['selectedSteps']['submissionAddress'] = result['submissionAddress']
-            result['selectedSteps']['names'] = result['selectedSteps']['names'] + step["name"] + ','
-            result['selectedSteps']['states'] = result['selectedSteps']['states'] + step["state"] + ','
+            result['selectedSteps']['names'].append(step["name"])
+            result['selectedSteps']['states'].append(step["state"])
             if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED", "DISPATCHED"]:
                 if step["name"] in x['remainingStepNames']:
-                    result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESET,'
+                    result['selectedSteps']['states'].append('RESET')
             elif "pause" in step and step['pause'] and step['state'] == "SUCCESSFUL":
                 if step["name"] in x['remainingStepNames']:
-                    result['selectedSteps']['states'] = result['selectedSteps']['states'] + 'RESUME,RESET,'
-    result['selectedSteps']['names'] = result['selectedSteps']['names'][:-1]
-    result['selectedSteps']['states'] = result['selectedSteps']['states'][:-1]
+                    result['selectedSteps']['states'].append('RESUME,RESET')
+    result['selectedSteps']['names'] = ",".join(result['selectedSteps']['names'])
+    result['selectedSteps']['states'] = ",".join(result['selectedSteps']['states'])
     return result
 
 
