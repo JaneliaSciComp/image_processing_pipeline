@@ -20,15 +20,32 @@ UTC_TIMEZONE = timezone('UTC')
 
 
 # collect the information about existing job used by the job_status page
-def get_job_info_from_db(image_processing_db, _id, parent_or_child):
-    all_steps = Step.objects.all()
+def get_job_information(image_processing_db, _id, parent_or_child):
     _id = ObjectId(_id)
+    job_information_from_db = get_job_information_from_db(image_processing_db, _id, parent_or_child)
+    return add_fields_to_job_information_from_db(parent_or_child, job_information_from_db, _id)
 
+
+def get_job_information_from_db(image_processing_db, _id, parent_or_child):
     if parent_or_child == "parent":
-        parent_job_info = list(image_processing_db.jobs.find({"username": current_user.username, "hideFromView": {"$ne": 1}}, {"configAddress": 1, "state": 1, "jobName": 1, "remainingStepNames": 1,
-                                                                                                                               "creationDate": 1, "jacs_id": 1, "steps.name": 1,
-                                                                                                                               "steps.state": 1}))
-        for current_job_info in parent_job_info:
+        job_information_from_db = list(image_processing_db.jobs.find({"username": current_user.username, "hideFromView": {"$ne": 1}}, {"configAddress": 1, "state": 1, "jobName": 1, "remainingStepNames": 1,
+                                                                                                                                "creationDate": 1, "jacs_id": 1, "steps.name": 1,
+                                                                                                                                "steps.state": 1}))
+    else:
+        job_information_from_db = list(image_processing_db.jobs.find({"username": current_user.username, "_id": _id},
+                                                              {"remainingStepNames": 1, "stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
+                                                               "steps.creationTime": 1, "steps.endTime": 1,
+                                                               "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
+                                                               "steps.pause": 1, "steps._id": 1}))
+        job_information_from_db = job_information_from_db[0]
+
+    return job_information_from_db
+
+
+def add_fields_to_job_information_from_db(parent_or_child, job_information_from_db, _id):
+    all_steps = Step.objects.all()
+    if parent_or_child == "parent":
+        for current_job_info in job_information_from_db:
             selected_step_names = []
             for step in current_job_info["steps"]:
                 step_template = next((step_template for step_template in all_steps if step_template.name == step["name"]), None)
@@ -36,73 +53,25 @@ def get_job_info_from_db(image_processing_db, _id, parent_or_child):
                     selected_step_names.append(step["name"])
             current_job_info.update({'selectedStepNames': ",".join(selected_step_names)})
             current_job_info.update({"selected": ""})
-            if _id:
-                if current_job_info["_id"] == _id:
-                    current_job_info.update({"selected": "selected"})
-        return parent_job_info
-    elif parent_or_child == "child" and _id:
+            if current_job_info["_id"] == _id:
+                current_job_info.update({"selected": "selected"})
+        return job_information_from_db
+    elif parent_or_child == "child":
         child_job_info = []
-        temp_list = list(image_processing_db.jobs.find({"username": current_user.username, "_id": _id},
-                                                       {"remainingStepNames": 1, "stepOrTemplateName": 1, "steps.name": 1, "steps.state": 1,
-                                                        "steps.creationTime": 1, "steps.endTime": 1,
-                                                        "steps.elapsedTime": 1, "steps.logAndErrorPath": 1,
-                                                        "steps.pause": 1, "steps._id": 1}))
-        temp_list = temp_list[0]
-        remaining_step_names = temp_list["remainingStepNames"]
-        for step in temp_list["steps"]:
+        remaining_step_names = job_information_from_db["remainingStepNames"]
+        for step in job_information_from_db["steps"]:
             step_template = next((stepTemplate for stepTemplate in all_steps if stepTemplate.name == step["name"]), None)
             if step_template == None or step_template.submit:  # None implies a deprecated name
                 child_job_info.append(step)
-        if 'stepOrTemplateName' in temp_list and temp_list['stepOrTemplateName'] is not None:
-            step_or_template_name = temp_list["stepOrTemplateName"]
-            step_or_template_name_path = step_or_template_name_path_maker(step_or_template_name)
+        if 'stepOrTemplateName' in job_information_from_db and job_information_from_db['stepOrTemplateName'] is not None:
+            step_or_template_name = job_information_from_db["stepOrTemplateName"]
+            step_or_template_name_path = step_or_template_name_url_maker(step_or_template_name)
         else:
             step_or_template_name = ''
             step_or_template_name_path = ''
         return step_or_template_name, step_or_template_name_path, child_job_info, remaining_step_names
     else:
         return 404
-
-
-# build result object of existing job information
-def map_jobs_to_dictionary(x, all_steps):
-    result = {}
-    all_parameters = ['username', 'jobName', 'username', 'creationDate', 'state', 'jacs_id', '_id', 'submissionAddress', 'stepOrTemplateName']
-    for current_parameter in all_parameters:
-        if current_parameter in x:
-            if current_parameter == '_id':
-                result['id'] = str(x[current_parameter]) if str(x[current_parameter]) is not None else ''
-            elif current_parameter == 'stepOrTemplateName':
-                if x['stepOrTemplateName'] is not None:
-                    result['stepOrTemplateName'] = step_or_template_name_path_maker(x['stepOrTemplateName'])
-                    result["jobType"] = x['stepOrTemplateName']
-                else:
-                    result['stepOrTemplateName'] = ''
-                    result["jobType"] = ''
-            else:
-                result[current_parameter] = x[current_parameter] if x[current_parameter] is not None else ''
-        elif current_parameter == 'submissionAddress':
-            result['submissionAddress'] = ''
-        elif current_parameter == 'stepOrTemplateName':
-            result['stepOrTemplateName'] = ''
-            result["jobType"] = ''
-
-    result['selectedSteps'] = {'names': [], 'states': [], 'submissionAddress': ''}
-    for i, step in enumerate(x["steps"]):
-        step_template = next((step_template for step_template in all_steps if step_template.name == step["name"]), None)
-        if step_template == None or step_template.submit:  # None implies a deprecated name
-            result['selectedSteps']['submissionAddress'] = result['submissionAddress']
-            result['selectedSteps']['names'].append(step["name"])
-            result['selectedSteps']['states'].append(step["state"])
-            if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED", "DISPATCHED"]:
-                if step["name"] in x['remainingStepNames']:
-                    result['selectedSteps']['states'].append('RESET')
-            elif "pause" in step and step['pause'] and step['state'] == "SUCCESSFUL":
-                if step["name"] in x['remainingStepNames']:
-                    result['selectedSteps']['states'].append('RESUME,RESET')
-    result['selectedSteps']['names'] = ",".join(result['selectedSteps']['names'])
-    result['selectedSteps']['states'] = ",".join(result['selectedSteps']['states'])
-    return result
 
 
 # get job information used by jquery datatable
@@ -118,6 +87,55 @@ def all_jobs_in_json(image_processing_db, show_all_jobs=False):
     all_steps = Step.objects.all()
     list_to_return = list(map(map_jobs_to_dictionary, parent_job_info, repeat(all_steps)))
     return list_to_return
+
+
+# build result object of existing job information
+def map_jobs_to_dictionary(parent_job_information, all_steps):
+    job_dictionary = build_job_dictionary_with_overall_information(parent_job_information)
+    return add_step_information_to_job_dictionary(parent_job_information, job_dictionary, all_steps)
+
+
+def build_job_dictionary_with_overall_information(parent_job_information):
+    job_dictionary = {}
+    all_parameters = ['username', 'jobName', 'username', 'creationDate', 'state', 'jacs_id', '_id', 'submissionAddress', 'stepOrTemplateName']
+    for current_parameter in all_parameters:
+        if current_parameter in parent_job_information:
+            if current_parameter == '_id':
+                job_dictionary['id'] = str(parent_job_information[current_parameter]) if str(parent_job_information[current_parameter]) is not None else ''
+            elif current_parameter == 'stepOrTemplateName':
+                if parent_job_information['stepOrTemplateName'] is not None:
+                    job_dictionary['stepOrTemplateName'] = step_or_template_name_url_maker(parent_job_information['stepOrTemplateName'])
+                    job_dictionary["jobType"] = parent_job_information['stepOrTemplateName']
+                else:
+                    job_dictionary['stepOrTemplateName'] = ''
+                    job_dictionary["jobType"] = ''
+            else:
+                job_dictionary[current_parameter] = parent_job_information[current_parameter] if parent_job_information[current_parameter] is not None else ''
+        elif current_parameter == 'submissionAddress':
+            job_dictionary['submissionAddress'] = ''
+        elif current_parameter == 'stepOrTemplateName':
+            job_dictionary['stepOrTemplateName'] = ''
+            job_dictionary["jobType"] = ''
+    return job_dictionary
+
+
+def add_step_information_to_job_dictionary(parent_job_information, job_dictionary, all_steps):
+    job_dictionary['selectedSteps'] = {'names': [], 'states': [], 'submissionAddress': ''}
+    for i, step in enumerate(parent_job_information["steps"]):
+        step_template = next((step_template for step_template in all_steps if step_template.name == step["name"]), None)
+        if step_template == None or step_template.submit:  # None implies a deprecated name
+            job_dictionary['selectedSteps']['submissionAddress'] = job_dictionary['submissionAddress']
+            job_dictionary['selectedSteps']['names'].append(step["name"])
+            job_dictionary['selectedSteps']['states'].append(step["state"])
+            if step['state'] not in ["CREATED", "SUCCESSFUL", "RUNNING", "NOT YET QUEUED", "QUEUED", "DISPATCHED"]:
+                if step["name"] in parent_job_information['remainingStepNames']:
+                    job_dictionary['selectedSteps']['states'].append('RESET')
+            elif "pause" in step and step['pause'] and step['state'] == "SUCCESSFUL":
+                if step["name"] in parent_job_information['remainingStepNames']:
+                    job_dictionary['selectedSteps']['states'].append('RESUME,RESET')
+    job_dictionary['selectedSteps']['names'] = ",".join(job_dictionary['selectedSteps']['names'])
+    job_dictionary['selectedSteps']['states'] = ",".join(job_dictionary['selectedSteps']['states'])
+    return job_dictionary
 
 
 # build object with meta information about parameters from the admin interface
@@ -227,7 +245,7 @@ def get_headers(for_query=False):
 
 # get step information about existing jobs from db
 def get_job_step_data(_id, image_processing_db):
-    result = get_configurations_from_db(_id, image_processing_db, step_name=None)
+    result = get_configurations_from_db(_id, image_processing_db)
     if (result is not None) and result != 404 and len(result) > 0 and 'steps' in result[0]:
         return result[0]['steps']
     return None
@@ -236,15 +254,12 @@ def get_job_step_data(_id, image_processing_db):
 # get the job parameter information from db
 def get_configurations_from_db(image_processing_db_id, image_processing_db, global_parameter=None, step_name=None):
     if global_parameter:
-        global_parameter_value = list(
-            image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id)}, {'_id': 0, global_parameter: 1}))
-        output = global_parameter_value[0]
+        output = list(image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id)}, {'_id': 0, global_parameter: 1}))[0]
         if not output:
             output = {global_parameter: ""}
     else:
         if step_name:
-            output = list(image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id), 'steps.name': step_name},
-                                                        {'_id': 0, "steps.$": 1}))
+            output = list(image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id), 'steps.name': step_name}, {'_id': 0, "steps.$": 1}))
             if output:
                 output = output[0]["steps"][0]["parameters"]
         else:
@@ -259,43 +274,52 @@ def get_configurations_from_db(image_processing_db_id, image_processing_db, glob
 def update_db_states_and_times(image_processing_db, show_all_jobs=False):
     if current_user.is_authenticated:
         if show_all_jobs:
-            relevant_job_info_from_db = list(image_processing_db.jobs.find({"username": {"$exists": "true"}, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
+            relevant_job_information_from_db = list(image_processing_db.jobs.find({"username": {"$exists": "true"}, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
         else:
-            relevant_job_info_from_db = list(image_processing_db.jobs.find({"username": current_user.username, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
-        for parent_job_info_from_db in relevant_job_info_from_db:
-            if 'jacs_id' in parent_job_info_from_db:  # TODO handle case, when jacs_id is missing
-                if isinstance(parent_job_info_from_db["jacs_id"], list):
-                    jacs_ids = parent_job_info_from_db["jacs_id"]
-                else:
-                    jacs_ids = [parent_job_info_from_db["jacs_id"]]
+            relevant_job_information_from_db = list(image_processing_db.jobs.find({"username": current_user.username, "state": {"$in": ["NOT YET QUEUED", "RUNNING", "CREATED", "QUEUED", "DISPATCHED"]}}))
 
-                for jacs_id in jacs_ids:
-                    parent_job_info_from_jacs = get_job_info_from_jacs({'service-id': jacs_id})
-                    if parent_job_info_from_jacs and len(parent_job_info_from_jacs["resultList"]) > 0:
-                        parent_job_info_from_jacs = parent_job_info_from_jacs["resultList"][0]
-                        image_processing_db.jobs.update_one({"_id": parent_job_info_from_db["_id"]}, {"$set": {"state": parent_job_info_from_jacs["state"]}})
+        find_and_set_dictionaries_for_db_update = build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_db)
 
-                        all_child_job_info_from_jacs = get_job_info_from_jacs({'parent-id': jacs_id})
-                        all_child_job_info_from_jacs = all_child_job_info_from_jacs["resultList"]
-                        if all_child_job_info_from_jacs:
-                            for current_child_job_info_from_db in parent_job_info_from_db["steps"]:
-                                current_child_job_info_from_jacs = next((step for step in all_child_job_info_from_jacs if (current_child_job_info_from_db["name"] in step["description"])), None)
-                                if current_child_job_info_from_db["state"] == "NOT YET QUEUED" and jacs_id != jacs_ids[-1]:  # NOT YET QUEUED jobs were just submitted so only want to check based on currently running job
-                                    current_child_job_info_from_jacs = {}
-                                if current_child_job_info_from_jacs:
-                                    creation_time = convert_jacs_time(current_child_job_info_from_jacs["processStartTime"])
-                                    find_dictionary = {"_id": parent_job_info_from_db["_id"], "steps.name": current_child_job_info_from_db["name"]}
-                                    set_dictionary = {"steps.$.state": current_child_job_info_from_jacs["state"],
-                                                      "steps.$.creationTime": creation_time.strftime("%Y-%m-%d %H:%M:%S"),
-                                                      "steps.$.elapsedTime": str(datetime.now(EASTERN_TIMEZONE).replace(microsecond=0) - creation_time),
-                                                      "steps.$._id": (current_child_job_info_from_jacs["_id"] if "_id" in current_child_job_info_from_jacs else current_child_job_info_from_jacs["id"])}
+        for current_find_and_set_dictionaries in find_and_set_dictionaries_for_db_update:
+            image_processing_db.jobs.update_one(current_find_and_set_dictionaries['find'], current_find_and_set_dictionaries['set'])
 
-                                    if current_child_job_info_from_jacs["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:  # Add endTime and elapsedTime
-                                        end_time = convert_jacs_time(current_child_job_info_from_jacs["modificationDate"])
-                                        set_dictionary = {**set_dictionary, **{"steps.$.endTime": end_time.strftime("%Y-%m-%d %H:%M:%S"), "steps.$.elapsedTime": str(end_time - creation_time)}}
 
-                                    image_processing_db.jobs.update_one(find_dictionary, {"$set": set_dictionary})
+def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_db):
+    find_and_set_dictionaries = []
+    for parent_job_info_from_db in relevant_job_information_from_db:
+        if 'jacs_id' in parent_job_info_from_db:  # TODO handle case, when jacs_id is missing
+            if isinstance(parent_job_info_from_db["jacs_id"], list):
+                jacs_ids = parent_job_info_from_db["jacs_id"]
+            else:
+                jacs_ids = [parent_job_info_from_db["jacs_id"]]
 
+            for jacs_id in jacs_ids:
+                parent_job_info_from_jacs = get_job_info_from_jacs({'service-id': jacs_id})
+                if parent_job_info_from_jacs and len(parent_job_info_from_jacs["resultList"]) > 0:
+                    parent_job_info_from_jacs = parent_job_info_from_jacs["resultList"][0]
+                    parent_dictionary = { 'find': {"_id": parent_job_info_from_db["_id"]}, 'set': {"$set": {"state": parent_job_info_from_jacs["state"]}} }
+                    find_and_set_dictionaries.append(parent_dictionary)
+                    all_child_job_info_from_jacs = get_job_info_from_jacs({'parent-id': jacs_id})
+                    all_child_job_info_from_jacs = all_child_job_info_from_jacs["resultList"]
+                    if all_child_job_info_from_jacs:
+                        for current_child_job_info_from_db in parent_job_info_from_db["steps"]:
+                            current_child_job_info_from_jacs = next((step for step in all_child_job_info_from_jacs if (current_child_job_info_from_db["name"] in step["description"])), None)
+                            if current_child_job_info_from_db["state"] == "NOT YET QUEUED" and jacs_id != jacs_ids[-1]:  # NOT YET QUEUED jobs were just submitted so only want to check based on currently running job
+                                current_child_job_info_from_jacs = {}
+                            if current_child_job_info_from_jacs:
+                                creation_time = convert_jacs_time(current_child_job_info_from_jacs["processStartTime"])
+                                find_dictionary = {"_id": parent_job_info_from_db["_id"], "steps.name": current_child_job_info_from_db["name"]}
+                                set_dictionary = {"steps.$.state": current_child_job_info_from_jacs["state"],
+                                                  "steps.$.creationTime": creation_time.strftime("%Y-%m-%d %H:%M:%S"),
+                                                  "steps.$.elapsedTime": str(datetime.now(EASTERN_TIMEZONE).replace(microsecond=0) - creation_time),
+                                                  "steps.$._id": (current_child_job_info_from_jacs["_id"] if "_id" in current_child_job_info_from_jacs else current_child_job_info_from_jacs["id"])}
+
+                                if current_child_job_info_from_jacs["state"] in ['CANCELED', 'TIMEOUT', 'ERROR', 'SUCCESSFUL']:  # Add endTime and elapsedTime
+                                    end_time = convert_jacs_time(current_child_job_info_from_jacs["modificationDate"])
+                                    set_dictionary = {**set_dictionary, **{"steps.$.endTime": end_time.strftime("%Y-%m-%d %H:%M:%S"), "steps.$.elapsedTime": str(end_time - creation_time)}}
+                                step_dictionary={'find': find_dictionary, 'set': {"$set": set_dictionary } }
+                                find_and_set_dictionaries.append(step_dictionary)
+    return find_and_set_dictionaries
 
 def get_job_info_from_jacs(request_params_dictionary):
     request_output_jsonified = requests.get(JACS_HOST + ':9000/api/rest-v2/services/',
@@ -519,7 +543,7 @@ def build_post_body_for_jacs(image_processing_db, job_id):
     return post_body, post_url
 
 
-def step_or_template_name_path_maker(step_or_template_name):
+def step_or_template_name_url_maker(step_or_template_name):
     if step_or_template_name.find("Step: ", 0, 6) != -1:
         step_or_template_name = url_for('workflow', step=step_or_template_name[6:])
     else:

@@ -146,7 +146,7 @@ def job_status():
     image_processing_db_id = request.args.get('lightsheetDB_id')
     # Mongo client
     update_db_states_and_times(IMAGE_PROCESSING_DB)
-    parent_job_info = get_job_info_from_db(IMAGE_PROCESSING_DB, image_processing_db_id, "parent")
+    parent_job_info = get_job_information(IMAGE_PROCESSING_DB, image_processing_db_id, "parent")
     child_job_info = []
     job_type = []
     step_or_template_name = []
@@ -174,7 +174,7 @@ def job_status():
         update_db_states_and_times(IMAGE_PROCESSING_DB)
 
     if image_processing_db_id is not None:
-        job_type, step_or_template_name, child_job_info, remaining_step_names = get_job_info_from_db(IMAGE_PROCESSING_DB, image_processing_db_id, "child")
+        job_type, step_or_template_name, child_job_info, remaining_step_names = get_job_information(IMAGE_PROCESSING_DB, image_processing_db_id, "child")
         if not step_or_template_name:
             step_or_template_name = "Deprecated Workflow"
 
