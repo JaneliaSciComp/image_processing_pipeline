@@ -9,7 +9,7 @@ from app import app
 from app.authservice import create_auth_service
 from app.forms import LoginForm
 from app.utils import *
-from app.jobs_io import reformat_data_to_post, parse_json_data_no_forms, do_the_post, load_preexisting_job, load_uploaded_config
+from app.jobs_io import reformat_data_to_post, parse_json_data_no_forms, submit_the_job_to_db_and_jacs, load_preexisting_job, load_uploaded_config
 from app.models import Dependency, Configuration
 from bson.objectid import ObjectId
 
@@ -113,10 +113,10 @@ def workflow():
                 abort(404)
 
     if request.method == 'POST':
-        submission_status = do_the_post(request.url_root, request.json, reparameterize, IMAGE_PROCESSING_DB,
-                                        image_processing_db_id,
-                                        None,
-                                        step_or_template_name)
+        submission_status = submit_the_job_to_db_and_jacs(request.url_root, request.json, reparameterize, IMAGE_PROCESSING_DB,
+                                                          image_processing_db_id,
+                                                          None,
+                                                          step_or_template_name)
         return submission_status_returner(submission_status)
 
     return render_template('index.html',
@@ -278,32 +278,32 @@ def uploaded_file(filename=None):
 """
  View Function for creating a configuration record in the database of an existing pipeline from a json file
 """
-@app.route('/upload_config/<filename>', methods=['GET', 'POST'])
+@app.route('/load_config/<filename>', methods=['GET', 'POST'])
 @login_required
-def upload_config(filename=None):
+def load_config(filename=None):
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as file:
         c = json.loads(file.read())
         result = create_config(c)
         return redirect(url_for('workflow', config_name=result['name']))
-        # return render_template('upload.html', content=c, filename=filename, message=result['message'], success=result['success'])
+        #return render_template('upload_config.html', content=c, filename=filename, message=result['message'], success=result['success'])
     message = []
     message.append('Error uploading the file {0}'.format(filename))
-    ##return render_template('upload.html', filename=filename, message=message)
+    #return render_template('upload_config.html', filename=filename, message=message)
 
 
 """
  View Function for loading the configuration of an existing pipeline from a json file
 """
-@app.route('/load_config', methods=['GET', 'POST'])
+@app.route('/upload_config', methods=['GET', 'POST'])
 @login_required
-def load_config():
+def upload_config():
     if request.method == "GET":
         steps = Step.objects.all()
         empty = False
         if len(steps) == 0:
             empty = True
         return render_template(
-            'load_config.html',
+            'upload_config.html',
             empty=empty
         )
 
@@ -322,18 +322,18 @@ def load_config():
         if file and _allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('upload_config',filename=filename))
+            return redirect(url_for('load_config',filename=filename))
         else:
             allowed_ext = (', '.join(ALLOWED_EXTENSIONS))
             message = 'Please make sure, your file extension is one of the following: ' + allowed_ext
-            return render_template('upload.html', message=message)
+            return render_template('upload_config.html', message=message)
 
 
 @app.route('/config/<image_processing_db_id>', methods=['GET'])
 def config(image_processing_db_id):
     global_parameter = request.args.get('globalParameter')
     step_name = request.args.get('stepName')
-    output = get_configurations_from_db(image_processing_db_id, IMAGE_PROCESSING_DB, global_parameter, step_name)
+    output = get_configurations_from_db(IMAGE_PROCESSING_DB, image_processing_db_id, global_parameter, step_name)
     if output == 404:
         abort(404)
     else:

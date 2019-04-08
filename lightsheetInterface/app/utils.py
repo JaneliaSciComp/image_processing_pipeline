@@ -244,15 +244,16 @@ def get_headers(for_query=False):
 
 
 # get step information about existing jobs from db
-def get_job_step_data(_id, image_processing_db):
-    result = get_configurations_from_db(_id, image_processing_db)
+def get_job_step_data_from_db(image_processing_db, image_processing_db_id):
+    result = get_configurations_from_db(image_processing_db, image_processing_db_id)
     if (result is not None) and result != 404 and len(result) > 0 and 'steps' in result[0]:
-        return result[0]['steps']
+        overall_job_information = list(image_processing_db.jobs.find({"_id": ObjectId(image_processing_db_id)}, {"username": 1, "remainingStepNames": 1, "jobName": 1}))[0]
+        return result[0]['steps'], overall_job_information
     return None
 
 
 # get the job parameter information from db
-def get_configurations_from_db(image_processing_db_id, image_processing_db, global_parameter=None, step_name=None):
+def get_configurations_from_db(image_processing_db, image_processing_db_id, global_parameter=None, step_name=None):
     if global_parameter:
         output = list(image_processing_db.jobs.find({'_id': ObjectId(image_processing_db_id)}, {'_id': 0, global_parameter: 1}))[0]
         if not output:
@@ -343,85 +344,11 @@ def create_db_entries(content):
     for key in keys:
         obj = content[key]
         if key == 'parameters':
-            for o in obj:
-                p = Parameter()
-                p.name = o
-                p.displayName = o
-                value = obj[o]
-                if type(value) is dict:
-                    if 'start' in value and 'end' in value and 'every' in value:
-                        p.frequency = 'F'
-                        p.formatting = 'R'
-                        p.number1 = value['start']
-                        p.number2 = value['end']
-                        p.number3 = value['every']
-                else:
-                    p.frequency = 'F'
-                    if type(value) == str:
-                        p.text1 = value
-                    elif type(value) == float:
-                        p.number1 = value
-                    elif type(value) == list:
-                        # TODO: distinguish in between the different types
-                        continue
-                try:
-                    p.save()
-                except OSError as e:
-                    message.append('Error creating the parameter: ' + str(e))
-                    pass
-                except ValidationError as e:
-                    message.append('Error creating the parameter: ' + str(e))
-                    pass
-                except NotUniqueError:
-                    message.append('Parameter with the name "{0}" has already been added: '.format(p['name']))
-                    pass
+            message = add_parameters_to_db(obj, message)
         elif key == 'steps':
-            for o in obj:
-                s = Step()
-                if 'name' in o:
-                    s['name'] = o['name']
-                if 'order' in o:
-                    s['order'] = o['order']
-                if 'description' in o:
-                    s['description'] = o['description']
-                if 'parameters' in o:
-                    # Query for steps and associate them with template
-                    for param in o['parameters']:
-                        parameter_object = Parameter.objects.filter(name=param).first()
-                        if parameter_object:
-                            s['parameter'].append(parameter_object.pk)
-                try:
-                    s.save()
-                except ValidationError as e:
-                    message.append('Error creating the parameter: ' + str(e))
-                    pass
-                except NotUniqueError:
-                    message.append('Step with the name "{0}" has already been added.'.format(o['name']))
-                    pass
+            message = add_steps_to_db(obj, message)
         elif key == 'template':
-            for o in obj:
-                t = Template()
-                if 'name' in o:
-                    t.name = o['name']
-                if 'steps' in o:
-                    # Query for steps and associate them with template
-                    for step in o['steps']:
-                        step_object = Step.objects.filter(name=step).first()
-                        if step_object:
-                            t['steps'].append(step_object)
-                        else:
-                            print('No step object found')
-                try:
-                    t.save()
-                except ValidationError as e:
-                    message.append('Error creating the template: ' + str(e))
-                    pass
-                except NotUniqueError:
-                    message.append('Template with the name "{0}" has already been added.'.format(o['name']))
-                    pass
-                except:
-                    message.append('There was an error creating a template')
-                    pass
+            message = add_workflows_to_db(obj, message)
 
     if len(message) == 0:
         success = True
@@ -429,6 +356,94 @@ def create_db_entries(content):
 
     result = {'message': message, 'success': success}
     return result
+
+def add_parameters_to_db(obj, message):
+    for o in obj:
+        p = Parameter()
+        p.name = o
+        p.displayName = o
+        value = obj[o]
+        if type(value) is dict:
+            if 'start' in value and 'end' in value and 'every' in value:
+                p.frequency = 'F'
+                p.formatting = 'R'
+                p.number1 = value['start']
+                p.number2 = value['end']
+                p.number3 = value['every']
+        else:
+            p.frequency = 'F'
+            if type(value) == str:
+                p.text1 = value
+            elif type(value) == float:
+                p.number1 = value
+            elif type(value) == list:
+                # TODO: distinguish in between the different types
+                continue
+        try:
+            p.save()
+        except OSError as e:
+            message.append('Error creating the parameter: ' + str(e))
+            pass
+        except ValidationError as e:
+            message.append('Error creating the parameter: ' + str(e))
+            pass
+        except NotUniqueError:
+            message.append('Parameter with the name "{0}" has already been added: '.format(p['name']))
+            pass
+    return message
+
+
+def add_steps_to_db(obj, message):
+    for o in obj:
+        s = Step()
+        if 'name' in o:
+            s['name'] = o['name']
+        if 'order' in o:
+            s['order'] = o['order']
+        if 'description' in o:
+            s['description'] = o['description']
+        if 'parameters' in o:
+            # Query for steps and associate them with template
+            for param in o['parameters']:
+                parameter_object = Parameter.objects.filter(name=param).first()
+                if parameter_object:
+                    s['parameter'].append(parameter_object.pk)
+        try:
+            s.save()
+        except ValidationError as e:
+            message.append('Error creating the parameter: ' + str(e))
+            pass
+        except NotUniqueError:
+            message.append('Step with the name "{0}" has already been added.'.format(o['name']))
+            pass
+    return message
+
+
+def add_workflows_to_db(obj, message):
+    for o in obj:
+        t = Template()
+        if 'name' in o:
+            t.name = o['name']
+        if 'steps' in o:
+            # Query for steps and associate them with template
+            for step in o['steps']:
+                step_object = Step.objects.filter(name=step).first()
+                if step_object:
+                    t['steps'].append(step_object)
+                else:
+                    print('No step object found')
+        try:
+            t.save()
+        except ValidationError as e:
+            message.append('Error creating the template: ' + str(e))
+            pass
+        except NotUniqueError:
+            message.append('Template with the name "{0}" has already been added.'.format(o['name']))
+            pass
+        except:
+            message.append('There was an error creating a template')
+            pass
+    return message
 
 
 def create_config(content):
@@ -448,7 +463,8 @@ def create_config(content):
 def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_reparameterize):
     job_id = ObjectId(job_id)
     config_address = config_server_url + "config/{}".format(job_id)
-    post_body, post_url = build_post_body_for_jacs(image_processing_db, job_id)
+    job_info_from_database = list(image_processing_db.jobs.find({"_id": job_id}))[0]
+    post_body, post_url = build_post_body_for_jacs(job_info_from_database)
 
     # Do the submission to JACS
     try:
@@ -479,9 +495,7 @@ def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_r
     return submission_status
 
 
-def build_post_body_for_jacs(image_processing_db, job_id):
-    job_info_from_database = list(image_processing_db.jobs.find({"_id": job_id}))
-    job_info_from_database = job_info_from_database[0]
+def build_post_body_for_jacs(job_info_from_database):
     remaining_steps = []
     remaining_step_names = job_info_from_database["remainingStepNames"]
     pause_state = False
@@ -549,6 +563,8 @@ def step_or_template_name_url_maker(step_or_template_name):
     else:
         step_or_template_name = url_for('workflow', template=step_or_template_name[10:])
     return step_or_template_name
+
+
 
 ## THE REMAINNIG FUNCTIONS ARE CURRENTLY ONLY FOR QUICKLY COPYING SETPS AND DELETING PARAMETERS FOR ADMIN USE. THERE IS NO FORMAL UI WAY TO DO IT YET, JUST VIA HTML REQUESTS ##
 def copy_step_in_database(image_processing_db, original_step_name, new_step_name, new_step_description=None):
