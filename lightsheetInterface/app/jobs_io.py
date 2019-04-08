@@ -193,7 +193,8 @@ def load_preexisting_job(image_processing_db, image_processing_db_id, reparamete
     preexisting_job_step_data, overall_job_information = get_job_step_data_from_db(image_processing_db, image_processing_db_id)
     able_to_reparameterize = True
     succeeded_but_latter_step_failed = []
-
+    remaining_step_names = []
+    
     if preexisting_job_step_data:
         if (preexisting_job_step_data[-1]["pause"] == 0 and preexisting_job_step_data[-1]["state"] == "SUCCESSFUL") \
                 or any((step["state"] in "RUNNING CREATED") for step in preexisting_job_step_data):
