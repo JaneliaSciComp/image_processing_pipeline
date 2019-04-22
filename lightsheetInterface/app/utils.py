@@ -10,6 +10,7 @@ from app import app
 from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
 from collections import OrderedDict
 from itertools import repeat
+from pprint import pprint
 
 # JACS server
 JACS_HOST = app.config.get('JACS_HOST')
@@ -43,6 +44,9 @@ def get_job_information_from_db(image_processing_db, _id, parent_or_child):
 
 
 def add_fields_to_job_information_from_db(parent_or_child, job_information_from_db, _id):
+    #print("add_fields_to_job_information_from_db: parent_or_child ", parent_or_child)
+    #print("add_fields_to_job_information_from_db: job_information_from_db ")
+    #pprint(job_information_from_db[-1])
     all_steps = Step.objects.all()
     if parent_or_child == "parent":
         for current_job_info in job_information_from_db:
@@ -55,6 +59,8 @@ def add_fields_to_job_information_from_db(parent_or_child, job_information_from_
             current_job_info.update({"selected": ""})
             if current_job_info["_id"] == _id:
                 current_job_info.update({"selected": "selected"})
+        #pprint('job_information for parent')
+        #pprint(job_information_from_db[-1])
         return job_information_from_db
     elif parent_or_child == "child":
         child_job_info = []
@@ -69,25 +75,38 @@ def add_fields_to_job_information_from_db(parent_or_child, job_information_from_
         else:
             step_or_template_name = ''
             step_or_template_name_path = ''
+        #print("add_fields_to_job_information_from_db: step_or_template_name", step_or_template_name)
+        #print("add_fields_to_job_information_from_db: step_or_template_name_path", step_or_template_name_path)
+        #print("add_fields_to_job_information_from_db: child_job_info")
+        #pprint(child_job_info)
+        #print("add_fields_to_job_information_from_db: remaining_step_names")
+        #pprint(remaining_step_names)
         return step_or_template_name, step_or_template_name_path, child_job_info, remaining_step_names
     else:
         return 404
 
 
-# get job information used by jquery datatable
+# get job information usedcurrent_parameter by jquery datatable
 def all_jobs_in_json(image_processing_db, show_all_jobs=False):
     if show_all_jobs:
-        parent_job_info = image_processing_db.jobs.find({"username": {"$exists": "true"}, "hideFromView": {"$ne": 1}}, {"_id": 1, "username": 1, "jobName": 1, "remainingStepNames": 1, "submissionAddress": 1, "creationDate": 1,
+        parent_job_info = list(image_processing_db.jobs.find({"username": {"$exists": "true"}, "hideFromView": {"$ne": 1}}, {"_id": 1, "username": 1, "jobName": 1, "remainingStepNames": 1, "submissionAddress": 1, "creationDate": 1,
                                                                                                                         "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-                                                                                                                        "steps.state": 1, "steps.name": 1, "steps.pause": 1})
+                                                                                                                        "steps.state": 1, "steps.name": 1, "steps.pause": 1}))
     else:
-        parent_job_info = image_processing_db.jobs.find({"username": current_user.username, "hideFromView": {"$ne": 1}}, {"_id": 1, "jobName": 1, "remainingStepNames": 1, "submissionAddress": 1, "creationDate": 1,
+        parent_job_info = list(image_processing_db.jobs.find({"username": current_user.username, "hideFromView": {"$ne": 1}}, {"_id": 1, "jobName": 1, "remainingStepNames": 1, "submissionAddress": 1, "creationDate": 1,
                                                                                                                           "state": 1, "jacs_id": 1, "stepOrTemplateName": 1,
-                                                                                                                          "steps.state": 1, "steps.name": 1, "steps.pause": 1})
-    all_steps = Step.objects.all()
-    list_to_return = list(map(map_jobs_to_dictionary, parent_job_info, repeat(all_steps)))
+                                                                                                                          "steps.state": 1, "steps.name": 1, "steps.pause": 1}))
+    list_to_return = get_job_dictionary_as_list(parent_job_info)
     return list_to_return
 
+def get_job_dictionary_as_list(parent_job_info):
+    all_steps = Step.objects.all()
+    #print("get_job_dictionary_as_list: parent_job_info ")
+    #pprint(parent_job_info[-1])
+    list_to_return = list(map(map_jobs_to_dictionary, parent_job_info, repeat(all_steps)))
+    #print("get_job_dictionary_as_list: list_to_return ")
+    #pprint(list_to_return[-1])
+    return list_to_return
 
 # build result object of existing job information
 def map_jobs_to_dictionary(parent_job_information, all_steps):
@@ -559,9 +578,9 @@ def build_post_body_for_jacs(job_info_from_database):
 
 def step_or_template_name_url_maker(step_or_template_name):
     if step_or_template_name.find("Step: ", 0, 6) != -1:
-        step_or_template_name = url_for('workflow', step=step_or_template_name[6:])
+        step_or_template_name = ['/workflow=step?',step_or_template_name[6:]]
     else:
-        step_or_template_name = url_for('workflow', template=step_or_template_name[10:])
+        step_or_template_name = ['/workflow=template?', step_or_template_name[10:]]
     return step_or_template_name
 
 
