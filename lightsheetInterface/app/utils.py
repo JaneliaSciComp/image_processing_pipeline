@@ -174,10 +174,10 @@ def get_parameters(parameters):
                 parameter.count = '5'
             else:
                 parameter.count = '6'
-        elif parameter.float1:
+        elif parameter.float1 is not None:
             parameter.type = 'Float'
             parameter.count = '1'
-        elif parameter.text1:
+        elif parameter.text1 is not None:
             parameter.type = 'Text'
             if not parameter.text2:
                 parameter.count = '1'
