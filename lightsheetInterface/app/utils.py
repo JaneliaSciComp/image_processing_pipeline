@@ -578,9 +578,9 @@ def build_post_body_for_jacs(job_info_from_database):
 
 def step_or_template_name_url_maker(step_or_template_name):
     if step_or_template_name.find("Step: ", 0, 6) != -1:
-        step_or_template_name = ['/workflow=step?',step_or_template_name[6:]]
+        step_or_template_name = '/workflow?step='+step_or_template_name[6:]
     else:
-        step_or_template_name = ['/workflow=template?', step_or_template_name[10:]]
+        step_or_template_name = '/workflow?template='+step_or_template_name[10:]
     return step_or_template_name
 
 
