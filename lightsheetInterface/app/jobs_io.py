@@ -92,20 +92,20 @@ def initial_reformatting_of_step_parameters(posted_data, step):
                 param_value_set[range_key] = float(current_value) if current_value is not '' and current_value != "[]" else ''
                 step_parameters_reformatted[parameter_name] = param_value_set
         else:  # no range
-            param_value_set = []
+            if parameter_name not in step_parameters_reformatted:
+                step_parameters_reformatted[parameter_name] = []
             # check if current value is a float within a string and needs to be converted
             current_value = posted_data[step][p][parameter_key]
 
             if re.match("[-+]?[0-9]*\.?[0-9]*.$", current_value) is None:  # no float
                 try:
                     tmp = json.loads(current_value)
-                    param_value_set.append(tmp)
+                    step_parameters_reformatted[parameter_name].append(tmp)
                 except ValueError:
-                    param_value_set.append(current_value)
+                    step_parameters_reformatted[parameter_name].append(current_value)
             else:  # it's actual a float value -> get the value
-                param_value_set.append(float(current_value))
+                step_parameters_reformatted[parameter_name].append(float(current_value))
 
-            step_parameters_reformatted[parameter_name] = param_value_set
     return step_parameters_reformatted, parameters_to_empty
 
 
