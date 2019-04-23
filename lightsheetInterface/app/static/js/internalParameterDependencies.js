@@ -49,7 +49,7 @@ $(document).ready(function () {
                             dependencyToUpdateValue = null; //Initialize dependencyToUpdateValue to null
                             if (type == "checkbox") {//If check box is checked, then dependencyToUpdateValue equals empty string
                                 if ($(dependencyToUpdate).prop('checked')) {
-                                    dependencyToUpdateValue = standardID.substring(0, dependencySubstring.lastIndexOf('_'));
+                                    dependencyToUpdateValue = "";
                                 }
                             }
                             else if (type == "hidden") {//Multiselect checkbox
