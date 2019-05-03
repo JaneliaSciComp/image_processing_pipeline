@@ -97,6 +97,9 @@ dataIo.grabData = function () {
             else if (stepType == 'Si') {
                 data[step]['type'] = 'Singularity';
             }
+            else if (stepType == 'D') {
+                data[step]['type'] = 'Deconvolution';
+            }
         }
 
         // input fields

@@ -1,19 +1,19 @@
 {% if data is not string %}
     {% set data = data[0] %}
 {% endif %}
-{% set selected = "False" %}
+{% set selected = [] %}
 <select name="{{ parameter.name }}" id="{{ parameter.name }}" class="lightsheet-field" >
     {%  for textOrNumber in ['text','number'] %}
         {% for index in range(1,7)  %}
             {% set currentValue = parameter[textOrNumber~index] %}
             {% if (textOrNumber=='number' and currentValue is not none) or (textOrNumber == 'text' and currentValue is not none and currentValue|length) %}
-                <option value="{{ currentValue }}" {% if currentValue == data %} selected="selected" {% set selected = "True" %} {% endif %} data-defaultValue="{{ defaultValue[textOrNumber~index] }}" id="select_{{ parameter.name }}_{{ textOrNumber }}{{index}}">{{ currentValue }}
+                <option value="{{ currentValue }}" {% if currentValue == data %} selected="selected" {% set _ = selected.append(1) %} {% endif %} data-defaultValue="{{ defaultValue[textOrNumber~index] }}" id="select_{{ parameter.name }}_{{ textOrNumber }}{{index}}">{{ currentValue }}
             {% endif %}
         {% endfor %}
     {% endfor %}
 </select>
 <script>
-    if("{{ selected }}"=="False") {
+    if("{{ selected }}"=="[]") {
         //Quickfix. TODO: Make this more formal, maybe load it otherways
         //If one loads a job where the dropdown is usually dependent on other fields,
         //then the value loaded will not match. So here we set it to be the first dependent value based on data-defaultValue

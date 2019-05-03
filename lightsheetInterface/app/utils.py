@@ -546,6 +546,13 @@ def build_post_body_for_jacs(job_info_from_database):
                 ]}
             if "-numNodes" in step["parameters"]:
                 step_post_body["serviceResources"] = {"sparkNumNodes": str(int(step["parameters"]["-numNodes"]))}
+        elif step["type"] == "Deconvolution":
+            step_post_body = {
+                "stepName": step["name"],
+                "serviceName": "deconvolution",
+                "serviceProcessingLocation": 'LSF_JAVA',
+                "serviceArgs": step["parameters"]["-appArgs"].split(' ')
+            }
         else:  # Singularity
             step_post_body = {
                 "stepName": step["name"],

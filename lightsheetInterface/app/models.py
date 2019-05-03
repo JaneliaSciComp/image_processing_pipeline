@@ -13,7 +13,7 @@ frequency = (('F', 'Frequent'), ('S', 'Sometimes'), ('R', 'Rare'))
 formats = (
     ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Multiselect Dropdown'), ('F', 'Checkbox'),
     ('B', 'Radio Button'), ('D', 'Dropdown Menu'))
-steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet'))
+steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet'), ('D', 'Deconvolution'))
 
 
 class AppConfig(Document):
