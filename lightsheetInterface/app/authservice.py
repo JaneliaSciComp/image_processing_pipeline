@@ -8,7 +8,7 @@ from app import login_manager, app
 
 
 def create_auth_service():
-    return AuthenticationService(app.config.get('AUTH_SERVICE_URL'))
+    return AuthenticationService(app.config.get('AUTH_SERVICE_URL'), app.config.get('JACS_SYNC_URL'), app.config.get('ADMINS'))
 
 
 @login_manager.user_loader
@@ -43,8 +43,10 @@ class User(UserMixin):
 
 
 class AuthenticationService(object):
-    def __init__(self, auth_url):
+    def __init__(self, auth_url, jacs_sync_url, admins):
         self._auth_url = auth_url
+        self._jacs_sync_url = jacs_sync_url
+        self._admins = admins
 
     def authenticate(self, user_credentials):
         username = user_credentials.get('username')
@@ -59,6 +61,10 @@ class AuthenticationService(object):
         else:
             auth = authResponse.json()
             u = self._create_user(token=auth['token'], username=auth['user_name'])
+            #Add as JACS user if not already added
+            headers = {'cache-control': 'no-cache', 'username': 'user:'+ self._admins[0]}
+            requests.get(self._jacs_sync_url + '/data/user/getorcreate?subjectKey=' + 'user:' + username,
+                         headers = headers)
             expiration_time = u.get_expiration() - datetime.now()
             login_user(u, duration=expiration_time)
             return True

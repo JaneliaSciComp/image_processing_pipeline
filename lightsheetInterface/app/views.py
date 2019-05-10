@@ -134,7 +134,17 @@ def workflow():
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return redirect(url_for('workflow', template='AIC SimView Single Camera'))
+    all_workflows = list(IMAGE_PROCESSING_DB.template.find({}, {'name': 1}))
+    workflow_names = [workflow['name'] for workflow in all_workflows]
+    if len(all_workflows)==0:
+        return redirect(url_for('workflow', template='NO WORKFLOWS CREATED YET'))
+    elif 'AIC SimView Single Camera' in workflow_names:
+        return redirect(url_for('workflow', template='AIC SimView Single Camera'))
+    else:
+        return redirect(url_for('workflow', template=workflow_names[0]))
+
+
+
 
 
 """
