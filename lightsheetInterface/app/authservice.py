@@ -62,11 +62,11 @@ class AuthenticationService(object):
             auth = authResponse.json()
             u = self._create_user(token=auth['token'], username=auth['user_name'])
             #Add as JACS user if not already added
-            headers = {'cache-control': 'no-cache', 'username': 'user:'+ self._admins[0]}
-            requests.get(self._jacs_sync_url + '/data/user/getorcreate?subjectKey=' + 'user:' + username,
-                         headers = headers)
             expiration_time = u.get_expiration() - datetime.now()
             login_user(u, duration=expiration_time)
+            headers = {'cache-control': 'no-cache', 'username': 'user:'+ self._admins[0]}
+            requests.get(self._jacs_sync_url + '/data/user/getorcreate?subjectKey=' + 'user:' + username,
+                     headers = headers)
             return True
 
     def validate_user_token(self, token):
