@@ -31,12 +31,12 @@ UPLOAD_FOLDER = '/opt/projects/lightsheet/upload'
 
 # Production auth service: http://api.int.janelia.org:8030/authenticate
 # Dev auth service: https://jacs-dev.int.janelia.org/SCSW/AuthenticationService/v1/authenticate
-AUTH_SERVICE_URL = 'https://jacs-dev.int.janelia.org/SCSW/AuthenticationService/v1/authenticate'
+AUTH_SERVICE_URL = 'https://c13u09.int.janelia.org/SCSW/AuthenticationService/v1/authenticate'
 
 JACS_SYNC_URL = 'http://jacs-dev.int.janelia.org:9090/api/rest-v2'
 
 JACS_HOST = 'http://jacs-dev.int.janelia.org'
-JACS_DASHBOARD = 'http://jacs-dev.int.janelia.org:8080'
+JACS_DASHBOARD = 'http://c13u09.int.janelia.org:8080'
 
 ADMINS = []
 #'http://10.37.6.38:9000/api/rest-v2' #'http://jacs-dev.int.janelia.org:9000/api/rest-v2' #'http://jacs2.int.janelia.org:9000/api/rest-v2' 'http://10.37.6.38:9000/api/rest-v2' #

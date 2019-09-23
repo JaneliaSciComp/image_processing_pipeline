@@ -544,8 +544,16 @@ def build_post_body_for_jacs(job_info_from_database):
                     "-appEntryPoint", step["entryPointForSpark"],
                     "-appArgs", step["parameters"]["-appArgs"]
                 ]}
+            
             if "-numNodes" in step["parameters"]:
                 step_post_body["serviceResources"] = {"sparkNumNodes": str(int(step["parameters"]["-numNodes"]))}
+            
+            if "sparkAppStackSize" in step:
+                if "serviceResources" in step_post_body:
+                    step_post_body["serviceResources"].update({"sparkAppStackSize" : step["sparkAppStackSize"]})
+                else:
+                    step_post_body["serviceResources"]={"sparkAppStackSize" : step["sparkAppStackSize"]}
+
         elif step["type"] == "Deconvolution":
             step_post_body = {
                 "stepName": step["name"],
@@ -613,7 +621,7 @@ def copy_parameter_in_database(image_processing_db, parameter_ids, original_step
         new_parameter = list(image_processing_db.parameter.find({"_id": current_parameter_id}, {'_id': 0}))[0]
         new_parameter['name'] = new_parameter['name'].replace('_' + original_step_name, '_' + new_step_name)
         text_index = 1
-        while text_index < 5 and new_parameter["text" + str(text_index)]:
+        while text_index < 5 and ("text" + str(text_index)) in new_parameter and new_parameter["text" + str(text_index)]:
             new_parameter["text" + str(text_index)] = new_parameter["text" + str(text_index)].replace('_' + original_step_name, '_' + new_step_name)
             text_index = text_index + 1
         # Insert new parameter and store Ids
