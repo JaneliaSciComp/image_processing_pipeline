@@ -13,7 +13,9 @@ from itertools import repeat
 from pprint import pprint
 
 # JACS server
-JACS_HOST = app.config.get('JACS_HOST')
+JACS_SYNC_URL = app.config.get('JACS_SYNC_URL')
+JACS_ASYNC_URL = app.config.get('JACS_ASYNC_URL')
+JACS_DASHBOARD_URL = app.config.get('JACS_DASHBOARD_URL')
 
 # Timezone for timings
 EASTERN_TIMEZONE = timezone('US/Eastern')
@@ -342,7 +344,7 @@ def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_
     return find_and_set_dictionaries
 
 def get_job_info_from_jacs(request_params_dictionary):
-    request_output_jsonified = requests.get(JACS_HOST + ':9000/api/rest-v2/services/',
+    request_output_jsonified = requests.get(JACS_ASYNC_URL + '/services/',
                                             params=request_params_dictionary,
                                             headers=get_headers(True)).json()
     return request_output_jsonified
@@ -497,7 +499,7 @@ def submit_to_jacs(config_server_url, image_processing_db, job_id, continue_or_r
 
         if continue_or_reparameterize:
             image_processing_db.jobs.update_one({"_id": job_id}, {"$set": {"state": "NOT YET QUEUED"}, "$push": {
-                "jacsStatusAddress": JACS_HOST + '8080/job/' + jacs_id,
+                "jacsStatusAddress": JACS_DASHBOARD_URL + '/job/' + jacs_id,
                 "jacs_id": jacs_id}})
         else:
             image_processing_db.jobs.update_one({"_id": job_id}, {
@@ -581,11 +583,11 @@ def build_post_body_for_jacs(job_info_from_database):
 
         pipeline_services.append(step_post_body)
     if remaining_steps[0]['type'] == "LightSheet":
-        post_url = JACS_HOST + ':9000/api/rest-v2/async-services/lightsheetPipeline'
+        post_url = JACS_ASYNC_URL + '/async-services/lightsheetPipeline'
         post_body['processingLocation'] = 'LSF_JAVA'
         post_body["dictionaryArgs"] = {"pipelineConfig": {"steps": pipeline_services}}
     else:
-        post_url = JACS_HOST + ':9000/api/rest-v2/async-services/pipeline'
+        post_url = JACS_ASYNC_URL + '/async-services/pipeline'
         post_body["dictionaryArgs"] = {"pipelineConfig": {"pipelineServices": pipeline_services}}
 
     return post_body, post_url

@@ -13,7 +13,7 @@
         allJobs=true;
         var hideColumns = 0;
         var jacs_host = "{{jacs_host}}";
-        var jacs_dashboard = "{{ jacs_dashboard }}";
+        var jacs_dashboard_url = "{{ jacs_dashboard_url }}";
         {% if jobsJson is defined and jobsJson %}
             var table_data = {{ jobsJson|safe }};
         {% else %}

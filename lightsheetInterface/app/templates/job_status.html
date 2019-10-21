@@ -71,7 +71,7 @@
               <td>{{ currentChildJob.endTime }}</td>
               <td>{{ currentChildJob.elapsedTime }}</td>
               {% if "_id" in currentChildJob %}
-               <td><a href= {{jacs_host+":8080/job/"+currentChildJob._id}} target="_blank">Monitor Step</a></td>
+               <td><a href= {{jacs_dashboard_url+"/job/"+currentChildJob._id}} target="_blank">Monitor Step</a></td>
               {% else %}
                 <td></td>
               {% endif %}
