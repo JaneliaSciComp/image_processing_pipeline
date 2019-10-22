@@ -550,11 +550,12 @@ def build_post_body_for_jacs(job_info_from_database):
             if "-numNodes" in step["parameters"]:
                 step_post_body["serviceResources"] = {"sparkNumNodes": str(int(step["parameters"]["-numNodes"]))}
             
-            if "sparkAppStackSize" in step:
-                if "serviceResources" in step_post_body:
-                    step_post_body["serviceResources"].update({"sparkAppStackSize" : step["sparkAppStackSize"]})
-                else:
-                    step_post_body["serviceResources"]={"sparkAppStackSize" : step["sparkAppStackSize"]}
+            for spark_param in ["sparkAppStackSize","sparkDriverMemory"]:
+                if spark_param in step:
+                    if "serviceResources" in step_post_body:
+                        step_post_body["serviceResources"].update({spark_param : step[spark_param]})
+                    else:
+                        step_post_body["serviceResources"]={spark_param : step[spark_param]}
 
         elif step["type"] == "Deconvolution":
             step_post_body = {

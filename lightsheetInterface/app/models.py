@@ -66,6 +66,7 @@ class Step(Document):
     codeLocation = StringField(max_length=500)
     entryPointForSpark = StringField(max_length=500)
     sparkAppStackSize = StringField(max_length=500)
+    sparkDriverMemory = StringField(max_length=500)
     meta = {'strict': False}  # To prevent error from no longer having certain fields
 
     def __unicode__(self):

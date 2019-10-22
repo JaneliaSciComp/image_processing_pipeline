@@ -139,6 +139,9 @@ def reorder_steps_and_add_final_step_parameters(unordered_reformatted_data):
                     current_step_dictionary["entryPointForSpark"] = step.entryPointForSpark
                     if step.sparkAppStackSize:
                         current_step_dictionary["sparkAppStackSize"] = step.sparkAppStackSize
+                    if step.sparkDriverMemory:
+                        current_step_dictionary["sparkDriverMemory"] = step.sparkDriverMemory
+ 
                 if step.submit:
                     remaining_step_names.append(current_step_dictionary["name"])
                 reformatted_data.append(current_step_dictionary)
