@@ -50,14 +50,6 @@ $ export HOME=/opt/home
 $ sudo chown [your user name]:[your group] /opt/home
 ```
 
-Then create the settings.py file by copying settings.py.template and filling in the missing values.
-
-```bash
-127.0.0.1
-```
-
-which is localhost, if necessary.
-
 With
 
 ```bash
