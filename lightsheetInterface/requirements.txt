@@ -8,7 +8,7 @@ flask-mongoengine==0.9.5
 Flask-DebugToolbar==0.10.1
 Flask-DebugToolbar-Mongo==0.1
 Flask-Script==2.0.6
-ipdb==0.11
+ipdb==0.13
 python-dateutil==2.7.3
 pytz==2018.5
 uwsgi
