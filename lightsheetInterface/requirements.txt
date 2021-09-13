@@ -13,3 +13,4 @@ python-dateutil==2.7.3
 pytz==2018.5
 uwsgi
 requests==2.20.0
+werkzeug==0.16.1

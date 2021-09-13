@@ -521,16 +521,21 @@ def build_post_body_for_jacs(job_info_from_database):
     remaining_step_names = job_info_from_database["remainingStepNames"]
     pause_state = False
     current_step_index = 0
+    gridAccountId = "" # used for nondefault (non lsfgroups) chargeback group
     while not pause_state and current_step_index < len(job_info_from_database["steps"]):
         step = job_info_from_database["steps"][current_step_index]
-        if step["name"] in remaining_step_names:
+        if "type" not in step and "global" in step["name"].lower():
+            if "gridAccountId" in step["parameters"]:
+                gridAccountId = step["parameters"]["gridAccountId"]
+        elif step["name"] in remaining_step_names:
             remaining_steps.append(step)
             if "pause" in step:
                 pause_state = step["pause"]
         current_step_index = current_step_index + 1
 
     post_body = {"ownerKey": "user:" + current_user.username if current_user.is_authenticated else "",
-                 "resources": {"gridAccountId": current_user.username}}
+                 "resources": {"gridAccountId": gridAccountId if gridAccountId else current_user.username}}
+    
     pipeline_services = []
     for step in remaining_steps:
         if step["type"] == "LightSheet":
