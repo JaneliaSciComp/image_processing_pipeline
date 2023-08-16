@@ -5,7 +5,7 @@ var config = {
   projectDir: '/opt/projects/lightsheet',  // location on the remote server
   pythonPath: '/usr/bin/python3',
   keepReleases: 3,
-  username: 'flask',
+  username: 'ackermand',
 };
 
 plan.target('local', {
