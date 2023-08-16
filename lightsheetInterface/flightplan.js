@@ -54,7 +54,7 @@ plan.target('test-new', {
 });
 
 plan.target('production-new', {
-  host: 'dummyasdfasdf',
+  host: 'production-new',
   username: config.username,
   agent: process.env.SSH_AUTH_SOCK
   },{
