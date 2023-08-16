@@ -44,6 +44,24 @@ plan.target('production', {
     gitCheck: true
 });
 
+plan.target('test-new', {
+  host: 'pipeline-test-new',
+  username: config.username,
+  agent: process.env.SSH_AUTH_SOCK
+  },{
+    // Shouldn't be overridden, so please don't try.
+    gitCheck: true
+});
+
+plan.target('production-new', {
+  host: 'pipeline-new',
+  username: config.username,
+  agent: process.env.SSH_AUTH_SOCK
+  },{
+    // Shouldn't be overridden, so please don't try.
+    gitCheck: true
+});
+
 plan.local('version', function(local) {
   local.log('create new version number and add as a git commit')
   var versionType = plan.runtime.options.argv.remain[1];
