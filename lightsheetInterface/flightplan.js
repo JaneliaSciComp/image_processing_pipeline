@@ -54,7 +54,7 @@ plan.target('test-new', {
 });
 
 plan.target('production-new', {
-  host: 'vm7208-pipeline-new',
+  host: 'pipeline-new',
   username: config.username,
   agent: process.env.SSH_AUTH_SOCK
   },{
