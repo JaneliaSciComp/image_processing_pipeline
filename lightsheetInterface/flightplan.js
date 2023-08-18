@@ -5,7 +5,7 @@ var config = {
   projectDir: '/opt/projects/lightsheet',  // location on the local server
   pythonPath: '/usr/bin/python3',
   keepReleases: 3,
-  username: 'flask',
+  username: 'ackermand',
 };
 
 plan.target('local', {
@@ -59,7 +59,7 @@ plan.target('production-new', {
   agent: process.env.SSH_AUTH_SOCK
   },{
     // Shouldn't be overridden, so please don't try.
-    gitCheck: true
+    gitCheck: false
 });
 
 plan.local('version', function(local) {
