@@ -32,7 +32,7 @@ plan.target('test', {
   agent: process.env.SSH_AUTH_SOCK
   },{
     // Shouldn't be overridden, so please don't try.
-    gitCheck: true
+  gitCheck: true
 });
 
 plan.target('production', {
@@ -50,7 +50,7 @@ plan.target('test-new', {
   agent: process.env.SSH_AUTH_SOCK
   },{
     // Shouldn't be overridden, so please don't try.
-    gitCheck: true
+  gitCheck: true
 });
 
 plan.target('production-new', {
@@ -59,7 +59,7 @@ plan.target('production-new', {
   agent: process.env.SSH_AUTH_SOCK
   },{
     // Shouldn't be overridden, so please don't try.
-    gitCheck: false
+  gitCheck: true
 });
 
 plan.local('version', function(local) {
@@ -69,6 +69,10 @@ plan.local('version', function(local) {
   var command = local.exec('cat package.json | grep version');
   var myVersion =  "v" + (JSON.stringify(command).split(':')[3]).split('"')[1].replace('\\','');
   var command = local.exec('git add package.json; git commit -m' + '"' + myVersion + '"');
+});
+
+plan.remote('deploy', function (remote) {
+  remote.hostname();
 });
 
 // Check if there are files that have not been committed to git. This stops
