@@ -1,11 +1,11 @@
 var plan = require('flightplan');
 
 var config = {
-  srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the local server
-  projectDir: '/opt/projects/lightsheet',  // location on the local server
+  srcDir: '/opt/dev/lightsheetInterfaceDraft/lightsheetInterface',  // location on the remote server
+  projectDir: '/opt/projects/lightsheet',  // location on the remote server
   pythonPath: '/usr/bin/python3',
   keepReleases: 3,
-  username: 'ackermand',
+  username: 'flask',
 };
 
 plan.target('local', {
@@ -90,10 +90,10 @@ plan.local('deploy', function(local) {
 });
 
 
-plan.local('deploy', function(local) {
+plan.remote('deploy', function(remote) {
   config.deployTo = config.projectDir + '/releases/' + (new Date().getTime());
-  local.log('Creating webroot');
-  local.exec('mkdir -p ' + config.deployTo);
+  remote.log('Creating webroot');
+  remote.exec('mkdir -p ' + config.deployTo);
 });
 
 // Gets a list of files that git knows about and sends them to the
@@ -104,81 +104,81 @@ plan.local('deploy', function (local) {
   local.transfer(files, config.deployTo + '/');
 });
 
-plan.local('deploy',function (local) {
-  local.log('Linking to new release');
-  local.exec('ln -nfs ' + config.deployTo + ' ' +
+plan.remote('deploy',function (remote) {
+  remote.log('Linking to new release');
+  remote.exec('ln -nfs ' + config.deployTo + ' ' +
     config.projectDir + '/current');
 
-  local.log('Checking for stale releases');
-  var releases = getReleases(local);
+  remote.log('Checking for stale releases');
+  var releases = getReleases(remote);
 
   if (releases.length > config.keepReleases) {
     var removeCount = releases.length - config.keepReleases;
-    local.log('Removing ' + removeCount + ' stale release(s)');
+    remote.log('Removing ' + removeCount + ' stale release(s)');
 
     releases = releases.slice(0, removeCount);
     releases = releases.map(function (item) {
       return config.projectDir + '/releases/' + item;
       });
 
-    local.exec('rm -rf ' + releases.join(' '));
+    remote.exec('rm -rf ' + releases.join(' '));
   }
 });
 
-plan.local('deploy', function(local) {
-  local.log('Create virtualenv');
-  local.exec('cd ' + config.projectDir + '/current' + '; virtualenv env --no-site-packages -p ' + config.pythonPath);
+plan.remote('deploy', function(remote) {
+  remote.log('Create virtualenv');
+  remote.exec('cd ' + config.projectDir + '/current' + '; virtualenv env --no-site-packages -p ' + config.pythonPath);
 });
 
-plan.local('deploy', function(local) {
-  local.log('Install the requirements');
+plan.remote('deploy', function(remote) {
+  remote.log('Install the requirements');
   // use pip9 due to bug reported here: https://stackoverflow.com/questions/49854465/pythonpip-install-bson-error
-  local.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -U pip; pip install -r requirements.txt --no-cache-dir');
+  remote.exec('cd ' + config.projectDir + '/current' + '; source env/bin/activate; pip install -U pip; pip install -r requirements.txt --no-cache-dir');
 });
 
-plan.local('deploy', function(local) {
-  local.log('Copy over lightsheet-config.cfg');
-  local.exec('cp ' + config.projectDir + '/lightsheet-config.cfg ' + config.projectDir + '/current/app/');
+plan.remote('deploy', function(remote) {
+  remote.log('Copy over lightsheet-config.cfg');
+  remote.exec('cp ' + config.projectDir + '/lightsheet-config.cfg ' + config.projectDir + '/current/app/');
 });
 
-plan.local('deploy', function(local) {
-  local.log('Copy over env_config.py');
-  local.exec('cp ' + config.projectDir + '/env_config.py ' + config.projectDir + '/current/');
+plan.remote('deploy', function(remote) {
+  remote.log('Copy over env_config.py');
+  remote.exec('cp ' + config.projectDir + '/env_config.py ' + config.projectDir + '/current/');
 });
 
-// plan.local('deploy', function(local) {
-//   local.log('Create upload folder');
-//   local.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
+// plan.remote('deploy', function(remote) {
+//   remote.log('Create upload folder');
+//   remote.exec('cd ' + config.projectDir + '/current' + '; mkdir upload');
 // });
 
-plan.local('deploy', function(local) {
-  local.log('Restart application');
-  local.exec('sudo /usr/local/bin/flask_restart.sh');
+plan.remote('deploy', function(remote) {
+  remote.log('Restart application');
+  remote.exec('sudo /usr/local/bin/flask_restart.sh');
 });
 
-plan.local('rollback', function(local) {
-  local.log('Rolling back release');
-  var releases = getReleases(local);
+plan.remote('rollback', function(remote) {
+  remote.log('Rolling back release');
+  var releases = getReleases(remote);
   if (releases.length > 1) {
     var oldCurrent = releases.pop();
     var newCurrent = releases.pop();
-    local.log('Linking current to ' + newCurrent);
-    local.exec('ln -nfs ' + config.projectDir + '/releases/' + newCurrent + ' '
+    remote.log('Linking current to ' + newCurrent);
+    remote.exec('ln -nfs ' + config.projectDir + '/releases/' + newCurrent + ' '
       + config.projectDir + '/current');
 
-    local.log('Removing ' + oldCurrent);
-    local.sudo('rm -rf ' + config.projectDir + '/releases/' + oldCurrent, {user: config.root});
+    remote.log('Removing ' + oldCurrent);
+    remote.sudo('rm -rf ' + config.projectDir + '/releases/' + oldCurrent, {user: config.root});
   }
 
 });
 
-plan.local(['default','uptime'], function(local) {
-  local.exec('uptime');
-  local.exec('whoami');
+plan.remote(['default','uptime'], function(remote) {
+  remote.exec('uptime');
+  remote.exec('whoami');
 });
 
-function getReleases(local) {
-  var releases = local.exec('ls ' + config.projectDir +
+function getReleases(remote) {
+  var releases = remote.exec('ls ' + config.projectDir +
     '/releases', {silent: true});
 
   if (releases.code === 0) {
