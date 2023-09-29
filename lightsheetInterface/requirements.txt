@@ -1,3 +1,4 @@
+Jinja2==2.10
 Flask==1.0.2
 Flask-Admin==1.5.3
 Flask-Login==0.4.1
@@ -11,7 +12,6 @@ Flask-Script==2.0.6
 ipdb==0.13
 python-dateutil==2.7.3
 pytz==2018.5
-Jinja2==2.10
 uwsgi
 requests==2.20.0
 werkzeug==0.16.1
