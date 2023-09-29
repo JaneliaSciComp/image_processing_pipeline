@@ -11,7 +11,7 @@ Flask-Script==2.0.6
 ipdb==0.13
 python-dateutil==2.7.3
 pytz==2018.5
-jinja2==2.10
+Jinja2==2.10
 uwsgi
 requests==2.20.0
 werkzeug==0.16.1
