@@ -357,8 +357,10 @@ def get_job_info_from_jacs(request_params_dictionary):
 def convert_jacs_time(t):
     print('!!!!! CONVERT ', t)
 
-    t = datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
+    t = datetime.fromisoformat(t)
+    print('!!!!! t after from isoformat ', t)
     t = UTC_TIMEZONE.localize(t).astimezone(EASTERN_TIMEZONE)
+    print('!!!!! t after localize ', t)
     return t
 
 
