@@ -359,8 +359,11 @@ def convert_jacs_time(t):
 
     t = datetime.fromisoformat(t)
     print('!!!!! t after from isoformat ', t)
-    t = UTC_TIMEZONE.localize(t).astimezone(EASTERN_TIMEZONE)
-    print('!!!!! t after localize ', t)
+    if t.tzinfo is None:
+        t = UTC_TIMEZONE.localize(t)
+        print('!!!!! t after localize 1 ', t)
+    t = t.astimezone(EASTERN_TIMEZONE)
+    print('!!!!! t after localize 2 ', t)
     return t
 
 
