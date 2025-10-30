@@ -1,5 +1,4 @@
-import datetime, json, requests, operator, time
-from flask import url_for
+import datetime, json, requests, operator
 from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
 from datetime import datetime
@@ -7,7 +6,7 @@ from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
 from app import app
-from app.models import AppConfig, Step, Parameter, Template, PipelineInstance
+from app.models import Step, Parameter, Template, PipelineInstance
 from collections import OrderedDict
 from itertools import repeat
 from pprint import pprint
@@ -317,6 +316,7 @@ def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_
 
             for jacs_id in jacs_ids:
                 parent_job_info_from_jacs = get_job_info_from_jacs({'service-id': jacs_id})
+                print('!!!!!!! JOB INFO ', parent_job_info_from_db)
                 if parent_job_info_from_jacs and len(parent_job_info_from_jacs["resultList"]) > 0:
                     parent_job_info_from_jacs = parent_job_info_from_jacs["resultList"][0]
                     parent_dictionary = { 'find': {"_id": parent_job_info_from_db["_id"]}, 'set': {"$set": {"state": parent_job_info_from_jacs["state"]}} }
@@ -326,8 +326,12 @@ def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_
                     if all_child_job_info_from_jacs:
                         for current_child_job_info_from_db in parent_job_info_from_db["steps"]:
                             current_child_job_info_from_jacs = next((step for step in all_child_job_info_from_jacs if (current_child_job_info_from_db["name"] in step["description"])), None)
+
                             if current_child_job_info_from_db["state"] == "NOT YET QUEUED" and jacs_id != jacs_ids[-1]:  # NOT YET QUEUED jobs were just submitted so only want to check based on currently running job
                                 current_child_job_info_from_jacs = {}
+
+                            print('!!!! CURRENT JOB ', current_child_job_info_from_jacs)
+
                             if current_child_job_info_from_jacs:
                                 creation_time = convert_jacs_time(current_child_job_info_from_jacs["processStartTime"])
                                 find_dictionary = {"_id": parent_job_info_from_db["_id"], "steps.name": current_child_job_info_from_db["name"]}
@@ -351,6 +355,8 @@ def get_job_info_from_jacs(request_params_dictionary):
 
 
 def convert_jacs_time(t):
+    print('!!!!! CONVERT ', t)
+
     t = datetime.strptime(t[:-9], '%Y-%m-%dT%H:%M:%S')
     t = UTC_TIMEZONE.localize(t).astimezone(EASTERN_TIMEZONE)
     return t
