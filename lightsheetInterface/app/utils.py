@@ -316,7 +316,6 @@ def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_
 
             for jacs_id in jacs_ids:
                 parent_job_info_from_jacs = get_job_info_from_jacs({'service-id': jacs_id})
-                print('!!!!!!! JOB INFO ', parent_job_info_from_db)
                 if parent_job_info_from_jacs and len(parent_job_info_from_jacs["resultList"]) > 0:
                     parent_job_info_from_jacs = parent_job_info_from_jacs["resultList"][0]
                     parent_dictionary = { 'find': {"_id": parent_job_info_from_db["_id"]}, 'set': {"$set": {"state": parent_job_info_from_jacs["state"]}} }
@@ -329,8 +328,6 @@ def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_
 
                             if current_child_job_info_from_db["state"] == "NOT YET QUEUED" and jacs_id != jacs_ids[-1]:  # NOT YET QUEUED jobs were just submitted so only want to check based on currently running job
                                 current_child_job_info_from_jacs = {}
-
-                            print('!!!! CURRENT JOB ', current_child_job_info_from_jacs)
 
                             if current_child_job_info_from_jacs:
                                 creation_time = convert_jacs_time(current_child_job_info_from_jacs["processStartTime"])
@@ -355,15 +352,10 @@ def get_job_info_from_jacs(request_params_dictionary):
 
 
 def convert_jacs_time(t):
-    print('!!!!! CONVERT ', t)
-
     t = datetime.fromisoformat(t)
-    print('!!!!! t after from isoformat ', t)
     if t.tzinfo is None:
         t = UTC_TIMEZONE.localize(t)
-        print('!!!!! t after localize 1 ', t)
     t = t.astimezone(EASTERN_TIMEZONE)
-    print('!!!!! t after localize 2 ', t)
     return t
 
 
