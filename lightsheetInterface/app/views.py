@@ -1,6 +1,7 @@
 # Contains routes and functions to pass content to the template layer
-import requests, json, os, math, bson, re, subprocess, ipdb, logging, time
-from flask import render_template, request, jsonify, abort, send_from_directory, Response, flash
+import json, os
+
+from flask import render_template, request, jsonify, abort, send_from_directory, flash
 from flask import send_from_directory, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -9,8 +10,8 @@ from app import app
 from app.authservice import create_auth_service
 from app.forms import LoginForm
 from app.utils import *
-from app.jobs_io import reformat_data_to_post, parse_json_data_no_forms, submit_the_job_to_db_and_jacs, load_preexisting_job, load_uploaded_config
-from app.models import Dependency, Configuration
+from app.jobs_io import reformat_data_to_post, submit_the_job_to_db_and_jacs, load_preexisting_job, load_uploaded_config
+from app.models import Dependency
 from bson.objectid import ObjectId
 
 # This file contains all the view components necessary for routing and loading the correct webpages
@@ -20,17 +21,19 @@ ALLOWED_EXTENSIONS = {'txt', 'json'}
 
 # Mongo client
 MONGO_URI = app.config['MONGODB_HOST']
+MONGO_DB = app.config['MONGODB_DB']
 MONGO_USER = app.config.get('MONGODB_USERNAME')
 MONGO_PASSWORD = app.config.get('MONGODB_PASSWORD')
 
 if MONGO_USER:
+    print(f'Connect to {MONGO_URI}:{MONGO_DB}')
     CLIENT = MongoClient(MONGO_URI, username=MONGO_USER, password=MONGO_PASSWORD)
 else:
     CLIENT = MongoClient(MONGO_URI)
 
 # imageProcessingDB is the database containing lightsheet job information and parameters
 # The current database is called "lightsheet" but should be renamed to better reflect all its functionality
-IMAGE_PROCESSING_DB = CLIENT.lightsheet
+IMAGE_PROCESSING_DB = CLIENT[MONGO_DB]
 
 
 def _allowed_file(filename):

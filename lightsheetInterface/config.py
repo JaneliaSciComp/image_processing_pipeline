@@ -23,7 +23,8 @@ LOGIN_PAGE = '.login_form'
 # For localhost use 'mongodb://localhost:27017/lightsheet'
 # For a replica set use something like:
 # 'mongodb://mongodb4:27029,mongodb4:27030,mongodb4:27031/lightsheet?replicaSet=rsLightsheet&authSource=lightsheet'
-MONGODB_HOST = 'mongodb://localhost:27017/lightsheet'
+MONGODB_HOST = 'mongodb://localhost:27017'
+MONGODB_DB = 'lightsheet'
 MONGODB_USERNAME = ''
 MONGODB_PASSWORD = ''
 
