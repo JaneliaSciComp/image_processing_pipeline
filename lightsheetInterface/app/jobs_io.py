@@ -89,7 +89,7 @@ def initial_reformatting_of_step_parameters(posted_data, step):
             # move the parts of the range parameter to the right key of the object
             if range_key in ['start', 'every', 'end']:
                 current_value = posted_data[step][p][parameter_key]
-                param_value_set[range_key] = float(current_value) if current_value is not '' and current_value != "[]" else ''
+                param_value_set[range_key] = float(current_value) if current_value and current_value != '[]' else ''
                 step_parameters_reformatted[parameter_name] = param_value_set
         else:  # no range
             if parameter_name not in step_parameters_reformatted:
