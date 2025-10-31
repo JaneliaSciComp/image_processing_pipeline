@@ -209,7 +209,7 @@ def build_configuration_object(step_or_template_dictionary=None):
             elif 'template' in step_or_template_dictionary:
                 template_name = step_or_template_dictionary['template']
                 template = Template.objects.all().filter(name=template_name)
-                print('!!!!!!!!!!!!! TEMPLATES ', template)
+                print(f'!!!!!!!!!!!!! TEMPLATES {template_name} -> {template}')
                 if len(template) > 0:
                     current_steps = sorted(template[0].steps, key=operator.attrgetter('order'))
                     for step in current_steps:
