@@ -208,10 +208,11 @@ def build_configuration_object(step_or_template_dictionary=None):
                 current_steps = [current_steps]
             elif 'template' in step_or_template_dictionary:
                 template_name = step_or_template_dictionary['template']
-                template = Template.objects.all().filter(name=template_name)
-                current_steps = sorted(template[0].steps, key=operator.attrgetter('order'))
-                for step in current_steps:
-                    step['parameter'] = get_parameters(step['parameter'])
+                template = Template.objects.all().filter(name=template_name).first()
+                if template is not None:
+                    current_steps = sorted(template.steps, key=operator.attrgetter('order'))
+                    for step in current_steps:
+                        step['parameter'] = get_parameters(step['parameter'])
             elif 'steps' in step_or_template_dictionary:
                 for temp_step in step_or_template_dictionary['steps']:
                     if 'name' in temp_step:
