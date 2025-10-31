@@ -139,6 +139,7 @@ def workflow():
 def index():
     all_workflows = list(IMAGE_PROCESSING_DB.template.find({}, {'name': 1}))
     workflow_names = [workflow['name'] for workflow in all_workflows]
+    print(f'!!!!!!All Workflows: {workflow_names}')
     if len(all_workflows)==0:
         return redirect(url_for('workflow', template='NO WORKFLOWS CREATED YET'))
     elif 'AIC SimView Single Camera' in workflow_names:
