@@ -16,6 +16,15 @@ def _create_ui_app(cfg):
     env_config_file = _get_env_config_file()
     if env_config_file:
         ui_app.config.from_pyfile(env_config_file)
+
+    db = ui_app.config['MONGODB_DB']
+    username = ui_app.config['MONGODB_USERNAME']
+    password = ui_app.config['MONGODB_PASSWORD']
+    ui_app.config['MONGODB_SETTINGS'] = {
+        'db': db,
+        'username': username,
+        'password': password,
+    }
     return ui_app
 
 
