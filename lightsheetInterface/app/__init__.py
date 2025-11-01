@@ -17,10 +17,12 @@ def _create_ui_app(cfg):
     if env_config_file:
         ui_app.config.from_pyfile(env_config_file)
 
+    db_host = ui_app.config['MONGODB_HOST']
     db = ui_app.config['MONGODB_DB']
     username = ui_app.config['MONGODB_USERNAME']
     password = ui_app.config['MONGODB_PASSWORD']
     ui_app.config['MONGODB_SETTINGS'] = {
+        'host': db_host,
         'db': db,
         'username': username,
         'password': password,
