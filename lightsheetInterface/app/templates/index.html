@@ -116,12 +116,14 @@
 
                 $('#template-selector').on('change', function (event) {
                     var template_id = $(this).find(":selected").val();
-                    window.location = window.origin + '/workflow?template=' + template_id;
+                    const baseUrl = "{{ url_for('workflow') }}";
+                    window.location = baseUrl + '?template=' + template_id;
                 });
 
                 $('#step-selector').on('change', function (event) {
                     var step_id = $(this).find(":selected").val();
-                    window.location = window.origin + '/workflow?step=' + step_id;
+                    const baseUrl = "{{ url_for('workflow') }}";
+                    window.location = baseUrl + '?step=' + step_id;
                 });
 
                 $('.info-icon').on('click', function (event) {
