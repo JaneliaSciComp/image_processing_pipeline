@@ -2,13 +2,10 @@
   "name": "lightsheet-pipeline",
   "version": "0.12.2",
   "description": "Image Processing Pipeline Webapp",
-  "main": "flightplan.js",
   "directories": {
     "example": "examples"
   },
-  "dependencies": {
-    "flightplan": "^0.6.19"
-  },
+  "dependencies": {},
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

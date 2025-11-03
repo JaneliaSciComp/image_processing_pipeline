@@ -2,17 +2,15 @@
   "name": "lightsheetinterface",
   "version": "0.37.2",
   "description": "LightSheet Pipeline Configurator",
-  "main": "flightplan.js",
   "dependencies": {
-    "bootstrap-select": "^1.13.2",
-    "datatables.net": "^1.10.16",
-    "datatables.net-bs4": "^1.10.16",
-    "flightplan": "^0.6.19",
+    "bootstrap-select": "^1.13.18",
+    "datatables.net": "^2.3.4",
+    "datatables.net-bs4": "^2.3.4",
     "font-awesome": "^4.7.0"
   },
   "devDependencies": {
-    "eslint": "^5.5.0",
-    "jquery": "^3.3.1"
+    "eslint": "^9.39.0",
+    "jquery": "^3.7.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

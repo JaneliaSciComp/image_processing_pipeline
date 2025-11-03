@@ -20,10 +20,10 @@ from bson.objectid import ObjectId
 ALLOWED_EXTENSIONS = {'txt', 'json'}
 
 # Mongo client
-MONGO_URI = app.config['MONGODB_HOST']
-MONGO_DB = app.config['MONGODB_DB']
-MONGO_USER = app.config.get('MONGODB_USERNAME')
-MONGO_PASSWORD = app.config.get('MONGODB_PASSWORD')
+MONGO_URI = app.config.get('MONGODB_HOST', 'localhost:27017')
+MONGO_DB = app.config.get('MONGODB_DB', 'lightsheet')
+MONGO_USER = app.config.get('MONGODB_USERNAME', '')
+MONGO_PASSWORD = app.config.get('MONGODB_PASSWORD', '')
 
 if MONGO_USER:
     print(f'Connect to {MONGO_URI}:{MONGO_DB}')
@@ -77,6 +77,7 @@ def workflow():
     reparameterize = request.args.get('reparameterize')
     pipeline_instance = PipelineInstance.objects.filter(name=configuration_name).first()
 
+    configuration_object = {}
     if pipeline_instance:  # Then load an uploaded config
         uploaded_content = json.loads(pipeline_instance.content)
         configuration_object = build_configuration_object({'steps': uploaded_content['steps']})
@@ -139,7 +140,6 @@ def workflow():
 def index():
     all_workflows = list(IMAGE_PROCESSING_DB.template.find({}, {'name': 1}))
     workflow_names = [workflow['name'] for workflow in all_workflows]
-    print(f'!!!!!!All Workflows: {workflow_names}')
     if len(all_workflows)==0:
         return redirect(url_for('workflow', template='NO WORKFLOWS CREATED YET'))
     elif 'AIC SimView Single Camera' in workflow_names:
@@ -389,7 +389,7 @@ def hide_entries():
 def create_dependency_results(dependencies, configuration_object):
     global_parameters = []
     non_global_parameters = []
-    for step in configuration_object["steps"]:
+    for step in configuration_object.get('steps', []):
         if "GLOBALPARAMETERS" in step.name.upper():
             global_parameters = [parameter.name for parameter in step.parameter]
         else:

@@ -8,6 +8,7 @@ from wtforms.widgets import TextArea
 from app import admin
 import datetime, uuid
 
+
 types = (('', None), ('S', 'Step'), ('D', 'Directory'))
 frequency = (('F', 'Frequent'), ('S', 'Sometimes'), ('R', 'Rare'))
 formats = (

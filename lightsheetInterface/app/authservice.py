@@ -4,11 +4,13 @@ from datetime import datetime
 
 from flask_login import login_user, UserMixin, logout_user
 
-from app import login_manager, app
+from . import login_manager, app
 
 
 def create_auth_service():
-    return AuthenticationService(app.config.get('AUTH_SERVICE_URL'), app.config.get('JACS_SYNC_URL'), app.config.get('ADMINS'))
+    return AuthenticationService(app.config.get('AUTH_SERVICE_URL'),
+                                 app.config.get('JACS_SYNC_URL'),
+                                 app.config.get('ADMINS'))
 
 
 @login_manager.user_loader

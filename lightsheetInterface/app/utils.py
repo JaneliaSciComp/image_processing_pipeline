@@ -100,6 +100,7 @@ def all_jobs_in_json(image_processing_db, show_all_jobs=False):
     list_to_return = get_job_dictionary_as_list(parent_job_info)
     return list_to_return
 
+
 def get_job_dictionary_as_list(parent_job_info):
     all_steps = Step.objects.all()
     #print("get_job_dictionary_as_list: parent_job_info ")
@@ -108,6 +109,7 @@ def get_job_dictionary_as_list(parent_job_info):
     #print("get_job_dictionary_as_list: list_to_return ")
     #pprint(list_to_return[-1])
     return list_to_return
+
 
 # build result object of existing job information
 def map_jobs_to_dictionary(parent_job_information, all_steps):
@@ -346,6 +348,7 @@ def build_find_and_set_dictionaries_for_db_update(relevant_job_information_from_
                                 find_and_set_dictionaries.append(step_dictionary)
     return find_and_set_dictionaries
 
+
 def get_job_info_from_jacs(request_params_dictionary):
     request_output_jsonified = requests.get(JACS_ASYNC_URL + '/services/',
                                             params=request_params_dictionary,
@@ -382,6 +385,7 @@ def create_db_entries(content):
 
     result = {'message': message, 'success': success}
     return result
+
 
 def add_parameters_to_db(obj, message):
     for o in obj:
@@ -610,7 +614,6 @@ def step_or_template_name_url_maker(step_or_template_name):
     else:
         step_or_template_name = '/workflow?template='+step_or_template_name[10:]
     return step_or_template_name
-
 
 
 ## THE REMAINNIG FUNCTIONS ARE CURRENTLY ONLY FOR QUICKLY COPYING SETPS AND DELETING PARAMETERS FOR ADMIN USE. THERE IS NO FORMAL UI WAY TO DO IT YET, JUST VIA HTML REQUESTS ##

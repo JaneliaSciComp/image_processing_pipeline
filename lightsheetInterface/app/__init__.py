@@ -15,19 +15,27 @@ def _create_ui_app(cfg):
     ui_app.config.from_object(cfg)
     env_config_file = _get_env_config_file()
     if env_config_file:
+        print(f'Read env from {env_config_file}', flush=True)
         ui_app.config.from_pyfile(env_config_file)
 
-    db_host = ui_app.config['MONGODB_HOST']
-    db = ui_app.config['MONGODB_DB']
-    username = ui_app.config['MONGODB_USERNAME']
-    password = ui_app.config['MONGODB_PASSWORD']
-    ui_app.config['MONGODB_SETTINGS'] = {
-        'host': db_host,
+    return ui_app
+
+
+def _create_db_config(ui_app):
+    host = ui_app.config.get('MONGODB_HOST', 'localhost:27017')
+    db = ui_app.config.get('MONGODB_DB', 'lightsheet')
+    authentication_source = ui_app.config.get('MONGODB_AUTHENTICATION_SOURCE', '')
+    replicaset = ui_app.config.get('MONGODB_REPLICASET', '')
+    username = ui_app.config.get('MONGODB_USERNAME','')
+    password = ui_app.config.get('MONGODB_PASSWORD','')
+    return {
+        'host': host,
         'db': db,
         'username': username,
         'password': password,
+        'replicaset': replicaset,
+        'authentication_source': authentication_source,
     }
-    return ui_app
 
 
 def _create_login_manager(ui_app):
@@ -46,10 +54,13 @@ def _get_env_config_file():
     else:
         return None
 
+
 app = _create_ui_app(config)
 login_manager = _create_login_manager(app)
 
 admin = Admin(app)
+db_config = _create_db_config(app)
+app.config['MONGODB_SETTINGS'] = db_config
 db = MongoEngine(app)
 toolbar = DebugToolbarExtension(app)
 
@@ -94,9 +105,11 @@ def get_app_version():
         package_data.close()
         return dict(version=data['version'])
 
+
 @app.context_processor
 def get_jacs_dashboard_url():
     return dict(jacs_dashboard_url=app.config.get('JACS_DASHBOARD_URL'))
+
 
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):
@@ -108,7 +121,7 @@ def _jinja2_filter_datetime(date, fmt=None):
 
 
 @app.template_filter('strftime_short')
-def _jinja2_filter_datetime(date, fmt=None):
+def _jinja2_filter_datetime_short(date, fmt=None):
     date = dateutil.parser.parse(date)
     native = date.replace(tzinfo=None)
 
