@@ -97,7 +97,7 @@ def initial_reformatting_of_step_parameters(posted_data, step):
             # check if current value is a float within a string and needs to be converted
             current_value = posted_data[step][p][parameter_key]
 
-            if re.match("[-+]?[0-9]*\.?[0-9]*.$", current_value) is None:  # no float
+            if re.match('[-+]?[0-9]*\\.?[0-9]*$', current_value) is None:  # no float
                 try:
                     tmp = json.loads(current_value)
                     step_parameters_reformatted[parameter_name].append(tmp)
