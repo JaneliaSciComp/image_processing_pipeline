@@ -6,10 +6,9 @@
  * Generate jQuery datatables table
  */
 
-$(document).ready(()=>{
+$(document).ready(() => {
     const baseUrl = window.APP_ROOT || '';
-    let table=null;
-    table = $('#job-table').DataTable({
+    let table = $('#job-table').DataTable({
         stateSave:false,
         order: [[3, "desc"]],
         responsive: true,

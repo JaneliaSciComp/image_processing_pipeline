@@ -4,7 +4,7 @@
         <table class="table table-striped table-hover" id='job-table'/>
     </div>
     <script>
-        window.APP_ROOT = {{ request.script_root | tojson | safe}}
+        window.APP_ROOT = {{ request.script_root | tojson | safe }}
     </script>
     <script>document.write("<script src='{{ url_for('static', filename='js/table.js') }}?time=" + Date.now() +"'><\/script>");</script>
     <script>document.write("<script src='{{ url_for('static', filename='js/submit.js') }}?time=" + Date.now() +"'><\/script>");</script>

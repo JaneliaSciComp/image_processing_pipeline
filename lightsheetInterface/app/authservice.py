@@ -4,7 +4,7 @@ from datetime import datetime
 
 from flask_login import login_user, UserMixin, logout_user
 
-from . import login_manager, app
+from app import login_manager, app
 
 
 def create_auth_service():
