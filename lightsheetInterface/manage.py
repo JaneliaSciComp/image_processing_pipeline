@@ -1,9 +1,8 @@
 import argparse
 
-from app import app
-
-
 def runserver(host='localhost', port=9000):
+    from app import app
+    print(f'Start app on {host}:{port}')
     app.run(host=host, port=port)
 
 
@@ -25,4 +24,4 @@ def main():
 
 
 if __name__ == '__main__':
-    runserver()
+    main()

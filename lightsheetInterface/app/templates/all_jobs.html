@@ -19,6 +19,7 @@
         {% else %}
             var table_data = null;
         {% endif %}
-        var tableDataURL =  window.location.origin + "/table_data?showAllJobs=True";
+        const baseUrl = "{{ url_for('table_data') }}";
+        var tableDataURL =  baseUrl + "?showAllJobs=True";
     </script>
 {% endblock content %}

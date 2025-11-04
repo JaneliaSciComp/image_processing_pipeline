@@ -18,6 +18,8 @@ def _create_ui_app(cfg):
         print(f'Read env from {env_config_file}', flush=True)
         ui_app.config.from_pyfile(env_config_file)
 
+    app_root = ui_app.config.get('APPLICATION_ROOT', '/')
+    print(f'Application root: {app_root}')
     return ui_app
 
 
