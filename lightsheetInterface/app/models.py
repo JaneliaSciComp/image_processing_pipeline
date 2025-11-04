@@ -260,8 +260,9 @@ class ExtendedParameterView(ModelView):
 def create_admin(app):
 
     admin = Admin(app,
+                  name='',
                   index_view=AdminIndexView(
-                    name='Home',
+                    name='Admin', # Admin Home
                     template='admin/index.html',
                     url='/admin'
                   ))
