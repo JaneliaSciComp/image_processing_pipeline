@@ -77,7 +77,6 @@ $(document).ready(() => {
                         }
                         else if (states[i] == 'RESET') {
                             if (!allJobs) {
-                                var baseUrl = window.location.origin;
                                 names.push("<button onclick=\"dataIo.reset('" + row.stepOrTemplateName + "','" + row.id + "')\"> RESET </button> ");
                             }
                         }
@@ -99,7 +98,7 @@ $(document).ready(() => {
                 className: 'job-id',
                 data: 'id',
                 render(data, type, row, meta) {
-                    return data ? "<a href=\"/config/" + data + "\" target=\"_blank\">" + data + "</a>" : '';
+                    return data ? "<a href=\"" + baseUrl + "/config/" + data + "\" target=\"_blank\">" + data + "</a>" : '';
                 }
             },
             {
