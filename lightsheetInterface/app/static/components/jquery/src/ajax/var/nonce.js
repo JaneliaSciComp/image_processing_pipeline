@@ -1,5 +1,7 @@
-define( function() {
+define( [
+	"../../core"
+], function( jQuery ) {
 	"use strict";
 
-	return { guid: Date.now() };
+	return jQuery.now();
 } );

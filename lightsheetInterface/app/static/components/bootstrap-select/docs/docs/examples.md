@@ -496,7 +496,7 @@ Alternatively, use the `data-width` attribute to set the width of the select. Se
   <div class="row">
     <div class="col-sm-12">
       <div class="form-group">
-        <label><code>width: 'auto'</code></label>
+        <label>width: 'auto'</label>
         <select class="selectpicker form-control" data-width="auto">
           <option>Mustard</option>
           <option>Ketchup</option>
@@ -509,7 +509,7 @@ Alternatively, use the `data-width` attribute to set the width of the select. Se
   <div class="row">
     <div class="col-sm-12">
       <div class="form-group">
-        <label><code>width: 'fit'</code></label>
+        <label>width: 'fit'</label>
         <select class="selectpicker form-control" data-width="fit">
           <option>Mustard</option>
           <option>Ketchup</option>
@@ -522,8 +522,8 @@ Alternatively, use the `data-width` attribute to set the width of the select. Se
   <div class="row">
     <div class="col-sm-12">
       <div class="form-group">
-        <label><code>width: '150px'</code></label>
-        <select class="selectpicker form-control" data-width="150px">
+        <label>width: '100px'</label>
+        <select class="selectpicker form-control" data-width="100px">
           <option>Mustard</option>
           <option>Ketchup</option>
           <option>Relish</option>
@@ -535,7 +535,7 @@ Alternatively, use the `data-width` attribute to set the width of the select. Se
   <div class="row">
     <div class="col-sm-12">
       <div class="form-group">
-        <label><code>width: '75%'</code></label>
+        <label>width: '75%'</label>
         <select class="selectpicker form-control" data-width="75%">
           <option>Mustard</option>
           <option>Ketchup</option>
@@ -593,10 +593,6 @@ Add an icon to an option or optgroup with the `data-icon` attribute:
 ## Custom content
 
 Insert custom HTML into the option with the `data-content` attribute:
-
-<span class="alert alert-warning d-block" role="alert">
-  <strong>Note:</strong> This feature inserts HTML into the DOM. By default, it is sanitized using our built-in [sanitizer](options.md#sanitizer).
-</span>
 
 <div class="bs-docs-example">
   <select class="selectpicker">
@@ -786,12 +782,11 @@ Add a header to the dropdown menu, e.g. `header: 'Select a condiment'` or `data-
 
 ## Container
 
-Append the select menu to a specific element, e.g. `container: 'body'` or `data-container=".main-content"`. This is useful if the select element is inside an element with `overflow: hidden`.
+Append the select to a specific element, e.g. `container: 'body'` or `data-container=".main-content"`
 
-<div class="bs-docs-example" style="overflow: hidden;">
+<div class="bs-docs-example" style="overflow:hidden;">
   <div class="row">
     <div class="col-md-3">
-      <label><code>container: false</code></label>
       <select class="selectpicker form-control">
         <option data-subtext="French's">Mustard</option>
         <option data-subtext="Heinz">Ketchup</option>
@@ -805,7 +800,6 @@ Append the select menu to a specific element, e.g. `container: 'body'` or `data-
       </select>
     </div>
     <div class="col-md-3">
-    <label><code>container: 'body'</code></label>
       <select class="selectpicker form-control" data-container="body">
         <option data-subtext="French's">Mustard</option>
         <option data-subtext="Heinz">Ketchup</option>
@@ -837,7 +831,7 @@ Append the select menu to a specific element, e.g. `container: 'body'` or `data-
 `dropupAuto` is set to true by default, which automatically determines whether or not the menu should display above or below the select box. If `dropupAuto` is set to false, manually make the select a dropup menu by adding the `.dropup` class to the select.
 
 <div class="bs-docs-example">
-  <select class="selectpicker dropup" data-dropup-auto="false">
+  <select class="selectpicker dropup">
     <option>Mustard</option>
     <option>Ketchup</option>
     <option>Relish</option>
@@ -845,7 +839,7 @@ Append the select menu to a specific element, e.g. `container: 'body'` or `data-
 </div>
 
 ```html
-<select class="selectpicker dropup" data-dropup-auto="false">
+<select class="selectpicker dropup">
   ...
 </select>
 ```

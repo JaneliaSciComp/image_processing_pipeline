@@ -1,10 +1,9 @@
 define( [
 	"./core",
 	"./core/access",
-	"./core/camelCase",
 	"./data/var/dataPriv",
 	"./data/var/dataUser"
-], function( jQuery, access, camelCase, dataPriv, dataUser ) {
+], function( jQuery, access, dataPriv, dataUser ) {
 
 "use strict";
 
@@ -109,11 +108,11 @@ jQuery.fn.extend( {
 					while ( i-- ) {
 
 						// Support: IE 11 only
-						// The attrs elements can be null (trac-14894)
+						// The attrs elements can be null (#14894)
 						if ( attrs[ i ] ) {
 							name = attrs[ i ].name;
 							if ( name.indexOf( "data-" ) === 0 ) {
-								name = camelCase( name.slice( 5 ) );
+								name = jQuery.camelCase( name.slice( 5 ) );
 								dataAttr( elem, name, data[ name ] );
 							}
 						}

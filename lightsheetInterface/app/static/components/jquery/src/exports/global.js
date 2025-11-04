@@ -1,6 +1,6 @@
 define( [
 	"../core"
-], function( jQuery ) {
+], function( jQuery, noGlobal ) {
 
 "use strict";
 
@@ -25,9 +25,9 @@ jQuery.noConflict = function( deep ) {
 };
 
 // Expose jQuery and $ identifiers, even in AMD
-// (trac-7102#comment:10, https://github.com/jquery/jquery/pull/557)
-// and CommonJS for browser emulators (trac-13566)
-if ( typeof noGlobal === "undefined" ) {
+// (#7102#comment:10, https://github.com/jquery/jquery/pull/557)
+// and CommonJS for browser emulators (#13566)
+if ( !noGlobal ) {
 	window.jQuery = window.$ = jQuery;
 }
 
