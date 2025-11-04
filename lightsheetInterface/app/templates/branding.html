@@ -19,7 +19,9 @@
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('search') }}" style="display: none;"> Advanced Search </a>
       <a class="navbar-brand" href="{{ url_for('upload') }}"> Upload Pipeline</a>
       <a class="navbar-brand" href="{{ url_for('upload_config') }}"> Upload Config</a>
-      <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
+      {% if is_admin is defined and is_admin %}
+        <a class="navbar-brand" href="{{ url_for('admin.index') }}"> Admin </a>
+      {% endif %}
       <a class="navbar-brand" href="{{ url_for('logout') }}"> Logout </a>
       <div style="margin-left: 1em;">
           <a class="navbar-brand" > Select Uploaded Config: </a>
@@ -39,5 +41,5 @@
       </div>
     {% endif %}
   </nav>
-  <script>document.write("<script src='{{ url_for('static', filename='js/landing.js') }}?time=" + Date.now() +"'><\/script>");</script>
+  <script src="{{ url_for('static', filename='js/landing.js') }}?time=" + Date.now()></script>
 {% endblock navbar %}

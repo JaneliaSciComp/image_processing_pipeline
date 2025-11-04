@@ -1,7 +1,8 @@
 define( [
 	"../core",
-	"../var/document"
-], function( jQuery, document ) {
+	"../var/document",
+	"../var/isFunction"
+], function( jQuery, document, isFunction ) {
 
 "use strict";
 
@@ -29,7 +30,7 @@ jQuery.extend( {
 	isReady: false,
 
 	// A counter to track how many items to wait for before
-	// the ready event fires. See #6781
+	// the ready event fires. See trac-6781
 	readyWait: 1,
 
 	ready: function( wait ) {
@@ -52,7 +53,7 @@ jQuery.extend( {
 
 			while ( readyCallbacks.length ) {
 				fn = readyCallbacks.shift();
-				if ( jQuery.isFunction( fn ) ) {
+				if ( isFunction( fn ) ) {
 					executeReady( fn );
 				}
 			}

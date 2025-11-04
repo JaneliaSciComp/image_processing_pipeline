@@ -4,9 +4,8 @@ import config
 
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_mongoengine import MongoEngine
-from flask_admin import Admin
 from datetime import datetime
 
 
@@ -60,7 +59,6 @@ def _get_env_config_file():
 app = _create_ui_app(config)
 login_manager = _create_login_manager(app)
 
-admin = Admin(app)
 db_config = _create_db_config(app)
 app.config['MONGODB_SETTINGS'] = db_config
 db = MongoEngine(app)
@@ -68,6 +66,8 @@ toolbar = DebugToolbarExtension(app)
 
 from app import views, models
 from app.models import PipelineInstance
+
+admin = models.create_admin(app)
 
 
 def to_pretty_json(value):
@@ -81,7 +81,9 @@ app.jinja_env.filters['tojson_pretty'] = to_pretty_json
 # Define some global template variables
 @app.context_processor
 def add_global_variables():
-    return dict(date_now=datetime.now())
+    is_admin = current_user.is_authenticated and current_user.username in app.config.get('ADMINS', [])
+    return dict(date_now=datetime.now(),
+                is_admin=is_admin)
 
 
 @app.context_processor

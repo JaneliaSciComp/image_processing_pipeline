@@ -1,11 +1,12 @@
+from flask_admin import Admin, AdminIndexView
+from flask_admin.contrib.mongoengine import ModelView
 from mongoengine import (StringField, IntField, IntField, FloatField, ListField, BooleanField,
                          DateTimeField, Document, ReferenceField)
-from flask_admin.contrib.mongoengine import ModelView
+
 from app import app
 from flask_login import current_user
 from wtforms import TextAreaField
 from wtforms.widgets import TextArea
-from app import admin
 import datetime, uuid
 
 
@@ -256,9 +257,20 @@ class ExtendedParameterView(ModelView):
     }
 
 
-admin.add_view(ConfigView(AppConfig))
-admin.add_view(StepView(Step))
-admin.add_view(TemplateView(Template))
-admin.add_view(ExtendedParameterView(Parameter))
-admin.add_view(DependecyView(Dependency))
-admin.add_view(PipelineInstanceView(PipelineInstance))
+def create_admin(app):
+
+    admin = Admin(app,
+                  index_view=AdminIndexView(
+                    name='Home',
+                    template='admin/index.html',
+                    url='/admin',
+                  ))
+
+    admin.add_view(ConfigView(AppConfig))
+    admin.add_view(StepView(Step))
+    admin.add_view(TemplateView(Template))
+    admin.add_view(ExtendedParameterView(Parameter))
+    admin.add_view(DependecyView(Dependency))
+    admin.add_view(PipelineInstanceView(PipelineInstance))
+
+    return admin

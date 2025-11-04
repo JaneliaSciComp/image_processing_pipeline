@@ -148,9 +148,6 @@ def index():
         return redirect(url_for('workflow', template=workflow_names[0]))
 
 
-
-
-
 """
  View Function to the the status of jobs and for resuming jobs
 """
