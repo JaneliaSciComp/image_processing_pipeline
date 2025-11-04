@@ -66,7 +66,7 @@ lightsheet.hideEntries = function(){
               job_ids_to_hide.push(job_id)
           }
       }
-      var baseUrl = window.location.origin;
+      const baseUrl = window.APP_ROOT || '';
       dataIo.fetch(baseUrl+'/hide_entries/', 'POST', job_ids_to_hide);
       $('#job-table').DataTable().ajax.reload(null, false);
   }
