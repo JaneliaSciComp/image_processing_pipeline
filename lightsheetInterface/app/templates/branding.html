@@ -5,9 +5,12 @@
   </div>
 {% endblock branding %}
 {% block navbar %}
+  <script>
+      window.APP_ROOT = {{ request.script_root | tojson | safe}}
+  </script>
   <nav class="navbar navbar-light bg-light justify-content-start">
     <a class="navbar-brand navbar-brand-left" href="{{ url_for('index') }}"> Home </a>
-    {% if session.user_id %}
+    {% if current_user.is_authenticated %}
       <a class="navbar-brand navbar-brand-left" href="{{ url_for('job_status') }}"> Check Job Status </a>
       <form class="form-inline" style="display: none;">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
@@ -36,8 +39,5 @@
       </div>
     {% endif %}
   </nav>
-  <script>
-      window.APP_ROOT = {{ request.script_root | tojson | safe}}
-  </script>
   <script>document.write("<script src='{{ url_for('static', filename='js/landing.js') }}?time=" + Date.now() +"'><\/script>");</script>
 {% endblock navbar %}
