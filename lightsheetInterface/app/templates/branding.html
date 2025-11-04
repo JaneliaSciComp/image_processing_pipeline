@@ -36,5 +36,8 @@
       </div>
     {% endif %}
   </nav>
+  <script>
+      window.APP_ROOT = {{ request.script_root | tojson | safe}}
+  </script>
   <script>document.write("<script src='{{ url_for('static', filename='js/landing.js') }}?time=" + Date.now() +"'><\/script>");</script>
 {% endblock navbar %}

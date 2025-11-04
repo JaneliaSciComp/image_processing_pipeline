@@ -191,8 +191,10 @@ lightsheet.passEmptyField = function(obj){
 };
 
 $(document).ready(function(){
+  const baseUrl = window.APP_ROOT || '';
+
   $('#pipeline-configs').on('change', function(event){
     var pipeline_name = $(this).find(":selected").val();
-    window.location = window.origin + '/workflow?config_name=' + pipeline_name;
+    window.location = baseUrl + '/workflow?config_name=' + pipeline_name;
   });
 });
