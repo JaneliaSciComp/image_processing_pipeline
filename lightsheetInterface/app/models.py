@@ -263,9 +263,8 @@ def create_admin(app):
                   index_view=AdminIndexView(
                     name='Home',
                     template='admin/index.html',
-                    url='/admin',
-                  ),
-                  url='/')
+                    url='/admin'
+                  ))
 
     admin.add_view(ConfigView(AppConfig))
     admin.add_view(StepView(Step))
