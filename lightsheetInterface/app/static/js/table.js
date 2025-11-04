@@ -6,7 +6,9 @@
  * Generate jQuery datatables table
  */
 
-$(document).ready(()=>{let table=null;
+$(document).ready(()=>{
+    const baseUrl = window.APP_ROOT || '';
+    let table=null;
     table = $('#job-table').DataTable({
         stateSave:false,
         order: [[3, "desc"]],
@@ -35,7 +37,6 @@ $(document).ready(()=>{let table=null;
                 title: 'Name (Click To Load)',
                 data: 'jobName',
                 render(data, type, row, meta) {
-                    var baseUrl = window.location.origin
                     return data ? "<a href=\"" + baseUrl + row.stepOrTemplateName + "&lightsheetDB_id=" + row.id + "\">" + data + "</a>" : '';
                 }
             },
