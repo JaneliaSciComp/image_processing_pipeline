@@ -264,7 +264,8 @@ def create_admin(app):
                     name='Home',
                     template='admin/index.html',
                     url='/admin',
-                  ))
+                  ),
+                  url='/')
 
     admin.add_view(ConfigView(AppConfig))
     admin.add_view(StepView(Step))
