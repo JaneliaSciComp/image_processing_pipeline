@@ -1,4 +1,4 @@
-DEBUG = False
+DEBUG = True
 SECRET_KEY = 'the_very_secret_key'
 CACHE_TYPE = 'simple'
 TEMPLATES_AUTO_RELOAD = True

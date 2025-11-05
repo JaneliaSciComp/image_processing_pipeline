@@ -4,7 +4,7 @@ This repo contains a python flask application to configure step parameters for p
 
 ### Development
 
-Make sure, your python is version 3.5 or higher and your pip is using this correct python:
+Make sure, your python is version 3.9 or higher and your pip is using this correct python:
 
 ```bash
 $ python --version
@@ -14,33 +14,21 @@ $ which pip
 ```
 
 Create a virtualenv environment, here the environment is called 'env':
-
+IPP does not work with python>3.9 so you need to pin python to 3.9
 ```bash
-$ virtualenv env --no-site-packages
-```
-
-or better
-
-```bash
-$ virtualenv --no-site-packages -p [path to your python] env
-```
-
-If you are on a Mac, use venv instead of virtualenv, because mathplotlib needs a framework build of Python
-
-```bash
-$ python -m venv env
+$ uv venv .env --python=3.9
 ```
 
 Activate the environment:
 
 ```bash
-$ source env/bin/activate
+$ source .venv/bin/activate
 ```
 
 Install the requirements:
 
 ```bash
-$ pip install -r requirements.txt
+$ uv pip install -r lightsheetInterface/requirements.txt
 ```
 
 In Ubuntu, I had trouble doing that, because of issues with permissions when accessing some python libs in my HOME directory. I resolved that by pointing the HOME environment variable to another folder:
@@ -54,6 +42,11 @@ With
 
 ```bash
 $ python manage.py runserver [-b <binding ip>] [-p <port>]
+```
+
+To use a local configuration run with:
+```bash
+$ LIGHTSHEET_INTERFACE_SETTINGS=$PWD/mylocal/env_config.py python lightsheetInterface/manage.py [-b <binding ip>] [-p <port>]
 ```
 
 you should be able to run the Flask application.
