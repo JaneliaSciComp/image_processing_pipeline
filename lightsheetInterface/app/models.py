@@ -1,6 +1,6 @@
 from flask_admin import Admin, AdminIndexView
-from flask_admin.contrib.mongoengine import ModelView
-from mongoengine import (StringField, IntField, IntField, FloatField, ListField, BooleanField,
+from flask_admin.contrib.mongoengine import ModelView, filters as mongo_filters
+from mongoengine import (StringField, IntField, FloatField, ListField, BooleanField,
                          DateTimeField, Document, ReferenceField)
 
 from app import app
@@ -16,6 +16,23 @@ formats = (
     ('', None), ('R', 'Range'), ('A', 'Array'), ('C', 'Multiselect Dropdown'), ('F', 'Checkbox'),
     ('B', 'Radio Button'), ('D', 'Dropdown Menu'))
 steptypes = (('', None), ('Si', 'Singularity'), ('Sp', 'Spark'), ('L', 'LightSheet'), ('D', 'Deconvolution'))
+
+
+# Currently the convert method takes a field object as column not a string as field name.
+# This patch addresses the problem
+def _patched_convert(self, type_name, column, name):
+    filter_name = type_name.lower()
+
+    if filter_name in self.converters:
+        if isinstance(column, str):
+            return self.converters[filter_name](column, name)
+        else:
+            return self.converters[filter_name](column.name, name)
+
+    return None
+
+
+mongo_filters.FilterConverter.convert = _patched_convert
 
 
 class AppConfig(Document):
@@ -112,7 +129,7 @@ class ConfigurationInstance(Document):
     meta = {'strict': False}  # To prevent error from no longer having certain fields
 
     def __unicode__(self):
-        return self.creation_date.strftime("%d/%m/%y-%H:%m")
+        return self.creation_date.strftime('%d/%m/%y-%H:%m')
 
     def save(self, *args, **kwargs):
         if not self.creation_date:
@@ -162,16 +179,6 @@ class StepView(ModelView):
             return False
 
     column_filters = ['name', 'description']
-
-
-class ParameterView(ModelView):
-    def is_accessible(self):
-        if current_user.username in app.config.get('ADMINS'):
-            return True
-        else:
-            return False
-
-    column_filters = ['name', 'description', 'frequency', 'formatting']
 
 
 class TemplateView(ModelView):
@@ -240,7 +247,7 @@ class CKTextAreaField(TextAreaField):
     widget = CKTextAreaWidget()
 
 
-class ExtendedParameterView(ModelView):
+class ParameterView(ModelView):
     def is_accessible(self):
         if current_user.username in app.config.get('ADMINS'):
             return True
@@ -248,10 +255,10 @@ class ExtendedParameterView(ModelView):
             return False
 
     extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
-    form_columns = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "float1", "text1", "text2",
-                    "text3", "text4", "text5", "readonly", "mount", "empty", "startsEmpty", "frequency", "formatting", "hint"]
-    column_filters = ["name", "displayName", "description", "number1", "number2", "number3", "number4", "number5", "number6", "text1",
-                      "text2", "text3", "text4", "text5", "mount", "frequency", "formatting"]
+    form_columns = ['name', 'displayName', 'description', 'number1', 'number2', 'number3', 'number4', 'number5', 'number6', 'float1', 'text1', 'text2',
+                    'text3', 'text4', 'text5', 'readonly', 'mount', 'empty', 'startsEmpty', 'frequency', 'formatting', 'hint']
+    column_filters = ['name', 'displayName', 'description', 'number1', 'number2', 'number3', 'number4', 'number5', 'number6', 'text1',
+                      'text2', 'text3', 'text4', 'text5', 'mount', 'frequency', 'formatting']
     form_overrides = {
         'hint': CKTextAreaField
     }
@@ -270,7 +277,7 @@ def create_admin(app):
     admin.add_view(ConfigView(AppConfig))
     admin.add_view(StepView(Step))
     admin.add_view(TemplateView(Template))
-    admin.add_view(ExtendedParameterView(Parameter))
+    admin.add_view(ParameterView(Parameter))
     admin.add_view(DependecyView(Dependency))
     admin.add_view(PipelineInstanceView(PipelineInstance))
 

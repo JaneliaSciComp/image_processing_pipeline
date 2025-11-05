@@ -13,10 +13,9 @@ $ which python
 $ which pip
 ```
 
-Create a virtualenv environment, here the environment is called 'env':
-IPP does not work with python>3.9 so you need to pin python to 3.9
+Create a virtualenv environment, here the environment is called '.venv':
 ```bash
-$ uv venv .env --python=3.9
+$ uv venv .venv
 ```
 
 Activate the environment:
