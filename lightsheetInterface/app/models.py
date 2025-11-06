@@ -269,7 +269,7 @@ def create_admin(app):
     admin = Admin(app,
                   name='',
                   index_view=AdminIndexView(
-                    name='Admin', # Admin Home
+                    name='Admin Home', # Admin Home
                     template='admin/index.html',
                     url='/admin'
                   ))
