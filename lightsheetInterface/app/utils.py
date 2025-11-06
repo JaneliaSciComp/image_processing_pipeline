@@ -1,7 +1,9 @@
-import datetime, json, requests, operator
+import json, requests, operator
+
 from flask_login import current_user
 from mongoengine import ValidationError, NotUniqueError
 from datetime import datetime
+from dateutil import parser as dateparser
 from pytz import timezone
 from bson.objectid import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
@@ -357,7 +359,7 @@ def get_job_info_from_jacs(request_params_dictionary):
 
 
 def convert_jacs_time(t):
-    t = datetime.fromisoformat(t)
+    t = dateparser.isoparse(t)
     if t.tzinfo is None:
         t = UTC_TIMEZONE.localize(t)
     t = t.astimezone(EASTERN_TIMEZONE)
